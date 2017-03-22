@@ -211,7 +211,8 @@ public class FetchResourceSelector{
     	List<String> links = new ArrayList<String>();
     	Object obj = JsonPath.read(jsonContent, jsonPath);
     	if(obj instanceof List){
-    		List<String> list = (List<String>)obj;
+    		@SuppressWarnings("unchecked")
+			List<String> list = (List<String>)obj;
 			for(String link : list){
 				links.add(urlPrefix + link);
 			}

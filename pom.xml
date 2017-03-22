@@ -5,90 +5,121 @@
 	<artifactId>get4j-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
+	<name>get4j-parent</name>
+	<url>https://github.com/bytegriffin/get4j</url>
 
 	<modules>
 		<module>get4j-core</module>
 		<module>get4j-cluster</module>
 	</modules>
 
+	<properties>
+		<log4j.version>2.8.1</log4j.version>
+		<slf4j.version>1.7.25</slf4j.version>
+		<dom4j.version>2.0.0</dom4j.version>
+		<httpcore.version>4.4.6</httpcore.version>
+		<httpclient.version>4.5.3</httpclient.version>
+		<jsoup.version>1.10.2</jsoup.version>
+		<htmlunit.version>2.25</htmlunit.version>
+		<fastjson.version>1.2.29</fastjson.version>
+		<jsonpath.version>2.2.0</jsonpath.version>
+		<!-- 注意：以下是java8的，和java6、java7不一样 -->
+		<hikaricp.version>2.6.1</hikaricp.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.version>1.8</java.version>
+	</properties>
+
+	<developers>
+		<developer>
+			<id>bytegriffin</id>
+			<name>Qiang Gan</name>
+			<email>bytegriffin@126.com</email>
+		</developer>
+	</developers>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+		</license>
+	</licenses>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>
 				<artifactId>log4j-api</artifactId>
-				<version>2.8.1</version>
+				<version>${log4j.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>
 				<artifactId>log4j-core</artifactId>
-				<version>2.8.1</version>
+				<version>${log4j.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>
 				<artifactId>log4j-1.2-api</artifactId>
-				<version>2.8.1</version>
+				<version>${log4j.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
-				<version>1.7.24</version>
+				<version>${slf4j.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-nop</artifactId>
-				<version>1.7.24</version>
+				<version>${slf4j.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.dom4j</groupId>
 				<artifactId>dom4j</artifactId>
-				<version>2.0.0</version>
+				<version>${dom4j.version}</version>
 			</dependency>
-
 
 			<dependency>
 				<groupId>org.apache.httpcomponents</groupId>
 				<artifactId>httpcore</artifactId>
-				<version>4.4.6</version>
+				<version>${httpcore.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.httpcomponents</groupId>
 				<artifactId>httpclient</artifactId>
-				<version>4.5.3</version>
+				<version>${httpclient.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.jsoup</groupId>
 				<artifactId>jsoup</artifactId>
-				<version>1.10.2</version>
+				<version>${jsoup.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>net.sourceforge.htmlunit</groupId>
 				<artifactId>htmlunit</artifactId>
-				<version>2.25</version>
+				<version>${htmlunit.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.alibaba</groupId>
 				<artifactId>fastjson</artifactId>
-				<version>1.2.24</version>
+				<version>${fastjson.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.jayway.jsonpath</groupId>
 				<artifactId>json-path</artifactId>
-				<version>2.2.0</version>
+				<version>${jsonpath.version}</version>
 			</dependency>
 
-			<!-- 注意：以下是java8的，和java6、java7不一样 -->
 			<dependency>
 				<groupId>com.zaxxer</groupId>
 				<artifactId>HikariCP</artifactId>
-				<version>2.6.1</version>
+				<version>${hikaricp.version}</version>
 			</dependency>
 
 			<dependency>
