@@ -18,7 +18,7 @@ public class HdfsDownloader implements Process{
 	@Override
 	public void init(Seed seed) {
 		// TODO Auto-generated method stub
-		logger.info("Seed[" + seed.getSeedName() + "]的组件HdfsDownloader的初始化完成。");
+		logger.info("种子[" + seed.getSeedName() + "]的组件HdfsDownloader的初始化完成。");
 	}
 
 	@Override
