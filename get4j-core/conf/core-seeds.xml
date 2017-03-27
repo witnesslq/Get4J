@@ -11,16 +11,16 @@
 		<property>
 			<name>worker.thread.number</name>
 			<value>3</value>
-			<description>非必填项。爬虫工作线程数量，默认值是1。</description>
+			<description>非必填项。爬虫工作线程数量，默认值是1。根据url数量来动态分配 </description>
 		</property>
 		<property>
 			<name>fetch.mode</name>
-			<value>list_detail</value>
+			<value>site</value>
 			<description>必填项。抓取模式：list_detail（列表-详情页面）、single（单个页面)、site（单个站点）、cascade（慎用，页面中给出所有的url链接）默认值是single。</description>
 		</property>
 		<property>
 			<name>fetch.url</name>
-			<value>https://www.yirendai.com/loan/list/{1}</value>
+			<value>https://www.yirendai.com/</value>
 			<description>
 				必填项。表示要抓取的Url，如果抓取模式fetchMode为list_detail，该值为列表Url，其中可变的页数PageNum需要用大括号{}括起来，
 				下一页程序会按照自增1来处理，注意：请求参数请用&amp;取代，否则xml验证会出错。
@@ -38,7 +38,7 @@
 		</property>
 		<property>
 			<name>fetch.total.pages</name>
-			<value>6</value>
+			<value>4</value>
 			<description>
 				非必填项，总页数，当抓取模式fetch.mode设置为list_detail时使用，表示列表总页数，一般写整数，当然也可以是由Jsoup支持的选择器（html内容）
 				或jsonpath（json内容）的字符串，这样会更加动态性，默认值是1。
@@ -123,7 +123,7 @@
 		</property>
 		<property>
 			<name>parse.class.impl</name>
-			<value>com.bytegriffin.parse.CustomPageParser</value>
+			<value>com.bytegriffin.get4j.parse.CustomPageParser</value>
 			<description>当parse.element.select没填时为必填项。自定义解析实现类。需要写具体package路径，例如：com.anspider.parse.CustomPageParser
 			</description>
 		</property>

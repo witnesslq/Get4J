@@ -496,11 +496,14 @@ public class HttpClientEngine implements HttpEngine {
 				page.setJsonContent(content);
 			} else if (contentType.contains("text/html") || contentType.contains("text/plain")) {
 				page.setHtmlContent(content);//注意：有时text/plain这种文本格式里面放的是json字符串，但是有种特殊情况是这个json字符串里也包含html
-				//设置Response Cookie
-				page.setCookies(response.getLastHeader("Set-Cookie").getValue());
 			} else { //不是html也不是json，那么只能是resource的链接了
 				HashSet<String> resources = page.getResources();
 				resources.add(url);
+			}
+			// 设置Response Cookie
+			Header header = response.getLastHeader("Set-Cookie");
+			if(header != null){ 
+				page.setCookies(header.getValue());
 			}
 		} catch (Exception e) {
 			UrlQueue.newUnVisitedLink(page.getSeedName(), url);

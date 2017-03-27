@@ -30,19 +30,15 @@ public class JobController extends TimerTask {
 		} else {
 			ConcurrentQueue<String> urlQueue = UrlQueue.getUnVisitedLink(seedName);
 			executorService = Executors.newCachedThreadPool();
-			// 根据url数量来动态计算，分配给每个工作线程
-			int urlsize = urlQueue.size();
-			int num = urlsize / threadNum;// 这样子可能还有余数,应该把余数也分摊
-			if (urlsize % threadNum != 0) {
-				num++;// 如果有余数(一定小于threadNum),则前面的线程分摊下,每个线程多做一个任务
-			}
 
 			for (int i = 0; i < threadNum; i++) {
-				int start = i * num;
-				int end = Math.min((i + 1) * num, urlsize);// 最后一个线程任务可能不够
-				ConcurrentQueue<String> subUrlQueue = urlQueue.subQueue(start, end);
-				Worker worker = new Worker(seedName, subUrlQueue);
+				Worker worker = new Worker(seedName, urlQueue);
 				executorService.execute(worker);
+				try {//必须要加等待，否则运行太快会导致只有一个线程抓取，其它线程因为运行太快urlQueue里面为空而一直处于等待
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 

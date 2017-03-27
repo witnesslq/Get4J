@@ -10,39 +10,38 @@
 		</description>
 		<property>
 			<name>worker.thread.number</name>
-			<value>1</value>
-			<description>非必填项。爬虫工作线程数量，默认值是1。</description>
+			<value>3</value>
+			<description>非必填项。爬虫工作线程数量，默认值是1。根据url数量来动态分配 </description>
 		</property>
 		<property>
 			<name>fetch.mode</name>
 			<value>list_detail</value>
-			<description>必填项。抓取模式：list_detail（列表-详情页面）、single（单个页面)、site（单个站点）、cascade（慎用，页面中给出所有的url链接）默认值是site。
-			</description>
+			<description>必填项。抓取模式：list_detail（列表-详情页面）、single（单个页面)、site（单个站点）、cascade（慎用，页面中给出所有的url链接）默认值是single。</description>
 		</property>
 		<property>
 			<name>fetch.url</name>
 			<value>https://www.yirendai.com/loan/list/{1}</value>
 			<description>
-				必填项。要抓取的Url，如果抓取模式fetch.mode为list_detail，该值为列表Url，将可变的PageNum用大括号括起来，而页面中的PageSize默认该url中的页数自增1来处理，
-				因此不需要再去请求一个pagesize的url，直到找不到具体页面则说明已经到了最后一页。注意：请求参数请用&amp;取代，否则xml验证会出错。
+				必填项。表示要抓取的Url，如果抓取模式fetchMode为list_detail，该值为列表Url，其中可变的页数PageNum需要用大括号{}括起来，
+				下一页程序会按照自增1来处理，注意：请求参数请用&amp;取代，否则xml验证会出错。
 			</description>
 		</property>
 		<property>
 			<name>fetch.detail.selector</name>
 			<value>a.input_btn.btn_normal[href]</value>
 			<description>
-				非必填项，当抓取模式fetch.mode为list_detail时使用，表示详情页面的url，支持Jsoup原生的css选择器和正则表达式（html内容）或jsonpath（json内容）。
+				非必填项，详情页面链接选择器，当抓取模式fetch.mode设置为list_detail时使用，支持Jsoup原生的选择器（html内容）或jsonpath（json内容）。
 				当此内容为JsonPath字符串的时候，如果list页面的json中提供的detail的链接是相对路径，那么此时这个值的格式为：链接前缀+jsonpath，
-				例如：http://www.aaa.com/bbb$.data.url；当此内容为空时，说明抓取的页面格式是列表页面，而不存在详情页面。注意：如果Json字符串中包含的是Html，
-				这时候就不好处理detaillink，只能写自定义的PageParser来解析。
+				例如：http://www.aaa.com/bbb$.data.url；当此属性为空时，说明抓取的页面只包含列表页面，不存在详情页面。注意：如果Json属性中包含的是Html，
+				并且Html里包含着DetailLink的时候，这时候需要先写Jsonpath再写Jsoup选择器字符串，中间用竖杠隔开，例如： $.data.*|a.class[href]
 			</description>
 		</property>
 		<property>
 			<name>fetch.total.pages</name>
-			<value>2</value>
+			<value>1</value>
 			<description>
-				当抓取模式fetch.mode为list_detail时为必填项，表示列表总页数，一般写整数，当然也可以是由Jsoup支持的css选择器或正则表达式
-				（html内容）或jsonpath（json内容）的字符串，这样会更加动态性，默认值是1。
+				非必填项，总页数，当抓取模式fetch.mode设置为list_detail时使用，表示列表总页数，一般写整数，当然也可以是由Jsoup支持的选择器（html内容）
+				或jsonpath（json内容）的字符串，这样会更加动态性，默认值是1。
 			</description>
 		</property>
 		<property>
@@ -124,7 +123,7 @@
 		</property>
 		<property>
 			<name>parse.class.impl</name>
-			<value>com.anspider.parse.CustomPageParser</value>
+			<value>com.bytegriffin.get4j.parse.CustomPageParser</value>
 			<description>当parse.element.select没填时为必填项。自定义解析实现类。需要写具体package路径，例如：com.anspider.parse.CustomPageParser
 			</description>
 		</property>

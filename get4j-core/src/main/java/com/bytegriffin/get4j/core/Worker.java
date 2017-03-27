@@ -27,7 +27,7 @@ public class Worker implements Runnable {
 		if (StringUtil.isNullOrBlank(seedName)) {
 			return;
 		}
-//		ConcurrentQueue<String> urlQueue = UrlQueue.getUnVisitedLink(siteName);
+
 		while (urlQueue != null && !urlQueue.isEmpty()) {
 			logger.info("线程[" + Thread.currentThread().getName() + "]开始执行任务[" + seedName + "]。。。");
 			Object obj = urlQueue.outFirst();

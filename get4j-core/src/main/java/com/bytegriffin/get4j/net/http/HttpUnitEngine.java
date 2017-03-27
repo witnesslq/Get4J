@@ -178,6 +178,8 @@ public class HttpUnitEngine implements HttpEngine {
 				HashSet<String> resources = page.getResources();
 				resources.add(url);
 			}
+			//设置Response Cookie
+			page.setCookies(response.getResponseHeaderValue("Set-Cookie"));
 		} catch (Exception e) {
 			UrlQueue.newUnVisitedLink(page.getSeedName(), url);
 			logger.error("线程["+Thread.currentThread().getName()+"]种子[" + page.getSeedName() + "]获取链接[" + url + "]内容失败。", e);

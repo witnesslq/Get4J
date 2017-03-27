@@ -26,19 +26,19 @@ public class AutoDelegateParser implements Process {
 			try {
 				pp = (PageParser)Class.forName(clazz).newInstance();
 			} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-				logger.error("Seed["+seed.getSeedName()+"]初始化页面解析类["+clazz+"]时出现问题，",e);
+				logger.error("种子["+seed.getSeedName()+"]初始化页面解析类["+clazz+"]时出现问题，",e);
 				System.exit(1);
 			}
 		}
 		Constants.PAGE_PARSER_CACHE.put(seed.getSeedName(), pp);
-		logger.info("Seed[" + seed.getSeedName() + "]的组件DelegateParser的初始化完成。");
+		logger.info("种子[" + seed.getSeedName() + "]的组件DelegateParser的初始化完成。");
 	}
 
 	@Override
 	public void execute(Page page) {
 		PageParser pp = Constants.PAGE_PARSER_CACHE.get(page.getSeedName());
 		pp.parse(page);
-		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子Seed[" + page.getSeedName() + "]解析页面完成。");
+		logger.info("线程[" + Thread.currentThread().getName() + "]种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]解析页面完成。");
 	}
 
 }
