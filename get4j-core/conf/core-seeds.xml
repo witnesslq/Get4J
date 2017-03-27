@@ -10,7 +10,7 @@
 		</description>
 		<property>
 			<name>worker.thread.number</name>
-			<value>1</value>
+			<value>3</value>
 			<description>非必填项。爬虫工作线程数量，默认值是1。</description>
 		</property>
 		<property>
@@ -38,7 +38,7 @@
 		</property>
 		<property>
 			<name>fetch.total.pages</name>
-			<value>2</value>
+			<value>6</value>
 			<description>
 				非必填项，总页数，当抓取模式fetch.mode设置为list_detail时使用，表示列表总页数，一般写整数，当然也可以是由Jsoup支持的选择器（html内容）
 				或jsonpath（json内容）的字符串，这样会更加动态性，默认值是1。
@@ -123,7 +123,7 @@
 		</property>
 		<property>
 			<name>parse.class.impl</name>
-			<value>com.anspider.parse.CustomPageParser</value>
+			<value>com.bytegriffin.parse.CustomPageParser</value>
 			<description>当parse.element.select没填时为必填项。自定义解析实现类。需要写具体package路径，例如：com.anspider.parse.CustomPageParser
 			</description>
 		</property>
