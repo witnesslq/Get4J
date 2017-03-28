@@ -51,7 +51,10 @@ public class ListDetailFetcher implements Process {
 				totalPages = String.valueOf(totalPage);// 所以需要再次转换
 			} else {// html格式
 				Document doc = Jsoup.parse(page.getHtmlContent());
-				totalPages = doc.select(totalPages.trim()).text();
+				totalPages = doc.select(totalPages.trim()).text().trim();
+				if(StringUtil.isNullOrBlank(totalPages)){
+					totalPages = "1";
+				}
 			}
 		}
 		generateListUrl(seed.getSeedName(), fetchUrl, Integer.valueOf(totalPages));
@@ -111,7 +114,7 @@ public class ListDetailFetcher implements Process {
 		FetchResourceSelector resourceselector = Constants.FETCH_RESOURCE_SELECTOR_CACHE.get(page.getSeedName());
 		String detailSelect = Constants.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
 		// 如果fetch.resource.selector配置了all或者none，或者没有配置fetch.detail.selecotr只配置了fetch.resource.selector，那说明没有detaillink与avatar对应，也就是说只能抓取所有resource
-		if (resourceselector.isConfigAll() || resourceselector.isConfigNone() || StringUtil.isNullOrBlank(detailSelect) ) {
+		if (resourceselector == null || resourceselector.isConfigAll() || resourceselector.isConfigNone() || StringUtil.isNullOrBlank(detailSelect) ) {
 			UrlAnalyzer.custom(page).sniffAndSetResources();
 		} else { // 如果fetch.resource.selector配置了具体参数（一定是包含detaillink与avatar资源的外部的css选择器或正则，而不只是指定avatar），则表示抓取符合参数的具体资源
 			detailLinkAvatar = UrlAnalyzer.custom(page).mappingDetailLinkAndAvatar();

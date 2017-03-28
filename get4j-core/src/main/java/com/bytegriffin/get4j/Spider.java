@@ -1,7 +1,6 @@
 package com.bytegriffin.get4j;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,7 +18,6 @@ import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.SpiderEngine;
 import com.bytegriffin.get4j.fetch.FetchMode;
 import com.bytegriffin.get4j.net.http.HttpProxy;
-import com.bytegriffin.get4j.parse.PageParser;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.MD5Util;
 import com.bytegriffin.get4j.util.StringUtil;
@@ -253,18 +251,8 @@ public class Spider {
 	 * @param parser
 	 * @return
 	 */
-	public Spider parser(PageParser parser) {
-		seed.setParseClassImpl(parser.getClass().getName());
-		return this;
-	}
-	
-	/**
-	 * 自定义页面解析类
-	 * @param className
-	 * @return
-	 */
-	private Spider parser(String className){
-		seed.setParseClassImpl(className);
+	public Spider parser(Class<?> parser) {
+		seed.setParseClassImpl(parser.getName());
 		return this;
 	}
 	
@@ -403,7 +391,7 @@ public class Spider {
 			}
 		}
 
-		this.parser((PageParser) clazz.newInstance());
+		this.parser(clazz);
 		
 		return this;
 	}

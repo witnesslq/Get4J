@@ -212,10 +212,11 @@ public class Page {
 		if (null == dbPage) {
 			return flag;
 		}
-		if (!(this.getTitle() == null ? dbPage.getTitle() == null : this.getTitle().equals(dbPage.getTitle()))) {
-			flag = true;
-		}
 		try {
+			// title中也可能带有单引号之类的特殊字符，所以需要转义处理
+			if (!(this.getTitle() == null ? dbPage.getTitle() == null : URLEncoder.encode(this.getTitle(),"UTF-8").equals(dbPage.getTitle()))) {
+				flag = true;
+			}
 			//html页面首先要解码，因为之前存进去的时候是编码的（为了过滤某些单引号之类的字符串）
 			if (!(this.getHtmlContent() == null ? dbPage.getHtmlContent() == null : URLEncoder.encode(this.getHtmlContent(),"UTF-8").equals(dbPage.getHtmlContent()))) {
 				flag = true;

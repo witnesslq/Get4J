@@ -16,7 +16,7 @@
 		<property>
 			<name>fetch.mode</name>
 			<value>site</value>
-			<description>必填项。抓取模式：list_detail（列表-详情页面）、single（单个页面)、site（单个站点）、cascade（慎用，页面中给出所有的url链接）默认值是single。</description>
+			<description>必填项。抓取模式：list_detail（列表-详情页面）、single（单个页面)、cascade（单个页面中给出所有的url链接）、site（单个站点，不包含外链）默认值是single。</description>
 		</property>
 		<property>
 			<name>fetch.url</name>
@@ -130,7 +130,7 @@
 		</property>
 		<property>
 			<name>store.jdbc</name>
-			<value>jdbc:mysql://localhost:3306/anspider?useSSL=false&amp;serverTimezone=UTC&amp;characterEncoding=UTF-8&amp;user=root&amp;password=root
+			<value>jdbc:mysql://localhost:3306/get4j?useSSL=false&amp;serverTimezone=UTC&amp;characterEncoding=UTF-8&amp;user=root&amp;password=root
 			</value>
 			<description>非必填项。保存到Mysql关系型数据库中</description>
 		</property>

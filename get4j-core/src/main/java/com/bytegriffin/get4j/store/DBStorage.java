@@ -111,7 +111,11 @@ public class DBStorage implements Process {
 		if (page.getTitle() == null) {//之所以不判断空字符串''，是因为有可能页面本身就是这样
 			sql += "" + null + ",";
 		} else {
-			sql += "'" + page.getTitle() + "',";
+			try {
+				sql += "'" + URLEncoder.encode(page.getTitle(), "UTF-8") + "',";
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
 		}
 		if (StringUtil.isNullOrBlank(page.getAvatar())) {
 			sql += "" + null + ",";
@@ -165,7 +169,11 @@ public class DBStorage implements Process {
 		if (page.getTitle() == null) {
 			sql += "TITLE=" + null + ",";
 		} else {
-			sql += "TITLE='" + page.getTitle() + "',";
+			try {
+				sql += "TITLE='" + URLEncoder.encode(page.getTitle(), "UTF-8") + "',";
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
 		}
 		if (page.getCookies() == null) {
 			sql += "COOKIES=" + null + ",";
