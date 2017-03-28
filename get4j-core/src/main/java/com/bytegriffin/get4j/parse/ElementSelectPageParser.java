@@ -15,26 +15,26 @@ import com.bytegriffin.get4j.net.http.UrlAnalyzer;
  * 默认支持Jsoup的css选择器和正则表达式
  */
 public class ElementSelectPageParser implements PageParser{
-	
+
 	private static final Logger logger = LogManager.getLogger(ElementSelectPageParser.class);
-	
-	private String select;
-	
-	public ElementSelectPageParser(String select){
-		this.select = select;
+
+	private String elementSeletor;
+
+	public ElementSelectPageParser(String elementSeletor){
+		this.elementSeletor = elementSeletor;
 	}
 
 	@Override
 	public void parse(Page page) {
 		String text = null;
 		if(page.isHtmlContent()){//用jsoup的css选择器或正则表达式解析html
-			text = UrlAnalyzer.select(page.getHtmlContent(),select);
+			text = UrlAnalyzer.select(page.getHtmlContent(),elementSeletor);
 			page.setHtmlContent(text);
 		} else if(page.isJsonContent()){//用jsonpath解析json
 			try{
-				text = JsonPath.read(page.getJsonContent(), select);
+				text = JsonPath.read(page.getJsonContent(), elementSeletor);
 			}catch(PathNotFoundException p){
-				logger.error("Seed["+page.getSeedName()+"]在使用Jsonpath["+select+"]定位解析Json字符串时出错，",p);
+				logger.error("Seed["+page.getSeedName()+"]在使用Jsonpath["+elementSeletor+"]定位解析Json字符串时出错，",p);
 			}
 			page.setJsonContent(text);
 		}

@@ -93,21 +93,16 @@
 			<description>
 				非必填项。页面资源的抓取选择器，支持Jsoup原生的css选择器和正则表达式或Jsonpath，一般用于下载资源文件，例想抓取图片：[*.jpg]或者$.data[*].img。
 				当此内容为JsonPath字符串的时候，如果json中提供的detail的链接是相对路径，那么此时这个值的格式为：链接前缀+jsonpath，如果需要抓取多个url可以用逗号","隔开，默认不填是全抓取。
-				注意：当启用List_detail模式时，它特指的是avatar资源，即：与Detail_Link一一对应的资源，需要配置的是包含detail_link与avatar的css选择器或正则表达式
+				注意：当启用List_detail模式时，它特指的是avatar资源，即：与Detail_Link一一对应的资源，需要配置的是包含detail_link与avatar的css选择器或正则表达式；
+				当启用非List_detail模式时，可抓取多种资源，每个选择器中间用逗号隔开。
 			</description>
 		</property>
 		<property>
 			<name>download.disk</name>
-			<value></value>
-			<description>非必填项。如果业务需要下载url站点的页面及资源文件，则将此url站点保存的磁盘目录，默认值classpath:/data/download/seedName/，绝对路径不用写classpath
-			</description>
-		</property>
-		<property>
-			<name>download.resource.disk</name>
 			<value>classpath:/data/download/seed1/</value>
 			<description>
-				非必填项。如果业务不需要下载页面，只需要下载相关资源文件的话需要设置此项，也就是说如果配置了此项，那么就不需要配置download.disk，
-				默认值classpath:/data/download/seedName/，绝对路径不用写classpath，当然也可以配置成静态服务器地址，例如：http://static.site.com，
+				非必填项。如果业务需要下载url站点的页面及资源文件，则将此url站点保存的磁盘目录，默认值classpath:/data/download/seedName/，
+				绝对路径不用写classpath，当然也可以配置成静态服务器地址，例如：http://static.site.com，
 				如果是静态服务器地址，那么还需要配合启动rsync/ftp/scp脚本功能。注意：在List_Detail模式下特指与Detail_Link一一对应的avatar资源。
 			</description>
 		</property>

@@ -8,6 +8,9 @@ import com.bytegriffin.get4j.store.DBStorage;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+/**
+ * 测试存储
+ */
 public class TestStore {
 
 	public static void testDB() throws UnsupportedEncodingException {

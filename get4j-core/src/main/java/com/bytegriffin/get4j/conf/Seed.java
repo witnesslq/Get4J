@@ -94,10 +94,6 @@ public class Seed {
 	 */
 	private String downloadDisk;
 	/**
-	 * 非必填项。如果业务不需要下载页面，只需要下载相关资源文件的话需要设置此项，也就是说如果配置了此项，那么就不需要配置download.disk，默认值classpath:/data/download/seedName/，绝对路径不用写classpath
-	 */
-//	private String downloadResourceDisk;
-	/**
 	 * 如果业务需要下载url站点，则将此url站点保存的hdfs系统
 	 */
 	private String downloadHdfs;

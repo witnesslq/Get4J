@@ -11,9 +11,12 @@ import org.apache.http.util.EntityUtils;
 
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 
-public class TestJsonParse {
+/**
+ * 测试jsonpath解析
+ */
+public class TestJsonPathParse {
 
-	public TestJsonParse() {
+	public TestJsonPathParse() {
 		// TODO Auto-generated constructor stub
 	}
 	

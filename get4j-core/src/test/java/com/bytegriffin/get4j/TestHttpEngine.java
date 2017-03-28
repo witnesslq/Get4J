@@ -30,6 +30,9 @@ import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
+/**
+ * 测试HttpClient与HttpUnit在实际状态下的抓取结果
+ */
 public class TestHttpEngine {
 
 

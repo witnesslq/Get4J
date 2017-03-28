@@ -15,12 +15,12 @@
 		</property>
 		<property>
 			<name>fetch.mode</name>
-			<value>list_detail</value>
+			<value>site</value>
 			<description>必填项。抓取模式：list_detail（列表-详情页面）、single（单个页面)、site（单个站点）、cascade（慎用，页面中给出所有的url链接）默认值是single。</description>
 		</property>
 		<property>
 			<name>fetch.url</name>
-			<value>https://www.yirendai.com/loan/list/{1}</value>
+			<value>https://www.yirendai.com/</value>
 			<description>
 				必填项。表示要抓取的Url，如果抓取模式fetchMode为list_detail，该值为列表Url，其中可变的页数PageNum需要用大括号{}括起来，
 				下一页程序会按照自增1来处理，注意：请求参数请用&amp;取代，否则xml验证会出错。
@@ -38,7 +38,7 @@
 		</property>
 		<property>
 			<name>fetch.total.pages</name>
-			<value>1</value>
+			<value>4</value>
 			<description>
 				非必填项，总页数，当抓取模式fetch.mode设置为list_detail时使用，表示列表总页数，一般写整数，当然也可以是由Jsoup支持的选择器（html内容）
 				或jsonpath（json内容）的字符串，这样会更加动态性，默认值是1。
@@ -93,21 +93,16 @@
 			<description>
 				非必填项。页面资源的抓取选择器，支持Jsoup原生的css选择器和正则表达式或Jsonpath，一般用于下载资源文件，例想抓取图片：[*.jpg]或者$.data[*].img。
 				当此内容为JsonPath字符串的时候，如果json中提供的detail的链接是相对路径，那么此时这个值的格式为：链接前缀+jsonpath，如果需要抓取多个url可以用逗号","隔开，默认不填是全抓取。
-				注意：当启用List_detail模式时，它特指的是avatar资源，即：与Detail_Link一一对应的资源，需要配置的是包含detail_link与avatar的css选择器或正则表达式
+				注意：当启用List_detail模式时，它特指的是avatar资源，即：与Detail_Link一一对应的资源，需要配置的是包含detail_link与avatar的css选择器或正则表达式；
+				当启用非List_detail模式时，可抓取多种资源，每个选择器中间用逗号隔开。
 			</description>
 		</property>
 		<property>
 			<name>download.disk</name>
-			<value></value>
-			<description>非必填项。如果业务需要下载url站点的页面及资源文件，则将此url站点保存的磁盘目录，默认值classpath:/data/download/seedName/，绝对路径不用写classpath
-			</description>
-		</property>
-		<property>
-			<name>download.resource.disk</name>
 			<value>classpath:/data/download/seed1/</value>
 			<description>
-				非必填项。如果业务不需要下载页面，只需要下载相关资源文件的话需要设置此项，也就是说如果配置了此项，那么就不需要配置download.disk，
-				默认值classpath:/data/download/seedName/，绝对路径不用写classpath，当然也可以配置成静态服务器地址，例如：http://static.site.com，
+				非必填项。如果业务需要下载url站点的页面及资源文件，则将此url站点保存的磁盘目录，默认值classpath:/data/download/seedName/，
+				绝对路径不用写classpath，当然也可以配置成静态服务器地址，例如：http://static.site.com，
 				如果是静态服务器地址，那么还需要配合启动rsync/ftp/scp脚本功能。注意：在List_Detail模式下特指与Detail_Link一一对应的avatar资源。
 			</description>
 		</property>

@@ -20,23 +20,6 @@ import com.gargoylesoftware.htmlunit.WebClient;
  */
 public final class Constants {
 
-	// 默认下载路径
-	// public static final String default_download_path =
-	// System.getProperty("user.dir") + File.separator + "data" + File.separator
-	// + "download" + File.separator;
-	// // 默认保存图片路径
-	// public static final String default_image_path =
-	// System.getProperty("user.dir") + File.separator + "data" + File.separator
-	// + "image" + File.separator;
-	// // 默认生成Lucene index路径
-	// public static final String default_index_path =
-	// System.getProperty("user.dir") + File.separator + "data" + File.separator
-	// + "index" + File.separator;
-
-	// 全局site缓存 key:seed_name value: site
-	// public static final Map<String, Seed> SEED_CACHE = new HashMap<String,
-	// Seed>();
-
 	/**
 	 * 全局chain工作流缓存 key:seed_name value: site
 	 */

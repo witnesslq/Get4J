@@ -86,6 +86,32 @@ public final class FileUtil {
 		}
 		return newList;
 	}
+	
+	/**
+	 * 将Proxy字符串解析成代理对象
+	 * @param str
+	 * @return
+	 */
+	public static LinkedList<HttpProxy> parseProxyString(String str) {
+		HttpProxy hp = null;
+		LinkedList<HttpProxy> newList = new LinkedList<HttpProxy>();
+		if (StringUtil.isNullOrBlank(str)) {
+			return newList;
+		} else if (str.contains("@")) {
+			String[] array = str.split("@");
+			String[] front = array[0].split(":");
+			String[] end = array[1].split(":");
+			hp = new HttpProxy(front[0], front[1], end[0], end[1]);
+		} else if (str.contains(":")) {
+			// 可能是没有IP，只有port
+			String[] front = str.split(":");
+			hp = new HttpProxy(front[0], front[1]);
+		} else {
+			hp = new HttpProxy(str);
+		}
+		newList.add(hp);
+		return newList;
+	}
 
 	/**
 	 * 读取文件的每行数据将其放回到一个LinkedList中

@@ -1,11 +1,16 @@
 package com.bytegriffin.get4j;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.bytegriffin.get4j.annotation.ListDetail;
+import com.bytegriffin.get4j.annotation.Single;
+import com.bytegriffin.get4j.annotation.Site;
 import com.bytegriffin.get4j.conf.Configuration;
 import com.bytegriffin.get4j.conf.ConfigurationXmlHandler;
 import com.bytegriffin.get4j.conf.Context;
@@ -15,7 +20,9 @@ import com.bytegriffin.get4j.core.SpiderEngine;
 import com.bytegriffin.get4j.fetch.FetchMode;
 import com.bytegriffin.get4j.net.http.HttpProxy;
 import com.bytegriffin.get4j.parse.PageParser;
+import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.MD5Util;
+import com.bytegriffin.get4j.util.StringUtil;
 
 /**
  * 爬虫入口类兼Api<br>
@@ -149,26 +156,26 @@ public class Spider {
 	/**
 	 * 抓取启动器<br>
 	 * firstTime表示爬虫第一次的抓取时间，格式为：2001-10-10 23:29:02，如果firstTime已经过时，爬虫会立刻执行 <br>
-	 * period表示爬虫重复抓取的时间间隔，单位是秒
+	 * interval表示爬虫重复抓取的时间间隔，单位是秒
 	 * @param firstTime
-	 * @param period
+	 * @param interval
 	 * @return
 	 */
-	public Spider timer(String firstTime, Long period) {
+	public Spider timer(String firstTime, Long interval) {
 		seed.setFetchStart(firstTime);
-		if (period != null) {
-			seed.setFetchInterval(String.valueOf(period));
+		if (interval != null) {
+			seed.setFetchInterval(String.valueOf(interval));
 		}
 		return this;
 	}
 
 	/**
 	 * 资源选择器，支持Jsoup原生的选择器（html内容）或Jsonpath（json内容）
-	 * @param selector
+	 * @param resourceSelector
 	 * @return
 	 */
-	public Spider resources(String selector) {
-		seed.setFetchResourceSelectors(selector);
+	public Spider resourceSelector(String resourceSelector) {
+		seed.setFetchResourceSelectors(resourceSelector);
 		return this;
 	}
 
@@ -197,7 +204,7 @@ public class Spider {
 		seed.setFetchHttpProxy(list);
 		return this;
 	}
-	
+
 	/**
 	 * 设置一组代理<br>
 	 * 爬虫会自动检测，如果代理不能用，会立刻停止
@@ -223,11 +230,21 @@ public class Spider {
 
 	/**
 	 * 下载本地路径，默认地址为$path/data/download/${seedname}
+	 * @param disk
+	 * @return
+	 */
+	public Spider downloadDisk(String disk) {
+		seed.setDownloadDisk(disk);
+		return this;
+	}
+
+	/**
+	 * 下载到hdfs路径
 	 * @param path
 	 * @return
 	 */
-	public Spider download(String path) {
-		seed.setDownloadDisk(path);
+	public Spider downloadHdfs(String hdfs) {
+		seed.setDownloadDisk(hdfs);
 		return this;
 	}
 
@@ -238,6 +255,26 @@ public class Spider {
 	 */
 	public Spider parser(PageParser parser) {
 		seed.setParseClassImpl(parser.getClass().getName());
+		return this;
+	}
+	
+	/**
+	 * 自定义页面解析类
+	 * @param className
+	 * @return
+	 */
+	private Spider parser(String className){
+		seed.setParseClassImpl(className);
+		return this;
+	}
+	
+	/**
+	 * 单个页面元素解析内部类，设置了此项就不能设置自定义的解析类了
+	 * @param elementSelector
+	 * @return
+	 */
+	public Spider elementSelectParser(String elementSelector) {
+		seed.setParseElementSelector(elementSelector);
 		return this;
 	}
 
@@ -261,6 +298,115 @@ public class Spider {
 		seed.setStoreLuceneIndex(indexPath);
 		return this;
 	}
+	
+	/**
+	 * 将解析结构保存到hbase数据库中
+	 * @param address
+	 * @return
+	 */
+	public Spider hbase(String address) {
+		seed.setStoreLuceneIndex(address);
+		return this;
+	}
+	
+	/**
+	 * annotation入口，如果不像一项一项设置seed属性，也可以写一个annotation
+	 * @param clazz
+	 * @return
+	 * @throws Exception 
+	 */
+	public Spider annotation(Class<?> clazz) throws Exception{
+		Annotation[] ans = clazz.getDeclaredAnnotations();
+		if(ans == null || ans.length == 0){
+			logger.error("类["+clazz.getName()+"]没有配置任何Annotation。");
+			System.exit(1);
+		}
+		String type = ans[0].annotationType().getSimpleName();
+		if("ListDetail".equalsIgnoreCase(type)){
+			boolean anno = clazz.isAnnotationPresent(ListDetail.class);
+			if(anno){
+				ListDetail seed = (ListDetail) clazz.getAnnotation(ListDetail.class);
+				this.fetchMode(FetchMode.list_detail);
+				this.fetchUrl(seed.url());
+				this.detailSelector(seed.detailSelector());
+				this.totalPages(seed.totolPages());
+				this.thread(seed.thread());
+				this.timer(seed.startTime(), seed.interval());
+				this.sleep(seed.sleep());
+				this.proxy(FileUtil.parseProxyString(seed.proxy()));
+				this.userAgent(seed.userAgent());
+				this.resourceSelector(seed.resourceSelector());
+				this.downloadDisk(seed.downloadDisk());
+				this.downloadHdfs(seed.downloadHdfs());
+				this.javascriptSupport(seed.javascriptSupport());
+				this.jdbc(seed.jdbc());
+				this.lucene(seed.lucene());
+				this.hbase(seed.hbase());
+			}
+		} else if("Site".equalsIgnoreCase(type)){
+			boolean anno = clazz.isAnnotationPresent(Site.class);
+			if(anno){
+				Site seed = (Site) clazz.getAnnotation(Site.class);
+				this.fetchMode(FetchMode.site);
+				this.fetchUrl(seed.url());
+				this.thread(seed.thread());
+				this.timer(seed.startTime(), seed.interval());
+				this.sleep(seed.sleep());
+				this.proxy(FileUtil.parseProxyString(seed.proxy()));
+				this.userAgent(seed.userAgent());
+				this.resourceSelector(seed.resourceSelector());
+				this.downloadDisk(seed.downloadDisk());
+				this.downloadHdfs(seed.downloadHdfs());
+				this.javascriptSupport(seed.javascriptSupport());
+				this.jdbc(seed.jdbc());
+				this.lucene(seed.lucene());
+				this.hbase(seed.hbase());
+				this.elementSelectParser(seed.parser());
+			}
+		} else if("Single".equalsIgnoreCase(type)){
+			boolean anno = clazz.isAnnotationPresent(Single.class);
+			if(anno){
+				Single seed = (Single) clazz.getAnnotation(Single.class);
+				this.fetchMode(FetchMode.single);
+				this.fetchUrl(seed.url());
+				this.thread(seed.thread());
+				this.timer(seed.startTime(), seed.interval());
+				this.sleep(seed.sleep());
+				this.proxy(FileUtil.parseProxyString(seed.proxy()));
+				this.userAgent(seed.userAgent());
+				this.resourceSelector(seed.resourceSelector());
+				this.downloadDisk(seed.downloadDisk());
+				this.downloadHdfs(seed.downloadHdfs());
+				this.javascriptSupport(seed.javascriptSupport());
+				this.jdbc(seed.jdbc());
+				this.lucene(seed.lucene());
+				this.hbase(seed.hbase());
+			}
+		} else if("Cascade".equalsIgnoreCase(type)){
+			boolean anno = clazz.isAnnotationPresent(Site.class);
+			if(anno){//有两个Seed类，一个是annotation，一个是实体类
+				Site seed = (Site) clazz.getAnnotation(Site.class);
+				this.fetchMode(FetchMode.cascade);
+				this.fetchUrl(seed.url());
+				this.thread(seed.thread());
+				this.timer(seed.startTime(), seed.interval());
+				this.sleep(seed.sleep());
+				this.proxy(FileUtil.parseProxyString(seed.proxy()));
+				this.userAgent(seed.userAgent());
+				this.resourceSelector(seed.resourceSelector());
+				this.downloadDisk(seed.downloadDisk());
+				this.downloadHdfs(seed.downloadHdfs());
+				this.javascriptSupport(seed.javascriptSupport());
+				this.jdbc(seed.jdbc());
+				this.lucene(seed.lucene());
+				this.hbase(seed.hbase());
+			}
+		}
+
+		this.parser((PageParser) clazz.newInstance());
+		
+		return this;
+	}
 
 	/**
 	 * 创建爬虫
@@ -276,8 +422,13 @@ public class Spider {
 
 	/**
 	 * 爬虫开启运行
+	 * 检查Api设置是否设置正确，否则启动失败
 	 */
 	public void start(){
+		if(StringUtil.isNullOrBlank(seed.getFetchUrl())){
+			logger.error("没有配置要抓取的url。");
+			System.exit(1);
+		}
 		SpiderEngine.create().setSeed(seed).build();
 	}
 

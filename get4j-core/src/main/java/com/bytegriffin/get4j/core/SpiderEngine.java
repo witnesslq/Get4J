@@ -192,7 +192,8 @@ public class SpiderEngine {
 				AutoDelegateParser dp = new AutoDelegateParser();
 				chain.addProcess(dp);
 				dp.init(seed);
-				subProcess.append("-CustomPageParser");
+				int index = seed.getParseClassImpl().lastIndexOf(".") + 1;
+				subProcess.append("-"+seed.getParseClassImpl().substring(index));
 			} else if (!StringUtil.isNullOrBlank(seed.getParseElementSelector())) {
 				AutoDelegateParser dp = new AutoDelegateParser();
 				chain.addProcess(dp);
@@ -225,9 +226,9 @@ public class SpiderEngine {
 			if (chain.list.size() > 0) {
 				// 缓存每个site的工作流程
 				Constants.CHAIN_CACHE.put(seed.getSeedName(), chain);
-				logger.info("site[" + seed.getSeedName() + "]流程[" + subProcess.toString() + "]设置完成。");
+				logger.info("种子[" + seed.getSeedName() + "]流程[" + subProcess.toString() + "]设置完成。");
 			} else {
-				logger.error("site[" + seed.getSeedName() + "]流程设置失败，没有任何子流程加入，请检查配置文件。");
+				logger.error("种子[" + seed.getSeedName() + "]流程设置失败，没有任何子流程加入，请检查配置文件。");
 				System.exit(1);
 			}
 		}
@@ -255,7 +256,7 @@ public class SpiderEngine {
 			String starttime = seed.getFetchStart();
 			JobController job = new JobController(seed.getSeedName(), seed.getThreadNumber());
 			Timer timer = new Timer();
-			if (StringUtil.isNullOrBlank(interval) && StringUtil.isNullOrBlank(starttime)) {
+			if (StringUtil.isNullOrBlank(starttime)) {
 				logger.info("爬虫开始抓取[" + seed.getSeedName() + "]。。。");
 				timer.schedule(job, 0l);
 			} else if (StringUtil.isNullOrBlank(interval) || interval.equals("0")) {
