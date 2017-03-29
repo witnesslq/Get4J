@@ -8,7 +8,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,8 +32,8 @@ public final class FileUtil {
 	 * 
 	 * @return
 	 */
-	public static LinkedList<String> readUserAgent(String userAgentFile) {
-		LinkedList<String> list = readFileLine(userAgentFile);
+	public static List<String> readUserAgentFile(String userAgentFile) {
+		List<String> list = readFileLine(userAgentFile);
 		return list;
 	}
 
@@ -65,9 +66,9 @@ public final class FileUtil {
 	 * 
 	 * @return
 	 */
-	public static LinkedList<HttpProxy> readHttpProxy(String httpProxyFile) {
-		LinkedList<String> list = readFileLine(httpProxyFile);
-		LinkedList<HttpProxy> newList = new LinkedList<HttpProxy>();
+	public static List<HttpProxy> readHttpProxyFile(String httpProxyFile) {
+		List<String> list = readFileLine(httpProxyFile);
+		List<HttpProxy> newList = new ArrayList<HttpProxy>();
 		for (String str : list) {
 			HttpProxy hp = null;
 			if (StringUtil.isNullOrBlank(str)) {
@@ -92,37 +93,35 @@ public final class FileUtil {
 	/**
 	 * 将Proxy字符串解析成代理对象
 	 * 
-	 * @param str
+	 * @param proxyString
 	 * @return
 	 */
-	public static LinkedList<HttpProxy> parseProxyString(String str) {
+	public static HttpProxy formatProxy(String proxyString) {
 		HttpProxy hp = null;
-		LinkedList<HttpProxy> newList = new LinkedList<HttpProxy>();
-		if (StringUtil.isNullOrBlank(str)) {
-			return newList;
-		} else if (str.contains("@")) {
-			String[] array = str.split("@");
+		if (StringUtil.isNullOrBlank(proxyString)) {
+			return hp;
+		} else if (proxyString.contains("@")) {
+			String[] array = proxyString.split("@");
 			String[] front = array[0].split(":");
 			String[] end = array[1].split(":");
 			hp = new HttpProxy(front[0], front[1], end[0], end[1]);
-		} else if (str.contains(":")) {
+		} else if (proxyString.contains(":")) {
 			// 可能是没有IP，只有port
-			String[] front = str.split(":");
+			String[] front = proxyString.split(":");
 			hp = new HttpProxy(front[0], front[1]);
 		} else {
-			hp = new HttpProxy(str);
+			hp = new HttpProxy(proxyString);
 		}
-		newList.add(hp);
-		return newList;
+		return hp;
 	}
 
 	/**
-	 * 读取文件的每行数据将其放回到一个LinkedList中
+	 * 读取文件的每行数据将其放回到一个ArrayList中
 	 * 
 	 * @param configFile
 	 * @return
 	 */
-	private static LinkedList<String> readFileLine(String configFile) {
+	private static List<String> readFileLine(String configFile) {
 		configFile = getAbsolutePath(configFile);
 		boolean flag = FileUtil.isExists(configFile);
 		if (!flag) {
@@ -132,7 +131,7 @@ public final class FileUtil {
 		if (!fc) {
 			return null;
 		}
-		LinkedList<String> result = new LinkedList<String>();
+		List<String> result = new ArrayList<String>();
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(configFile));// 构造一个BufferedReader类来读取文件
 			String s = null;

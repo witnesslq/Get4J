@@ -10,8 +10,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.net.http.HttpEngine;
-import com.bytegriffin.get4j.net.http.HttpProxyLooper;
-import com.bytegriffin.get4j.net.http.UserAgentLooper;
+import com.bytegriffin.get4j.net.http.HttpProxySelector;
+import com.bytegriffin.get4j.net.http.UserAgentSelector;
 import com.bytegriffin.get4j.parse.PageParser;
 import com.gargoylesoftware.htmlunit.WebClient;
 
@@ -28,12 +28,12 @@ public final class Constants {
 	/**
 	 * 全局http_proxy缓存 key:seed_name value: HttpProxyLooper
 	 */
-	public static final Map<String, HttpProxyLooper> HTTP_PROXY_LOOPER_CACHE = new HashMap<String, HttpProxyLooper>();
+	public static final Map<String, HttpProxySelector> HTTP_PROXY_LOOPER_CACHE = new HashMap<String, HttpProxySelector>();
 
 	/**
 	 * 全局user_agent缓存 key:seed_name value: UserAgentLooper
 	 */
-	public static final Map<String, UserAgentLooper> USER_AGENT_LOOPER_CACHE = new HashMap<String, UserAgentLooper>();
+	public static final Map<String, UserAgentSelector> USER_AGENT_LOOPER_CACHE = new HashMap<String, UserAgentSelector>();
 
 	/**
 	 * 全局httpclientbuilder缓存 key:seed_name value: HttpClientBuilder

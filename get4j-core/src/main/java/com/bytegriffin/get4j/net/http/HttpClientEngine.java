@@ -11,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -100,17 +100,17 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 		initHttpAsyncClientBuilder(seed.getSeedName());
 
 		// 2.初始化Http Proxy
-		LinkedList<HttpProxy> httpProxys = seed.getFetchHttpProxy();
+		List<HttpProxy> httpProxys = seed.getFetchHttpProxy();
 		if (httpProxys != null && httpProxys.size() > 0) {
-			HttpProxyLooper hplooper = new HttpProxyLooper();
+			HttpProxySelector hplooper = new HttpProxySelector();
 			hplooper.setQueue(httpProxys);
 			Constants.HTTP_PROXY_LOOPER_CACHE.put(seed.getSeedName(), hplooper);
 		}
 
 		// 3.初始化Http UserAgent
-		LinkedList<String> userAgents = seed.getFetchUserAgent();
+		List<String> userAgents = seed.getFetchUserAgent();
 		if (userAgents != null && userAgents.size() > 0) {
-			UserAgentLooper ualooper = new UserAgentLooper();
+			UserAgentSelector ualooper = new UserAgentSelector();
 			ualooper.setQueue(userAgents);
 			Constants.USER_AGENT_LOOPER_CACHE.put(seed.getSeedName(), ualooper);
 		}
@@ -434,11 +434,11 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 	 * @param site
 	 */
 	private static void setHttpProxy(String seedName) {
-		HttpProxyLooper hpl = Constants.HTTP_PROXY_LOOPER_CACHE.get(seedName);
+		HttpProxySelector hpl = Constants.HTTP_PROXY_LOOPER_CACHE.get(seedName);
 		if (hpl == null) {
 			return;
 		}
-		HttpProxy proxy = hpl.next();
+		HttpProxy proxy = hpl.choice();
 		if (proxy.getHttpHost() != null) {
 			Constants.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setProxy(proxy.getHttpHost());
 		}
@@ -451,13 +451,13 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 	 * 设置User_Agent
 	 */
 	private static void setUserAgent(String seedName) {
-		UserAgentLooper ual = Constants.USER_AGENT_LOOPER_CACHE.get(seedName);
+		UserAgentSelector ual = Constants.USER_AGENT_LOOPER_CACHE.get(seedName);
 		if (ual == null) {
 			return;
 		}
-		String userAgent = ual.next();
+		String userAgent = ual.choice();
 		if (!StringUtil.isNullOrBlank(userAgent)) {
-			Constants.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setUserAgent(ual.next());
+			Constants.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setUserAgent(userAgent);
 		}
 	}
 

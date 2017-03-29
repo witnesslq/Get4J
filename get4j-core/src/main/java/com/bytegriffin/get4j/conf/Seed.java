@@ -70,11 +70,11 @@ public class Seed {
 	/**
 	 * 抓取网站所需的http代理
 	 */
-	private LinkedList<HttpProxy> fetchHttpProxy;
+	private List<HttpProxy> fetchHttpProxy;
 	/**
 	 * 抓取网站所需的User Agent
 	 */
-	private LinkedList<String> fetchUserAgent;
+	private List<String> fetchUserAgent;
 	/**
 	 * 抓取该url站点所需的cookie，更像是人为操作
 	 */
@@ -131,9 +131,9 @@ public class Seed {
 	 * 设置useragent文件 读取user agent文件到内存中
 	 * @param userAgentFile
 	 */
-	public void setFetchUserAgent(String userAgentFile) {
+	public void setFetchUserAgentFile(String userAgentFile) {
 		if(!StringUtil.isNullOrBlank(userAgentFile)){
-			this.fetchUserAgent = FileUtil.readUserAgent(userAgentFile);
+			this.fetchUserAgent = FileUtil.readUserAgentFile(userAgentFile);
 		}
 	}
 
@@ -141,9 +141,9 @@ public class Seed {
 	 * 设置httpproxy文件 读取httpproxy代理文件到内存中
 	 * @param httpProxyFile
 	 */
-	public void setFetchHttpProxy(String httpProxyFile) {
+	public void setFetchHttpProxyFile(String httpProxyFile) {
 		if(!StringUtil.isNullOrBlank(httpProxyFile)){
-			this.fetchHttpProxy =  FileUtil.readHttpProxy(httpProxyFile);
+			this.fetchHttpProxy =  FileUtil.readHttpProxyFile(httpProxyFile);
 		}
 	}
 
@@ -252,18 +252,29 @@ public class Seed {
 		return fetchStart;
 	}
 
-	public void setFetchStart(String fetchStart) {
-		this.fetchStart = fetchStart;
-	}
-
-	public LinkedList<HttpProxy> getFetchHttpProxy() {
+	public List<HttpProxy> getFetchHttpProxy() {
 		return fetchHttpProxy;
 	}
 
-	public LinkedList<String> getFetchUserAgent() {
+	public void setFetchHttpProxy(List<HttpProxy> fetchHttpProxy) {
+		this.fetchHttpProxy = fetchHttpProxy;
+	}
+
+	public List<String> getFetchUserAgent() {
 		return fetchUserAgent;
 	}
 
+	public void setFetchUserAgent(List<String> fetchUserAgent) {
+		this.fetchUserAgent = fetchUserAgent;
+	}
+
+	public void setFetchResourceSelectors(List<String> fetchResourceSelectors) {
+		this.fetchResourceSelectors = fetchResourceSelectors;
+	}
+
+	public void setFetchStart(String fetchStart) {
+		this.fetchStart = fetchStart;
+	}
 
 	public Map<String, String> getFetchCookies() {
 		return fetchCookies;
@@ -336,9 +347,6 @@ public class Seed {
 	}
 	public void setFetchTotalPages(String fetchTotalPages) {
 		this.fetchTotalPages = fetchTotalPages;
-	}
-	public void setFetchHttpProxy(LinkedList<HttpProxy> fetchHttpProxy) {
-		this.fetchHttpProxy = fetchHttpProxy;
 	}
 
 	public void setFetchUserAgent(LinkedList<String> fetchUserAgent) {

@@ -1,6 +1,7 @@
 package com.bytegriffin.get4j;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,8 +16,8 @@ import com.bytegriffin.get4j.conf.ConfigurationXmlHandler;
 import com.bytegriffin.get4j.conf.Context;
 import com.bytegriffin.get4j.conf.CoreSeedsXmlHandler;
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.SpiderEngine;
 import com.bytegriffin.get4j.core.PageMode;
+import com.bytegriffin.get4j.core.SpiderEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.MD5Util;
@@ -186,7 +187,7 @@ public class Spider {
 	 */
 	public Spider proxy(String ip, Integer port) {
 		HttpProxy hp = new HttpProxy(ip, port);
-		LinkedList<HttpProxy> list = new LinkedList<HttpProxy>();
+		List<HttpProxy> list = new ArrayList<HttpProxy>();
 		list.add(hp);
 		seed.setFetchHttpProxy(list);
 		return this;
@@ -198,20 +199,30 @@ public class Spider {
 	 * @param list
 	 * @return
 	 */
-	public Spider proxy(LinkedList<HttpProxy> list) {
+	public Spider proxys(List<HttpProxy> list) {
 		seed.setFetchHttpProxy(list);
 		return this;
 	}
 
 	/**
-	 * 
+	 * 自定义一个UserAgent
 	 * @param userAgent
 	 * @return
 	 */
 	public Spider userAgent(String userAgent) {
-		LinkedList<String> list = new LinkedList<String>();
+		List<String> list = new LinkedList<String>();
 		list.add(userAgent);
 		seed.setFetchUserAgent(list);
+		return this;
+	}
+	
+	/**
+	 * 定义一个列User_Agent
+	 * @param userAgents
+	 * @return
+	 */
+	public Spider userAgents(List<String> userAgents) {
+		seed.setFetchUserAgent(userAgents);
 		return this;
 	}
 
@@ -310,7 +321,8 @@ public class Spider {
 				this.thread(seed.thread());
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
-				this.proxy(FileUtil.parseProxyString(seed.proxy()));
+				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
+				this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
 				this.userAgent(seed.userAgent());
 				this.resourceSelector(seed.resourceSelector());
 				this.downloadDisk(seed.downloadDisk());
@@ -329,7 +341,8 @@ public class Spider {
 				this.thread(seed.thread());
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
-				this.proxy(FileUtil.parseProxyString(seed.proxy()));
+				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
+				this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
 				this.userAgent(seed.userAgent());
 				this.resourceSelector(seed.resourceSelector());
 				this.downloadDisk(seed.downloadDisk());
@@ -349,7 +362,8 @@ public class Spider {
 				this.thread(seed.thread());
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
-				this.proxy(FileUtil.parseProxyString(seed.proxy()));
+				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
+				this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
 				this.userAgent(seed.userAgent());
 				this.resourceSelector(seed.resourceSelector());
 				this.downloadDisk(seed.downloadDisk());
@@ -368,7 +382,8 @@ public class Spider {
 				this.thread(seed.thread());
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
-				this.proxy(FileUtil.parseProxyString(seed.proxy()));
+				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
+				this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
 				this.userAgent(seed.userAgent());
 				this.resourceSelector(seed.resourceSelector());
 				this.downloadDisk(seed.downloadDisk());

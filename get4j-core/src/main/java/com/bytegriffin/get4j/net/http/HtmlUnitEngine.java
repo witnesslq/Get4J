@@ -2,7 +2,7 @@ package com.bytegriffin.get4j.net.http;
 
 import java.net.URL;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -56,17 +56,17 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 		Constants.WEBCLIENT_CACHE.put(seed.getSeedName(), webClient);
 
 		// 2.初始化Http Proxy
-		LinkedList<HttpProxy> httpProxys = seed.getFetchHttpProxy();
+		List<HttpProxy> httpProxys = seed.getFetchHttpProxy();
 		if (httpProxys != null && httpProxys.size() > 0) {
-			HttpProxyLooper hplooper = new HttpProxyLooper();
+			HttpProxySelector hplooper = new HttpProxySelector();
 			hplooper.setQueue(httpProxys);
 			Constants.HTTP_PROXY_LOOPER_CACHE.put(seed.getSeedName(), hplooper);
 		}
 
 		// 3.初始化Http UserAgent
-		LinkedList<String> userAgents = seed.getFetchUserAgent();
+		List<String> userAgents = seed.getFetchUserAgent();
 		if (userAgents != null && userAgents.size() > 0) {
-			UserAgentLooper ualooper = new UserAgentLooper();
+			UserAgentSelector ualooper = new UserAgentSelector();
 			ualooper.setQueue(userAgents);
 			Constants.USER_AGENT_LOOPER_CACHE.put(seed.getSeedName(), ualooper);
 		}
@@ -117,11 +117,11 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 	 * @param site
 	 */
 	private static void setHttpProxy(String siteName, WebClient webClient, WebRequest request) {
-		HttpProxyLooper hpl = Constants.HTTP_PROXY_LOOPER_CACHE.get(siteName);
+		HttpProxySelector hpl = Constants.HTTP_PROXY_LOOPER_CACHE.get(siteName);
 		if (hpl == null) {
 			return;
 		}
-		HttpProxy proxy = hpl.next();
+		HttpProxy proxy = hpl.choice();
 		if (proxy.getHttpHost() != null) {
 			request.setProxyHost(proxy.getIp());
 			request.setProxyPort(Integer.valueOf(proxy.getPort()));
@@ -137,11 +137,11 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 	 * 设置User_Agent
 	 */
 	private static void setUserAgent(String seedName,  WebRequest request) {
-		UserAgentLooper ual = Constants.USER_AGENT_LOOPER_CACHE.get(seedName);
+		UserAgentSelector ual = Constants.USER_AGENT_LOOPER_CACHE.get(seedName);
 		if (ual == null) {
 			return;
 		}
-		String userAgent = ual.next();
+		String userAgent = ual.choice();
 		if(!StringUtil.isNullOrBlank(userAgent)){
 			request.setAdditionalHeader("User-Agent",userAgent);
 		}
