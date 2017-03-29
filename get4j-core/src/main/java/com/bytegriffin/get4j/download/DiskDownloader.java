@@ -74,8 +74,7 @@ public class DiskDownloader implements Process {
 
 		// 5.设置page的资源保存路径属性
 		page.setResourceSavePath(Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName()));
-
-		logger.info("线程[" + Thread.currentThread().getName() + "]下载种子Seed[" + page.getSeedName() + "]完成。");
+		logger.info("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	}
 
 	/**

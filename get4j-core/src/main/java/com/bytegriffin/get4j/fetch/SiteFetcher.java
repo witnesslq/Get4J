@@ -54,7 +54,7 @@ public class SiteFetcher implements Process {
 		HashSet<String> links = UrlAnalyzer.custom(page).sniffSiteLinks();
 		UrlQueue.addUnVisitedLinks(page.getSeedName(), links);
 
-		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子Seed[" + page.getSeedName() + "]多个页面完成。");
+		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	}
 
 }

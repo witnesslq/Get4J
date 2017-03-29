@@ -38,7 +38,7 @@ public class ElementSelectPageParser implements PageParser{
 			}
 			page.setJsonContent(text);
 		}
-		
+		logger.info("线程[" + Thread.currentThread().getName() + "]解析种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	}
 
 }

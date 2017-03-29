@@ -48,7 +48,7 @@ public class SingleFetcher implements Process {
 			
 		}
 
-		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子Seed["+page.getSeedName()+"]单个页面完成。");
+		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	}
 
 }

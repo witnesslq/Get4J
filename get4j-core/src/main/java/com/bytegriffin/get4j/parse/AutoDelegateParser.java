@@ -38,7 +38,7 @@ public class AutoDelegateParser implements Process {
 	public void execute(Page page) {
 		PageParser pp = Constants.PAGE_PARSER_CACHE.get(page.getSeedName());
 		pp.parse(page);
-		logger.info("线程[" + Thread.currentThread().getName() + "]种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]解析页面完成。");
+		logger.info("线程[" + Thread.currentThread().getName() + "]解析种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	}
 
 }

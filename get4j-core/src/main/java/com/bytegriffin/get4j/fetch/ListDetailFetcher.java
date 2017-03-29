@@ -171,7 +171,7 @@ public class ListDetailFetcher implements Process {
 			} else { // Json格式：程序不知道具体哪个字段是title字段
 
 			}
-			
+
 			// 5.将详情页面属性指定为传递对象，当Page类增加新属性后此段代码也需要更新
 			page.setTitle(detailPage.getTitle());
 			page.setAvatar(detailPage.getAvatar());
@@ -187,7 +187,7 @@ public class ListDetailFetcher implements Process {
 			page.setUrl(detailPage.getUrl());
 		}
 
-		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]LIST_DETAIL页面完成。");
+		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	}
 
 }

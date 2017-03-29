@@ -65,7 +65,7 @@ public class DBStorage implements Process {
 			String updateSql = updatesql + buildUpdateSql(page, dbpage.getId());
 			write(dataSource, updateSql);
 		}
-
+		logger.info("线程[" + Thread.currentThread().getName() + "]保存种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	
 	}
 

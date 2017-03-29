@@ -58,16 +58,16 @@ public class CascadeFetcher implements Process {
 		} else { // Json格式
 
 		}
-		
+
 		// 4.嗅探出新访问地址并增加（只增加一次，别的页面的url不管）新的访问链接交给爬虫队列
 		if(getCount() == 0){
 			HashSet<String> links = UrlAnalyzer.custom(page).sniffAllLinks();
 			UrlQueue.addUnVisitedLinks(page.getSeedName(), links);
 			increment();
-			logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]级联页面链接数量是["+UrlQueue.getUnVisitedLink(page.getSeedName()).size()+"]个。");
+			logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]级联抓取链接总数是["+UrlQueue.getUnVisitedLink(page.getSeedName()).size()+"]个。");
 		}
-		
-		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]级联页面完成。");
+
+		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	}
 
 }
