@@ -58,7 +58,7 @@ public class ListDetailFetcher implements Process {
 		String fetchUrl = seed.getFetchUrl();
 		String totalPages = seed.getFetchTotalPages();
 		if (!StringUtil.isNullOrBlank(totalPages) && !isNumeric(totalPages)) {
-			Page page = Constants.HTTP_ENGINE_CACHE.get(seed.getSeedName()).SetContentAndCookies(
+			Page page = Constants.HTTP_ENGINE_CACHE.get(seed.getSeedName()).getPageContent(
 					new Page(seed.getSeedName(), fetchUrl.replace(Constants.FETCH_LIST_URL_VAR_LEFT, "")
 							.replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "")));
 			if (totalPages.contains(Constants.JSON_PATH_PREFIX)) {// json格式
@@ -121,15 +121,10 @@ public class ListDetailFetcher implements Process {
 		List<String> listurls = listLink.get(page.getSeedName());
 		if (listurls.contains(page.getUrl())) {// 访问的是list url
 			// 1.获取并设置列表页Page的HtmlContent或JsonContent属性
-			page = http.SetContentAndCookies(page);
+			page = http.getPageContent(page);
 
 			// 2.设置Page其它属性 （detailSelect要先设置）
 			page.setFetchTime(DateUtil.getCurrentDate());
-			if (page.isHtmlContent()) {// Html格式
-				page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent()));
-			} else { // Json格式：程序不知道具体哪个字段是title字段
-
-			}
 
 			// 3.获取并设置Page的Resource属性
 			FetchResourceSelector resourceselector = Constants.FETCH_RESOURCE_SELECTOR_CACHE.get(page.getSeedName());
@@ -152,7 +147,7 @@ public class ListDetailFetcher implements Process {
 
 			// 1.获取并设置详情页DetailPage的HtmlContent或JsonContent属性
 			Page detailPage = new Page(page.getSeedName(), page.getUrl());
-			detailPage = http.SetContentAndCookies(detailPage);
+			detailPage = http.getPageContent(detailPage);
 
 			// 2.设置Detail Link对应的Avatar资源
 			if (!detailLinkAvatar.isEmpty()) {
@@ -166,11 +161,6 @@ public class ListDetailFetcher implements Process {
 
 			// 4.设置详情页DetailPage其它属性
 			detailPage.setFetchTime(DateUtil.getCurrentDate());
-			if (detailPage.isHtmlContent()) {// Html格式
-				detailPage.setTitle(UrlAnalyzer.getTitle(detailPage.getHtmlContent()));
-			} else { // Json格式：程序不知道具体哪个字段是title字段
-
-			}
 
 			// 5.将详情页面属性指定为传递对象，当Page类增加新属性后此段代码也需要更新
 			page.setTitle(detailPage.getTitle());

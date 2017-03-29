@@ -2,6 +2,7 @@ package com.bytegriffin.get4j.net.http;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.UnknownHostException;
 import java.nio.charset.CodingErrorAction;
@@ -77,7 +78,7 @@ import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.bytegriffin.get4j.util.UrlQueue;
 
-public class HttpClientEngine implements HttpEngine {
+public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 
 	private static final Logger logger = LogManager.getLogger(HttpClientEngine.class);
 	/** 连接超时时间，单位毫秒 **/
@@ -476,11 +477,10 @@ public class HttpClientEngine implements HttpEngine {
 	/**
 	 * 获取并设置page的页面内容（包含Html、Json）
 	 * 注意：有的站点链接是Post操作，只需在浏览器中找到真实link，保证参数完整，Get也可以获取。
-	 * 
 	 * @param page
 	 * @return
 	 */
-	public Page SetContentAndCookies(Page page) {
+	public Page getPageContent(Page page) {
 		CloseableHttpClient httpClient = null;
 		String url = page.getUrl();
 		try {
@@ -489,15 +489,27 @@ public class HttpClientEngine implements HttpEngine {
 			setUserAgent(page.getSeedName());
 			httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
 			HttpGet request = new HttpGet(url);
+			// request.addHeader("Content-Type","application/x-www-form-urlencoded; charset=UTF-8");
 			HttpResponse response = httpClient.execute(request);
 			HttpEntity entity = response.getEntity();
-			String content = EntityUtils.toString(entity, Consts.UTF_8);
-			FrequentAccess.log(page.getSeedName(), url, content, logger);
+
 			String contentType = entity.getContentType().getValue();
+			InputStream[] inputStreams = copyInputStream(entity.getContent());
+			String content = getContentAsString(inputStreams[0], "utf-8");
+			// 设置页面编码
+			page.setCharset(getCharset(contentType, content));
+
+			// 重新设置content编码
+			content = getContentAsString(inputStreams[1], page.getCharset());
+			
+			// 记录站点防止频繁抓取的页面链接
+			frequentAccesslog(page.getSeedName(), url, content, logger);
+	
 			if (isDownloadJsonFile(contentType)) {
 				page.setJsonContent(content);
 			} else if (contentType.contains("text/html") || contentType.contains("text/plain")) {
 				page.setHtmlContent(content);// 注意：有时text/plain这种文本格式里面放的是json字符串，但是有种特殊情况是这个json字符串里也包含html
+				page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent(), page.getCharset()));// json文件中一般不好嗅探titile属性
 			} else { // 不是html也不是json，那么只能是resource的链接了
 				HashSet<String> resources = page.getResources();
 				resources.add(url);

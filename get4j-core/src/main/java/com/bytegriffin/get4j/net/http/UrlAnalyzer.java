@@ -64,8 +64,8 @@ public final class UrlAnalyzer {
 	 * @param html
 	 * @return
 	 */
-	public static String getTitle(String html) {
-		Document document = Jsoup.parse(html);
+	public static String getTitle(String html, String charset) {
+		Document document = Jsoup.parse(html, charset);
 		String title = document.title();
 		return title;
 	}

@@ -46,18 +46,13 @@ public class CascadeFetcher implements Process {
 	@Override
 	public void execute(Page page) {
 		// 1.获取并设置Page的HtmlContent或JsonContent属性、Cookies属性
-		page = http.SetContentAndCookies(page);
+		page = http.getPageContent(page);
 
 		// 2.获取并设置Page的Resource属性
 		UrlAnalyzer.custom(page).sniffAndSetResources();
 
 		// 3.设置Page其它属性
 		page.setFetchTime(DateUtil.getCurrentDate());
-		if (page.isHtmlContent()) {// Html格式
-			page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent()));
-		} else { // Json格式
-
-		}
 
 		// 4.嗅探出新访问地址并增加（只增加一次，别的页面的url不管）新的访问链接交给爬虫队列
 		if(getCount() == 0){

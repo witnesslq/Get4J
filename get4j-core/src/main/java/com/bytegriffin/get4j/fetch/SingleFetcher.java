@@ -35,18 +35,13 @@ public class SingleFetcher implements Process {
 	@Override
 	public void execute(Page page) {
 		// 1.获取并设置Page的HtmlContent或JsonContent属性、Cookies属性
-		page = http.SetContentAndCookies(page);
+		page = http.getPageContent(page);
 		
 		// 2.获取并设置Page的Resource属性
 		UrlAnalyzer.custom(page).sniffAndSetResources();
 
 		// 3.设置Page其它属性
 		page.setFetchTime(DateUtil.getCurrentDate());
-		if(page.isHtmlContent()){// Html格式
-			page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent()));
-		} else { // Json格式：程序不知道具体哪个字段是title字段
-			
-		}
 
 		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	}

@@ -99,16 +99,16 @@ public class SpiderEngine {
 	 * @param seed
 	 */
 	private void buildHttpEngine(Seed seed){
-		HttpEngine probe = null;
+		HttpEngine http = null;
 		if(seed.isFetchJavascriptSupport()){
-			probe = new HtmlUnitEngine();
-			logger.info("启用HttpUnit作为抓取引擎");
+			http = new HtmlUnitEngine();
+			logger.info("启用HtmlUnit作为抓取引擎");
 		} else {
-			probe = new HttpClientEngine();
+			http = new HttpClientEngine();
 			logger.info("启用HttpClient作为抓取引擎");
 		}
 		//1.初始化httpclient部分参数
-		probe.init(seed);
+		http.init(seed);
 		//2.测试代理是否可用
 		List<HttpProxy> hplist = seed.getFetchHttpProxy();
 		if(hplist != null && hplist.size() > 0){
@@ -116,7 +116,7 @@ public class SpiderEngine {
 			LinkedList<HttpProxy> newList = new LinkedList<HttpProxy>();
 			for(HttpProxy httpProxy : hplist){
 				String furl = seed.getFetchUrl().replace(Constants.FETCH_LIST_URL_VAR_LEFT, "").replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "");
-				boolean isReached = probe.testHttpProxy(furl, httpProxy);
+				boolean isReached = http.testHttpProxy(furl, httpProxy);
 				if(isReached){
 					reached_count ++;
 				} else {
@@ -129,7 +129,7 @@ public class SpiderEngine {
 				System.exit(1);
 			}
 		}
-		Constants.HTTP_ENGINE_CACHE.put(seed.getSeedName(), probe);
+		Constants.HTTP_ENGINE_CACHE.put(seed.getSeedName(), http);
 	}
 
 	/**

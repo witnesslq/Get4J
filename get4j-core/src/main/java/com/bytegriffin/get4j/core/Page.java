@@ -48,6 +48,10 @@ public class Page {
 	 */
 	private String url;
 	/**
+	 * 页面编码
+	 */
+	private String charset;
+	/**
 	 * Response的cookie字符串
 	 */
 	private String cookies;
@@ -345,6 +349,14 @@ public class Page {
 
 	public void setCookies(String cookies) {
 		this.cookies = cookies;
+	}
+
+	public String getCharset() {
+		return charset;
+	}
+
+	public void setCharset(String charset) {
+		this.charset = charset;
 	}
 
 }

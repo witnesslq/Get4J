@@ -28,6 +28,6 @@ public interface HttpEngine {
 	 * @param page
 	 * @return
 	 */
-	Page SetContentAndCookies(Page page);
+	Page getPageContent(Page page);
 
 }

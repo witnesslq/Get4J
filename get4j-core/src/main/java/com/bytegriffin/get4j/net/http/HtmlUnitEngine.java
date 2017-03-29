@@ -27,7 +27,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
  * 专门处理Javascript效果的html网页 <br>
  * 但是它每访问一个页面的速度大概是httpclient的4倍左右 <br>
  */
-public class HtmlUnitEngine implements HttpEngine {
+public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 
 	private static final Logger logger = LogManager.getLogger(HtmlUnitEngine.class);
 
@@ -78,6 +78,7 @@ public class HtmlUnitEngine implements HttpEngine {
 		
 		logger.info("Seed[" + seed.getSeedName() + "]的Http引擎HttpUnitEngine的初始化完成。");
 	}
+
 
 	@Override
 	public boolean testHttpProxy(String url, HttpProxy httpProxy) {
@@ -152,7 +153,7 @@ public class HtmlUnitEngine implements HttpEngine {
 	 * @param page
 	 * @return
 	 */
-	public Page SetContentAndCookies(Page page) {
+	public Page getPageContent(Page page) {
 		WebClient webClient = Constants.WEBCLIENT_CACHE.get(page.getSeedName());
 		String url = page.getUrl();
 		HttpClientEngine.sleepTimeout(page.getSeedName());
@@ -163,14 +164,23 @@ public class HtmlUnitEngine implements HttpEngine {
 			HtmlPage htmlpage = webClient.getPage(request);
 			WebResponse response = htmlpage.getWebResponse();
 			String content = response.getContentAsString();
-			FrequentAccess.log(page.getSeedName(), url, content, logger);
 			String contentType = response.getContentType();
+			
+			// 设置页面编码
+			page.setCharset(getCharset(contentType, content));
+			
+			// 重新设置content编码
+			content = getContentAsString(response.getContentAsStream(), page.getCharset());
+			
+			// 记录站点防止频繁抓取的页面链接
+			frequentAccesslog(page.getSeedName(), url, content, logger);
+	
 			if (HttpClientEngine.isDownloadJsonFile(contentType)) {
 				page.setJsonContent(content);
 			} else if (contentType.contains("text/html") || contentType.contains("text/plain")) {
 				page.setHtmlContent(content);
-				//设置Response Cookie
-				page.setCookies(response.getResponseHeaderValue("Set-Cookie"));
+				// 设置title
+				page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent(), page.getCharset()));//json文件中一般不好嗅探titile属性
 			} else { //不是html也不是json，那么只能是resource的链接了
 				HashSet<String> resources = page.getResources();
 				resources.add(url);
