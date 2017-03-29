@@ -27,7 +27,7 @@ public class JobController extends TimerTask {
 		ExecutorService executorService = null;
 		CountDownLatch latch = null;
 		if (threadNum <= 1) {
-			// latch = new CountDownLatch(1);
+			latch = new CountDownLatch(1);
 			executorService = Executors.newSingleThreadExecutor();
 			Worker worker = new Worker(seedName, latch);
 			executorService.execute(worker);
@@ -52,7 +52,9 @@ public class JobController extends TimerTask {
 
 		// 等待所有工作线程执行完毕，再将坏链dump出来
 		try {
-			latch.await();
+			if(latch != null){
+				latch.await();
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
