@@ -6,7 +6,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.bytegriffin.get4j.fetch.FetchMode;
+import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.store.FailUrlStorage;
 
 /**
@@ -34,8 +34,8 @@ public class JobController extends TimerTask {
 		} else {
 			executorService = Executors.newFixedThreadPool(threadNum);
 			long waitThread = 1000;
-			FetchMode fm = Constants.FETCH_MODE_CACHE.get(seedName);
-			if (FetchMode.cascade.equals(fm) || FetchMode.site.equals(fm)) {// 抓取这种类型页面中链接时会比较费时，所以需要将线程等待时间设计的长一些
+			PageMode fm = Constants.FETCH_PAGE_MODE_CACHE.get(seedName);
+			if (PageMode.cascade.equals(fm) || PageMode.site.equals(fm)) {// 抓取这种类型页面中链接时会比较费时，所以需要将线程等待时间设计的长一些
 				waitThread = 3000;
 			}
 			latch = new CountDownLatch(threadNum);

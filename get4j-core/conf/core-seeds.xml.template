@@ -14,9 +14,12 @@
 			<description>非必填项。爬虫工作线程数量，默认值是1。根据url数量来动态分配 </description>
 		</property>
 		<property>
-			<name>fetch.mode</name>
+			<name>fetch.page.mode</name>
 			<value>site</value>
-			<description>必填项。抓取模式：list_detail（列表-详情页面）、single（单个页面)、cascade（单个页面中给出所有的url链接）、site（单个站点，不包含外链）默认值是single。</description>
+			<description>
+				必填项。抓取的页面模型：list_detail（列表-详情页面）、single（单个页面)、cascade（单个页面中给出所有的url链接）、
+				site（单个站点，不包含外链）默认值是single。不同的页面模型会导致爬虫启动的抓取器不同
+			</description>
 		</property>
 		<property>
 			<name>fetch.url</name>

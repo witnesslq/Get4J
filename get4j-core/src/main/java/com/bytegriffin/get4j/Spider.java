@@ -16,7 +16,7 @@ import com.bytegriffin.get4j.conf.Context;
 import com.bytegriffin.get4j.conf.CoreSeedsXmlHandler;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.SpiderEngine;
-import com.bytegriffin.get4j.fetch.FetchMode;
+import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.net.http.HttpProxy;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.MD5Util;
@@ -45,21 +45,22 @@ public class Spider {
 		return this;
 	}
 
+
 	/**
-	 * 抓取模式<br>
-	 * 必填项。list_detail（列表-详情页面）、single（单个页面)、site（单个站点）、cascade（慎用，页面中给出所有的url链接）
+	 * 抓取的页面模型<br>
+	 * 必填项。list_detail（列表-详情页面）、single（单个页面)、site（单个站点）、cascade（单页面上的所有链接）
 	 * 默认值是single。
-	 * @param fetchMode
+	 * @param pageMode
 	 * @return
 	 */
-	public Spider fetchMode(String fetchMode) {
-		seed.setFetchMode(fetchMode);
+	public Spider pageMode(PageMode pageMode) {
+		seed.setPageMode(pageMode);
 		return this;
 	}
 
 	/**
 	 * 设置抓取url <br>
-	 * 必填项。表示要抓取的Url，如果抓取模式fetchMode为list_detail，该值为列表Url，
+	 * 必填项。表示要抓取的Url，如果抓取模式pageMode为list_detail，该值为列表Url，
 	 * 其中可变的页数PageNum需要用大括号{}括起来
 	 * @param fetchUrl
 	 * @return
@@ -125,18 +126,6 @@ public class Spider {
 	 */
 	public Spider sleep(Long timeout) {
 		seed.setFetchSleepTimeout(timeout);
-		return this;
-	}
-
-	/**
-	 * 抓取模型<br>
-	 * 一般包括这几类：single（单个页面，默认值)、list_detail（列表-详情页面）、site（单个站点）、cascade（慎用，页面中给出所有的url链接）
-	 * 当detailSelector为空时，那么程序会判断为single模式，否则认为是list_detail模式，如果要抓取单个站点或者多个外链需要强行设置成site或者cascade模式
-	 * @param fetchMode
-	 * @return
-	 */
-	public Spider fetchMode(FetchMode fetchMode) {
-		seed.setFetchMode(fetchMode);
 		return this;
 	}
 
@@ -314,7 +303,7 @@ public class Spider {
 			boolean anno = clazz.isAnnotationPresent(ListDetail.class);
 			if(anno){
 				ListDetail seed = (ListDetail) clazz.getAnnotation(ListDetail.class);
-				this.fetchMode(FetchMode.list_detail);
+				this.pageMode(PageMode.list_detail);
 				this.fetchUrl(seed.url());
 				this.detailSelector(seed.detailSelector());
 				this.totalPages(seed.totolPages());
@@ -335,7 +324,7 @@ public class Spider {
 			boolean anno = clazz.isAnnotationPresent(Site.class);
 			if(anno){
 				Site seed = (Site) clazz.getAnnotation(Site.class);
-				this.fetchMode(FetchMode.site);
+				this.pageMode(PageMode.site);
 				this.fetchUrl(seed.url());
 				this.thread(seed.thread());
 				this.timer(seed.startTime(), seed.interval());
@@ -355,7 +344,7 @@ public class Spider {
 			boolean anno = clazz.isAnnotationPresent(Single.class);
 			if(anno){
 				Single seed = (Single) clazz.getAnnotation(Single.class);
-				this.fetchMode(FetchMode.single);
+				this.pageMode(PageMode.single);
 				this.fetchUrl(seed.url());
 				this.thread(seed.thread());
 				this.timer(seed.startTime(), seed.interval());
@@ -374,7 +363,7 @@ public class Spider {
 			boolean anno = clazz.isAnnotationPresent(Site.class);
 			if(anno){//有两个Seed类，一个是annotation，一个是实体类
 				Site seed = (Site) clazz.getAnnotation(Site.class);
-				this.fetchMode(FetchMode.cascade);
+				this.pageMode(PageMode.cascade);
 				this.fetchUrl(seed.url());
 				this.thread(seed.thread());
 				this.timer(seed.startTime(), seed.interval());

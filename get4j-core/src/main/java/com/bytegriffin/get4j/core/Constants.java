@@ -7,7 +7,7 @@ import javax.sql.DataSource;
 
 import org.apache.http.impl.client.HttpClientBuilder;
 
-import com.bytegriffin.get4j.fetch.FetchMode;
+import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.HttpProxyLooper;
@@ -45,11 +45,10 @@ public final class Constants {
 	 */
 	public static final Map<String, String> DOWNLOAD_DIR_CACHE = new HashMap<String, String>();
 
-
 	/**
-	 * 全局FetchMode缓存 key:seed_name value: fetch_mode
+	 * 全局PageMode缓存 key:seed_name value: PageMode
 	 */
-	public static final Map<String, FetchMode> FETCH_MODE_CACHE = new HashMap<String, FetchMode>();
+	public static final Map<String, PageMode> FETCH_PAGE_MODE_CACHE = new HashMap<String, PageMode>();
 
 	/**
 	 * 抓取list url的左边可变字符串部分

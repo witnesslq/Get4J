@@ -13,7 +13,7 @@ import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.download.DiskDownloader;
 import com.bytegriffin.get4j.download.HdfsDownloader;
 import com.bytegriffin.get4j.fetch.CascadeFetcher;
-import com.bytegriffin.get4j.fetch.FetchMode;
+import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.fetch.ListDetailFetcher;
 import com.bytegriffin.get4j.fetch.SingleFetcher;
 import com.bytegriffin.get4j.fetch.SiteFetcher;
@@ -152,22 +152,22 @@ public class SpiderEngine {
 
 			//2.设置流程
 			StringBuilder subProcess = new StringBuilder();
-			if (FetchMode.single.equals(seed.getFetchMode())) {
+			if (PageMode.single.equals(seed.getPageMode())) {
 				SingleFetcher fe = new SingleFetcher();
 				fe.init(seed);
 				chain.addProcess(fe);
 				subProcess.append("SingleFetcher");
-			} else if (FetchMode.cascade.equals(seed.getFetchMode())) {
+			} else if (PageMode.cascade.equals(seed.getPageMode())) {
 				CascadeFetcher mu = new CascadeFetcher();
 				mu.init(seed);
 				chain.addProcess(mu);
 				subProcess.append("CascadeFetcher");
-			} else if (FetchMode.site.equals(seed.getFetchMode())) {
+			} else if (PageMode.site.equals(seed.getPageMode())) {
 				SiteFetcher ld = new SiteFetcher();
 				ld.init(seed);
 				chain.addProcess(ld);
 				subProcess.append("SiteFetcher");
-			} else if (FetchMode.list_detail.equals(seed.getFetchMode()) || seed.isListDetailMode()) {//配置文件设置 或者 api设置两种判断
+			} else if (PageMode.list_detail.equals(seed.getPageMode()) || seed.isListDetailMode()) {//配置文件设置 或者 api设置两种判断
 				ListDetailFetcher ld = new ListDetailFetcher();
 				ld.init(seed);
 				chain.addProcess(ld);
@@ -220,12 +220,12 @@ public class SpiderEngine {
 			FailUrlStorage.init(seed);
 			
 			// list_detail 已经在init方法中保存了未访问链接了，因为分页的问题要特殊处理
-			if (!FetchMode.list_detail.equals(seed.getFetchMode())) {
+			if (!PageMode.list_detail.equals(seed.getPageMode())) {
 				// 添加每个seed对应的未访问url
 				UrlQueue.newUnVisitedLink(seedName, seed.getFetchUrl());
 			}
 
-			Constants.FETCH_MODE_CACHE.put(seedName, seed.getFetchMode());
+			Constants.FETCH_PAGE_MODE_CACHE.put(seedName, seed.getPageMode());
 
 			if (chain.list.size() > 0) {
 				// 缓存每个site的工作流程

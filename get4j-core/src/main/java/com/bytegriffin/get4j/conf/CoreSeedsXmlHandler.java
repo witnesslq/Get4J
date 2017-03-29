@@ -63,8 +63,8 @@ public class CoreSeedsXmlHandler extends AbstractConfig{
 					if(!StringUtil.isNullOrBlank(value)){
 						seed.setFetchSleepTimeout(Long.valueOf(value));
 					}
-				} else if (name.equalsIgnoreCase(fetch_mode)) {
-					seed.setFetchMode(value);
+				} else if (name.equalsIgnoreCase(fetch_page_mode)) {
+					seed.setPageMode(value);
 				} else if (name.equalsIgnoreCase(fetch_resource_selector)) {
 					seed.setFetchResourceSelectors(value);
 				} else if (name.equalsIgnoreCase(fetch_javascript_support)) {

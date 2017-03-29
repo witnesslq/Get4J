@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.bytegriffin.get4j.core.Constants;
-import com.bytegriffin.get4j.fetch.FetchMode;
+import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.net.http.HttpClientEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
@@ -30,9 +30,9 @@ public class Seed {
 	 */
 	private int threadNumber = 1;
 	/**
-	 * 抓取模式：list_detail（页面格式）、single（单个页面)、cascade（页面中给出所有的url链接）、site（单个站点）默认值是site
+	 * 页面模型：list_detail（页面格式）、single（单个页面)、cascade（页面中给出所有的url链接）、site（单个站点）默认值是site
 	 */
-	private FetchMode fetchMode;
+	private PageMode pageMode;
 	/**
 	 * 要抓取的Url，如果抓取模式fetch.mode为list_detail，该值为列表Url，
 	 * 将可变的PageNum用大括号括起来，而页面中的PageSize默认该url中的页数自增1来处理。
@@ -149,22 +149,22 @@ public class Seed {
 
 	/**
 	 * 设置抓取模式，默认是site抓取
-	 * @param fetchMode
+	 * @param pageMode
 	 */
-	public void setFetchMode(String fetchMode) {
-		if(!StringUtil.isNullOrBlank(fetchMode)){
-			this.fetchMode = FetchMode.valueOf(fetchMode);
+	public void setPageMode(String pageMode) {
+		if(!StringUtil.isNullOrBlank(pageMode)){
+			this.pageMode = PageMode.valueOf(pageMode);
 			return;
 		} 
 		if(isListDetailMode()){
-			this.fetchMode = FetchMode.list_detail;
+			this.pageMode = PageMode.list_detail;
 		} else {
-			this.fetchMode = FetchMode.single;
+			this.pageMode = PageMode.single;
 		}
 	}
 
 	/**
-	 * 当用户没有设置FetchMode时候
+	 * 当用户没有设置PageMode时候
 	 * 也可以判断当前是否是list_detail模式
 	 * @return
 	 */
@@ -198,7 +198,7 @@ public class Seed {
 	 */
 	public void setFetchUrl(String fetchUrl) {
 		fetchUrl = HttpClientEngine.addUrlSchema(fetchUrl);
-		if (!FetchMode.list_detail.equals(this.fetchMode)){
+		if (!PageMode.list_detail.equals(this.pageMode)){
 			fetchUrl = fetchUrl.replace(Constants.FETCH_LIST_URL_VAR_LEFT, "").replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "");
 		}
 		this.fetchUrl = fetchUrl;
@@ -310,8 +310,8 @@ public class Seed {
 	}
 
 
-	public FetchMode getFetchMode() {
-		return fetchMode;
+	public PageMode getPageMode() {
+		return pageMode;
 	}
 
 	public String getExtractClassImpl() {
@@ -345,8 +345,8 @@ public class Seed {
 		this.fetchUserAgent = fetchUserAgent;
 	}
 
-	public void setFetchMode(FetchMode fetchMode) {
-		this.fetchMode = fetchMode;
+	public void setPageMode(PageMode pageMode) {
+		this.pageMode = pageMode;
 	}
 
 	public String getFetchDetailSelector() {

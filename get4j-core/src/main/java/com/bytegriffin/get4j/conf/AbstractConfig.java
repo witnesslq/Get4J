@@ -32,7 +32,7 @@ public abstract class AbstractConfig {
 
 	/******** xml node name ************/
 	protected static final String woker_thread_number = "worker.thread.number";
-	protected static final String fetch_mode = "fetch.mode";
+	protected static final String fetch_page_mode = "fetch.page.mode";
 	protected static final String fetch_url = "fetch.url";
 	protected static final String fetch_detail_selector = "fetch.detail.selector";
 	protected static final String fetch_total_pages = "fetch.total.pages";
