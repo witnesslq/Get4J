@@ -27,11 +27,11 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
  * 专门处理Javascript效果的html网页 <br>
  * 但是它每访问一个页面的速度大概是httpclient的4倍左右 <br>
  */
-public class HttpUnitEngine implements HttpEngine {
+public class HtmlUnitEngine implements HttpEngine {
 
-	private static final Logger logger = LogManager.getLogger(HttpUnitEngine.class);
+	private static final Logger logger = LogManager.getLogger(HtmlUnitEngine.class);
 
-	public HttpUnitEngine() {
+	public HtmlUnitEngine() {
 	}
 
 	@Override
@@ -163,9 +163,7 @@ public class HttpUnitEngine implements HttpEngine {
 			HtmlPage htmlpage = webClient.getPage(request);
 			WebResponse response = htmlpage.getWebResponse();
 			String content = response.getContentAsString();
-			if (content.contains("刷新太频繁") || content.contains("刷新频繁") || content.contains("频繁访问")) {
-				logger.warn("线程["+Thread.currentThread().getName()+"]种子[" + page.getSeedName() + "]访问[" + url + "]时太过频繁。");
-			}
+			FrequentAccess.log(page.getSeedName(), url, content, logger);
 			String contentType = response.getContentType();
 			if (HttpClientEngine.isDownloadJsonFile(contentType)) {
 				page.setJsonContent(content);

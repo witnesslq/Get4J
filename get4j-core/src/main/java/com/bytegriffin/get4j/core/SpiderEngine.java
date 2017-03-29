@@ -20,7 +20,7 @@ import com.bytegriffin.get4j.fetch.SiteFetcher;
 import com.bytegriffin.get4j.net.http.HttpClientEngine;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
-import com.bytegriffin.get4j.net.http.HttpUnitEngine;
+import com.bytegriffin.get4j.net.http.HtmlUnitEngine;
 import com.bytegriffin.get4j.parse.AutoDelegateParser;
 import com.bytegriffin.get4j.store.DBStorage;
 import com.bytegriffin.get4j.store.FailUrlStorage;
@@ -101,7 +101,7 @@ public class SpiderEngine {
 	private void buildHttpEngine(Seed seed){
 		HttpEngine probe = null;
 		if(seed.isFetchJavascriptSupport()){
-			probe = new HttpUnitEngine();
+			probe = new HtmlUnitEngine();
 			logger.info("启用HttpUnit作为抓取引擎");
 		} else {
 			probe = new HttpClientEngine();

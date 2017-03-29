@@ -80,7 +80,7 @@ import com.bytegriffin.get4j.util.UrlQueue;
 public class HttpClientEngine implements HttpEngine {
 
 	private static final Logger logger = LogManager.getLogger(HttpClientEngine.class);
-	/** 连接超时时间，单位毫秒**/
+	/** 连接超时时间，单位毫秒 **/
 	private final static int conn_timeout = 30000;
 	/** 获取数据的超时时间，单位毫秒。 如果访问一个接口，多少时间内无法返回数据，就直接放弃此次调用。 **/
 	private final static int soket_timeout = 30000;
@@ -95,10 +95,10 @@ public class HttpClientEngine implements HttpEngine {
 
 	@Override
 	public void init(Seed seed) {
-		//1.初始化HttpClientBuilder
+		// 1.初始化HttpClientBuilder
 		initHttpAsyncClientBuilder(seed.getSeedName());
 
-		//2.初始化Http Proxy
+		// 2.初始化Http Proxy
 		LinkedList<HttpProxy> httpProxys = seed.getFetchHttpProxy();
 		if (httpProxys != null && httpProxys.size() > 0) {
 			HttpProxyLooper hplooper = new HttpProxyLooper();
@@ -106,7 +106,7 @@ public class HttpClientEngine implements HttpEngine {
 			Constants.HTTP_PROXY_LOOPER_CACHE.put(seed.getSeedName(), hplooper);
 		}
 
-		//3.初始化Http UserAgent
+		// 3.初始化Http UserAgent
 		LinkedList<String> userAgents = seed.getFetchUserAgent();
 		if (userAgents != null && userAgents.size() > 0) {
 			UserAgentLooper ualooper = new UserAgentLooper();
@@ -114,26 +114,27 @@ public class HttpClientEngine implements HttpEngine {
 			Constants.USER_AGENT_LOOPER_CACHE.put(seed.getSeedName(), ualooper);
 		}
 
-		//4.设置HttpClient请求的间隔时间
-		if(seed.getFetchSleepTimeout() != null){
+		// 4.设置HttpClient请求的间隔时间
+		if (seed.getFetchSleepTimeout() != null) {
 			Constants.FETCH_SLEEP_TIMEOUT_CACHE.put(seed.getSeedName(), seed.getFetchSleepTimeout());
 		}
 		logger.info("Seed[" + seed.getSeedName() + "]的Http引擎HttpClientEngine的初始化完成。");
 	}
-	
+
 	/**
 	 * 设计Http请求间隔时间
+	 * 
 	 * @param seedName
 	 */
-	public static void sleepTimeout(String seedName){
+	public static void sleepTimeout(String seedName) {
 		Long millis = Constants.FETCH_SLEEP_TIMEOUT_CACHE.get(seedName);
-		if(millis == null){
+		if (millis == null) {
 			return;
 		}
 		try {
 			Thread.sleep(millis);
 		} catch (InterruptedException e) {
-			logger.error("HttpClient请求时间间隔时出错：",e);
+			logger.error("HttpClient请求时间间隔时出错：", e);
 		}
 	}
 
@@ -224,13 +225,14 @@ public class HttpClientEngine implements HttpEngine {
 		}
 		httpclient = builder.build();
 		try {
-			RequestConfig config = RequestConfig.custom().setProxy(httpProxy.getHttpHost()).setConnectTimeout(3000).build();
+			RequestConfig config = RequestConfig.custom().setProxy(httpProxy.getHttpHost()).setConnectTimeout(3000)
+					.build();
 			HttpGet httpget = new HttpGet(url);
 			httpget.setConfig(config);
 			HttpResponse response = httpclient.execute(httpget);
-			if(HttpStatus.SC_OK == response.getStatusLine().getStatusCode()){
-			    logger.info("Http代理[" + httpProxy.toString() + "]测试成功。");
-			    return true;
+			if (HttpStatus.SC_OK == response.getStatusLine().getStatusCode()) {
+				logger.info("Http代理[" + httpProxy.toString() + "]测试成功。");
+				return true;
 			} else {
 				logger.info("Http代理[" + httpProxy.toString() + "]测试失败。");
 				return false;
@@ -371,7 +373,8 @@ public class HttpClientEngine implements HttpEngine {
 		// BasicCredentialsProvider();
 		// Create global request configuration
 		RequestConfig defaultRequestConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.DEFAULT)
-				.setSocketTimeout(soket_timeout).setConnectTimeout(conn_timeout).setConnectionRequestTimeout(conn_timeout).setExpectContinueEnabled(true)
+				.setSocketTimeout(soket_timeout).setConnectTimeout(conn_timeout)
+				.setConnectionRequestTimeout(conn_timeout).setExpectContinueEnabled(true)
 				.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
 				.setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC)).build();
 
@@ -379,8 +382,9 @@ public class HttpClientEngine implements HttpEngine {
 
 		// Create an HttpClient with the given custom dependencies and
 		// configuration.
-		HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManager(connManager).setConnectionTimeToLive(1, TimeUnit.DAYS)
-				.setRedirectStrategy(redirectStrategy).setConnectionManagerShared(true).setRetryHandler(retryHandler)
+		HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManager(connManager)
+				.setConnectionTimeToLive(1, TimeUnit.DAYS).setRedirectStrategy(redirectStrategy)
+				.setConnectionManagerShared(true).setRetryHandler(retryHandler)
 				.setDefaultRequestConfig(defaultRequestConfig);
 
 		Constants.HTTP_CLIENT_BUILDER_CACHE.put(siteName, httpClientBuilder);
@@ -451,7 +455,7 @@ public class HttpClientEngine implements HttpEngine {
 			return;
 		}
 		String userAgent = ual.next();
-		if(!StringUtil.isNullOrBlank(userAgent)){
+		if (!StringUtil.isNullOrBlank(userAgent)) {
 			Constants.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setUserAgent(ual.next());
 		}
 	}
@@ -472,6 +476,7 @@ public class HttpClientEngine implements HttpEngine {
 	/**
 	 * 获取并设置page的页面内容（包含Html、Json）
 	 * 注意：有的站点链接是Post操作，只需在浏览器中找到真实link，保证参数完整，Get也可以获取。
+	 * 
 	 * @param page
 	 * @return
 	 */
@@ -485,28 +490,28 @@ public class HttpClientEngine implements HttpEngine {
 			httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
 			HttpGet request = new HttpGet(url);
 			HttpResponse response = httpClient.execute(request);
-			HttpEntity entity = response.getEntity();			
+			HttpEntity entity = response.getEntity();
 			String content = EntityUtils.toString(entity, Consts.UTF_8);
-			if (content.contains("刷新太频繁") || content.contains("刷新频繁") || content.contains("频繁访问") || content.contains("访问频繁")) {
-				logger.warn("线程["+Thread.currentThread().getName()+"]种子[" + page.getSeedName() + "]访问[" + url + "]时太过频繁。");
-			}
+			FrequentAccess.log(page.getSeedName(), url, content, logger);
 			String contentType = entity.getContentType().getValue();
 			if (isDownloadJsonFile(contentType)) {
 				page.setJsonContent(content);
 			} else if (contentType.contains("text/html") || contentType.contains("text/plain")) {
-				page.setHtmlContent(content);//注意：有时text/plain这种文本格式里面放的是json字符串，但是有种特殊情况是这个json字符串里也包含html
-			} else { //不是html也不是json，那么只能是resource的链接了
+				page.setHtmlContent(content);// 注意：有时text/plain这种文本格式里面放的是json字符串，但是有种特殊情况是这个json字符串里也包含html
+			} else { // 不是html也不是json，那么只能是resource的链接了
 				HashSet<String> resources = page.getResources();
 				resources.add(url);
 			}
 			// 设置Response Cookie
 			Header header = response.getLastHeader("Set-Cookie");
-			if(header != null){ 
+			if (header != null) {
 				page.setCookies(header.getValue());
 			}
 		} catch (Exception e) {
 			UrlQueue.newUnVisitedLink(page.getSeedName(), url);
-			logger.error("线程["+Thread.currentThread().getName()+"]种子[" + page.getSeedName() + "]获取链接[" + url + "]内容失败。", e);
+			logger.error(
+					"线程[" + Thread.currentThread().getName() + "]种子[" + page.getSeedName() + "]获取链接[" + url + "]内容失败。",
+					e);
 		} finally {
 			close(httpClient);
 		}
@@ -516,6 +521,7 @@ public class HttpClientEngine implements HttpEngine {
 	/**
 	 * 下载网页中的资源文件（JS/CSS/JPG等）<br>
 	 * 无需调用HttpUnit引擎，因为它已是被解析出来的资源<br>
+	 * 
 	 * @param site
 	 * @return
 	 */
@@ -538,13 +544,14 @@ public class HttpClientEngine implements HttpEngine {
 				byte[] content = EntityUtils.toByteArray(entity);
 				String resourceName = folderName + File.separator;
 				Header header = entity.getContentType();
-				if(header == null){
+				if (header == null) {
 					continue;
 				}
 				String contentType = header.getValue();
 				String suffix = "";
-				if (isDownloadJsonFile(contentType) || contentType.contains("text/html") || contentType.contains("text/plain")) {
-					continue;//如果是页面就直接过滤掉
+				if (isDownloadJsonFile(contentType) || contentType.contains("text/html")
+						|| contentType.contains("text/plain")) {
+					continue;// 如果是页面就直接过滤掉
 				} else if (contentType.contains("svg")) {
 					suffix = "svg";
 				} else if (contentType.contains("icon")) {
@@ -564,7 +571,7 @@ public class HttpClientEngine implements HttpEngine {
 					if (array != null) {
 						suffix = array[1];
 					}
-					if(suffix.contains(";")){
+					if (suffix.contains(";")) {
 						suffix = suffix.substring(0, suffix.indexOf(";"));
 					}
 				}
@@ -581,6 +588,7 @@ public class HttpClientEngine implements HttpEngine {
 	/**
 	 * 下载avatar资源文件<br>
 	 * 无需调用HttpUnit引擎，因为它已是被解析出来的资源<br>
+	 * 
 	 * @param page
 	 */
 	public static void downloadAvatar(Page page) {
@@ -597,13 +605,14 @@ public class HttpClientEngine implements HttpEngine {
 			byte[] content = EntityUtils.toByteArray(entity);
 			String resourceName = folderName + File.separator;
 			Header header = entity.getContentType();
-			if(header == null){
+			if (header == null) {
 				return;
 			}
 			String contentType = header.getValue();
 			String suffix = "";
-			if (isDownloadJsonFile(contentType) || contentType.contains("text/html") || contentType.contains("text/plain")) {
-				return;//如果是页面就直接过滤掉
+			if (isDownloadJsonFile(contentType) || contentType.contains("text/html")
+					|| contentType.contains("text/plain")) {
+				return;// 如果是页面就直接过滤掉
 			} else if (contentType.contains("svg")) {
 				suffix = "svg";
 			} else if (contentType.contains("icon")) {
@@ -623,7 +632,7 @@ public class HttpClientEngine implements HttpEngine {
 				if (array != null) {
 					suffix = array[1];
 				}
-				if(suffix.contains(";")){
+				if (suffix.contains(";")) {
 					suffix = suffix.substring(0, suffix.indexOf(";"));
 				}
 			}
