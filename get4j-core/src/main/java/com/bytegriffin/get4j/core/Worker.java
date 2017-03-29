@@ -1,5 +1,7 @@
 package com.bytegriffin.get4j.core;
 
+import java.util.concurrent.CountDownLatch;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,12 +16,12 @@ public class Worker implements Runnable {
 
 	private static final Logger logger = LogManager.getLogger(Worker.class);
 
-	private ConcurrentQueue<String> urlQueue;
 	private String seedName;
+	private CountDownLatch latch;
 
-	public Worker(String seedName, ConcurrentQueue<String> urlQueue) {
+	public Worker(String seedName, CountDownLatch latch) {
 		this.seedName = seedName;
-		this.urlQueue = urlQueue;
+		this.latch = latch;
 	}
 
 	@Override
@@ -27,20 +29,21 @@ public class Worker implements Runnable {
 		if (StringUtil.isNullOrBlank(seedName)) {
 			return;
 		}
-
+		Chain chain = Constants.CHAIN_CACHE.get(seedName);
+		ConcurrentQueue<String> urlQueue = UrlQueue.getUnVisitedLink(seedName);
+		logger.info("线程[" + Thread.currentThread().getName() + "]开始执行任务[" + seedName + "]。。。");
 		while (urlQueue != null && !urlQueue.isEmpty()) {
-			logger.info("线程[" + Thread.currentThread().getName() + "]开始执行任务[" + seedName + "]。。。");
+			
 			Object obj = urlQueue.outFirst();
 			if (obj == null) {
 				break;
 			}
 			String url = obj.toString();
-			Chain chain = Constants.CHAIN_CACHE.get(seedName);
 			chain.execute(new Page(seedName, url));
 			UrlQueue.newVisitedLink(seedName, url);
-			logger.info("线程[" + Thread.currentThread().getName() + "]完成任务[" + seedName + "]。。。");
 		}
-
+		logger.info("线程[" + Thread.currentThread().getName() + "]完成任务[" + seedName + "]。。。");
+		latch.countDown();
 	}
 
 }

@@ -314,7 +314,7 @@ public final class UrlAnalyzer {
 
 	/**
 	 * 使list页面中的avatar资源与detail link一一映射
-	 * @return
+	 * @return map key：detail_link value：avatar_link
 	 */
 	public Map<String, String> mappingDetailLinkAndAvatar(){
 		String detailSelect = Constants.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());

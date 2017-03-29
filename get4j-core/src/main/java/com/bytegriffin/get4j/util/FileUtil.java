@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 
@@ -86,9 +88,10 @@ public final class FileUtil {
 		}
 		return newList;
 	}
-	
+
 	/**
 	 * 将Proxy字符串解析成代理对象
+	 * 
 	 * @param str
 	 * @return
 	 */
@@ -172,6 +175,52 @@ public final class FileUtil {
 	public static boolean isExists(String filename) {
 		File file = new File(filename);
 		return file.exists();
+	}
+
+	/**
+	 * 生成dump文件夹以及dump下的文件
+	 * 
+	 * @param folder
+	 * @param filename
+	 */
+	public static File makeDumpDir(String folder, String filename) {
+		File file = new File(folder);
+		if (!file.exists()) {
+			file.mkdirs();
+		}
+		File dumpfile = new File(folder + filename);
+		if (!dumpfile.exists()) {
+			try {
+				dumpfile.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return dumpfile;
+	}
+
+	/**
+	 * 追加内容
+	 * @param file
+	 * @param content
+	 */
+	public static void append(File file, String content) {
+		FileWriter fw = null;
+		try {
+			fw = new FileWriter(file, true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		PrintWriter pw = new PrintWriter(fw);
+		pw.println(content);
+		pw.flush();
+		try {
+			fw.flush();
+			pw.close();
+			fw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -315,10 +364,11 @@ public final class FileUtil {
 		}
 		return newUrl;
 	}
-	
+
 	/**
 	 * 下载的资源命名规则：与页面命名类似，不同的是url后跟的参数全部删除掉，
 	 * 因为大多数页面都是动态，后面加上参数会代表不同的页面，而资源文件则不同，根本不需要
+	 * 
 	 * @param seedName
 	 * @param url
 	 * @param suffix
@@ -337,16 +387,18 @@ public final class FileUtil {
 		}
 
 		// 判断动态url中没有后缀名的自动加上相应的后缀名，有的资源文件没有后缀名，比如css不用写后缀照样也能引用
-		// 注意：资源文件link[href]有时候是xml文件，例如：<link type="application/rss+xml" href="rss"/>
-		// <link type="application/wlwmanifest+xml" href="wlwmanifest.xml"/>，所以要判断xml后缀
+		// 注意：资源文件link[href]有时候是xml文件，例如：<link type="application/rss+xml"
+		// href="rss"/>
+		// <link type="application/wlwmanifest+xml"
+		// href="wlwmanifest.xml"/>，所以要判断xml后缀
 		if (!FetchResourceSelector.isFindResources(newUrl)) {
 			newUrl += "." + suffix;
 		}
 
-		if(newUrl.indexOf("?") != -1){
+		if (newUrl.indexOf("?") != -1) {
 			newUrl = newUrl.substring(0, newUrl.indexOf("?"));
 		}
-		
+
 		// 默认用下划线取代url中的特殊字符
 		newUrl = newUrl.replace("*", "_").replace("<", "_").replace(">", "_").replace("/", "_").replace("\\", "_")
 				.replace("|", "_").replace(":", "_").replace("\"", "_").replace("?", "_");
@@ -375,7 +427,5 @@ public final class FileUtil {
 		}
 		return flag;
 	}
-
-	
 
 }

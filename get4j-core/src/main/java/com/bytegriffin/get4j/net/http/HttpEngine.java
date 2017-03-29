@@ -5,7 +5,7 @@ import com.bytegriffin.get4j.core.Page;
 
 /**
  * Http引擎<br>
- * 目前有两种：HttpClient 和 HttpUnit
+ * 目前有两种：HttpClient 和 HtmlUnit
  */
 public interface HttpEngine {
 

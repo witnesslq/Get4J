@@ -403,7 +403,7 @@ public class Spider {
 	public static Spider create() {
 		// 关闭httpclient中的日志，否则信息打印太多了。
 		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
-		seed = new Seed(MD5Util.uuid());
+		seed = new Seed(MD5Util.generateID());
 		me = new Spider();
 		return me;
 	}

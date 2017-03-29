@@ -9,6 +9,7 @@ import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Constants;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.Process;
+import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.UrlQueue;
@@ -22,10 +23,13 @@ import com.bytegriffin.get4j.util.UrlQueue;
 public class SiteFetcher implements Process {
 
 	private static final Logger logger = LogManager.getLogger(SiteFetcher.class);
+	private HttpEngine http = null;
 
 	@Override
 	public void init(Seed seed) {
-		// 初始化url选择/过滤器缓存
+		// 1.获取相应的http引擎
+		http = Constants.HTTP_ENGINE_CACHE.get(seed.getSeedName());
+		// 2.初始化url选择/过滤器缓存
 		FetchResourceSelector.init(seed);
 		logger.info("Seed[" + seed.getSeedName() + "]的组件SiteFetcher的初始化完成。");
 	}
@@ -33,7 +37,7 @@ public class SiteFetcher implements Process {
 	@Override
 	public void execute(Page page) {
 		// 1.获取并设置Page的HtmlContent或JsonContent属性、Cookies属性
-		page = Constants.HTTPPROBE_CACHE.get(page.getSeedName()).SetContentAndCookies(page);
+		page = http.SetContentAndCookies(page);
 
 		// 2.获取并设置Page的Resource属性
 		UrlAnalyzer.custom(page).sniffAndSetResources();

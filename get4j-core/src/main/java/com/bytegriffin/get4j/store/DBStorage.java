@@ -8,11 +8,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-
 import javax.sql.DataSource;
 
 import org.apache.logging.log4j.LogManager;
@@ -48,13 +44,14 @@ public class DBStorage implements Process {
 		config.setConnectionTestQuery("SELECT 1");
 		HikariDataSource datasource = new HikariDataSource(config);
 		if (datasource.isClosed()) {
-			logger.error("Seed[" + seed.getSeedName() + "]的组件DBStorage没有连接成功。");
+			logger.error("种子[" + seed.getSeedName() + "]的组件DBStorage没有连接成功。");
 			System.exit(1);
 		}
 		Constants.DATASOURCE_CACHE.put(seed.getSeedName(), datasource);
-		logger.info("Seed[" + seed.getSeedName() + "]的组件DBStorage的初始化完成。");
+		logger.info("种子[" + seed.getSeedName() + "]的组件DBStorage的初始化完成。");
 	}
 
+	
 	@Override
 	public void execute(Page page) {
 		DataSource dataSource = Constants.DATASOURCE_CACHE.get(page.getSeedName());
@@ -63,36 +60,13 @@ public class DBStorage implements Process {
 		Page dbpage = readOne(dataSource, page);
 		if (dbpage == null) {
 			String insertSql = insertsql + buildInsertSql(page);
-			List<String> sql = new ArrayList<String>();
-			sql.add(insertSql);
-			writeBatch(dataSource, sql);
+			write(dataSource, insertSql);
 		} else if (page.isRequireUpdate(dbpage)) {
 			String updateSql = updatesql + buildUpdateSql(page, dbpage.getId());
-			List<String> sql = new ArrayList<String>();
-			sql.add(updateSql);
-			writeBatch(dataSource, sql);
+			write(dataSource, updateSql);
 		}
 
-		// 如果有detail页面则启动批量更新
-		HashSet<Page> detailPages = page.getDetailPages();
-		if (detailPages != null && detailPages.size() > 0) {
-			List<String> insertSqls = new ArrayList<String>();
-			List<String> updateSqls = new ArrayList<String>();
-			for (Page detailPage : detailPages) {
-				Page dbDetailPage = readOne(dataSource, detailPage);
-				if (dbDetailPage == null) {
-					insertSqls.add(insertsql + buildInsertSql(detailPage));
-				} else if (detailPage.isRequireUpdate(dbDetailPage)) {
-					updateSqls.add(updatesql + buildUpdateSql(detailPage, dbDetailPage.getId()));
-				}
-			}
-			if (insertSqls.size() > 0) {
-				writeBatch(dataSource, insertSqls);
-			}
-			if (updateSqls.size() > 0) {
-				writeBatch(dataSource, updateSqls);
-			}
-		}
+	
 	}
 
 	/**
@@ -108,7 +82,7 @@ public class DBStorage implements Process {
 		} else {
 			sql += "'" + page.getSiteUrl() + "',";
 		}
-		if (page.getTitle() == null) {//之所以不判断空字符串''，是因为有可能页面本身就是这样
+		if (page.getTitle() == null) {// 之所以不判断空字符串''，是因为有可能页面本身就是这样
 			sql += "" + null + ",";
 		} else {
 			try {
@@ -120,7 +94,7 @@ public class DBStorage implements Process {
 		if (StringUtil.isNullOrBlank(page.getAvatar())) {
 			sql += "" + null + ",";
 		} else {
-			sql += "'" + page.getAvatar().replace("\\", "\\\\") + "',";//windows下的磁盘路径斜杠会被mysql数据库会自动去除
+			sql += "'" + page.getAvatar().replace("\\", "\\\\") + "',";// windows下的磁盘路径斜杠会被mysql数据库会自动去除
 		}
 		if (page.isHtmlContent()) {
 			try {
@@ -237,25 +211,25 @@ public class DBStorage implements Process {
 					if ("ID".equals(column)) {
 						rowData.setId(obj.toString());
 					} else if ("AVATAR".equals(column)) {
-						rowData.setAvatar(obj==null? null : obj.toString());
+						rowData.setAvatar(obj == null ? null : obj.toString());
 					} else if ("COOKIES".equals(column)) {
-						rowData.setCookies(obj==null? null : obj.toString());
+						rowData.setCookies(obj == null ? null : obj.toString());
 					} else if ("SEED_NAME".equals(column)) {
-						rowData.setSeedName(obj==null? null : obj.toString());
+						rowData.setSeedName(obj == null ? null : obj.toString());
 					} else if ("TITLE".equals(column)) {
-						rowData.setTitle(obj==null? null : obj.toString());
+						rowData.setTitle(obj == null ? null : obj.toString());
 					} else if ("SITE_URL".equals(column)) {
-						rowData.setSiteUrl(obj==null? null : obj.toString());
+						rowData.setSiteUrl(obj == null ? null : obj.toString());
 					} else if ("FETCH_CONTENT".equals(column)) {
 						if (page.isHtmlContent()) {
-							rowData.setHtmlContent(obj==null? null : obj.toString());
+							rowData.setHtmlContent(obj == null ? null : obj.toString());
 						} else if (page.isJsonContent()) {
-							rowData.setJsonContent(obj==null? null : obj.toString());
+							rowData.setJsonContent(obj == null ? null : obj.toString());
 						}
 					} else if ("FETCH_TIME".equals(column)) {
-						rowData.setFetchTime(obj==null? null : obj.toString());
+						rowData.setFetchTime(obj == null ? null : obj.toString());
 					} else if ("FETCH_URL".equals(column)) {
-						rowData.setUrl(obj==null? null : obj.toString());
+						rowData.setUrl(obj == null ? null : obj.toString());
 					}
 				}
 			}
@@ -284,10 +258,11 @@ public class DBStorage implements Process {
 
 	/**
 	 * 向数据库中批量写多个数据
+	 * 
 	 * @param dataSource
 	 * @param sqls
 	 */
-	public void writeBatch(DataSource dataSource, List<String> sqls) {
+	public synchronized void write(DataSource dataSource, String sql) {
 		Connection con = null;
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -295,20 +270,18 @@ public class DBStorage implements Process {
 			con = dataSource.getConnection();
 			con.setAutoCommit(false);
 			stmt = con.createStatement();
-			for (String sql : sqls) {
-			    stmt.addBatch(sql);
-			}
+			stmt.addBatch(sql);
 			stmt.executeBatch();
 			con.commit();
 		} catch (SQLException e) {
 			try {
-				if(con != null){
+				if (con != null) {
 					con.rollback();
 				}
 			} catch (SQLException e1) {
 				e1.printStackTrace();
 			}
-			logger.error("不能执行更新sql: " + sqls, e);
+			logger.error("不能执行更新sql: " + sql, e);
 		} finally {
 			try {
 				if (rs != null) {
@@ -324,7 +297,8 @@ public class DBStorage implements Process {
 					con = null;
 				}
 			} catch (SQLException e) {
-				logger.error("Job " + Thread.currentThread().getName() + " cannot to close DB resultset.", e.getCause());
+				logger.error("Job " + Thread.currentThread().getName() + " cannot to close DB resultset.",
+						e.getCause());
 			}
 
 		}

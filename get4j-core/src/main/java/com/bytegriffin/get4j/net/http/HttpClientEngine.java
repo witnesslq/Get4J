@@ -479,7 +479,6 @@ public class HttpClientEngine implements HttpEngine {
 		CloseableHttpClient httpClient = null;
 		String url = page.getUrl();
 		try {
-			logger.info("线程["+Thread.currentThread().getName()+"]种子[" + page.getSeedName() + "]获取并设置page内容的请求url为：["+url+"]");
 			sleepTimeout(page.getSeedName());
 			setHttpProxy(page.getSeedName());
 			setUserAgent(page.getSeedName());

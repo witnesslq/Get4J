@@ -131,5 +131,5 @@ public final class Constants {
 	/**
 	 * 全局Http探针缓存 key:seed_name value: HttpProbe
 	 */
-	public static final Map<String, HttpEngine> HTTPPROBE_CACHE = new HashMap<String, HttpEngine>();
+	public static final Map<String, HttpEngine> HTTP_ENGINE_CACHE = new HashMap<String, HttpEngine>();
 }

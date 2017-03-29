@@ -157,7 +157,6 @@ public class HttpUnitEngine implements HttpEngine {
 		String url = page.getUrl();
 		HttpClientEngine.sleepTimeout(page.getSeedName());
 		try {
-			logger.info("线程["+Thread.currentThread().getName()+"]种子[" + page.getSeedName() + "]获取并设置page内容的请求url为：["+url+"]");
 			WebRequest request = new WebRequest(new URL(url));
 			setHttpProxy(page.getSeedName(), webClient, request);
 			setUserAgent(page.getSeedName(), request);

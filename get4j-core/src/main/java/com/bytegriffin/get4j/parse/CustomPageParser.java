@@ -1,7 +1,5 @@
 package com.bytegriffin.get4j.parse;
 
-import java.util.HashSet;
-
 import com.bytegriffin.get4j.Spider;
 import com.bytegriffin.get4j.annotation.Site;
 import com.bytegriffin.get4j.core.Page;
@@ -14,7 +12,7 @@ public class CustomPageParser implements PageParser{
 
 	@Override
 	public void parse(Page page) {
-		HashSet<Page> sets = page.getDetailPages();
+
 	}
 
 	public static void main(String[] args) throws Exception{

@@ -104,9 +104,9 @@ public final class UrlQueue{
     ConcurrentQueue<String> queue = UrlQueue.UN_VISITED_LINKS.get(seedName);
     if(queue == null){
       queue = new ConcurrentQueue<String>();
+      UrlQueue.UN_VISITED_LINKS.put(seedName, queue);
     }
     queue.add(link);
-    UrlQueue.UN_VISITED_LINKS.put(seedName, queue);
   }
   
   /**
@@ -118,9 +118,9 @@ public final class UrlQueue{
     ConcurrentQueue<String> queue = UrlQueue.UN_VISITED_RESOURCES.get(seedName);
     if(queue == null){
       queue = new ConcurrentQueue<String>();
+      UrlQueue.UN_VISITED_RESOURCES.put(seedName, queue);
     }
     queue.add(resource);
-    UrlQueue.UN_VISITED_RESOURCES.put(seedName, queue);
   }
 
   /**
@@ -132,9 +132,9 @@ public final class UrlQueue{
     ConcurrentQueue<String> queue = UrlQueue.VISITED_LINKS.get(seedName);
     if(queue == null){
       queue = new ConcurrentQueue<String>();
+      UrlQueue.VISITED_LINKS.put(seedName, queue);
     }
     queue.add(link);
-    UrlQueue.VISITED_LINKS.put(seedName, queue);
   }
   
   /**
@@ -146,9 +146,9 @@ public final class UrlQueue{
     ConcurrentQueue<String> queue = UrlQueue.VISITED_RESOURCES.get(seedName);
     if(queue == null){
       queue = new ConcurrentQueue<String>();
+      UrlQueue.VISITED_RESOURCES.put(seedName, queue);
     }
     queue.add(resource);
-    UrlQueue.VISITED_RESOURCES.put(seedName, queue);
   }
 
   /**
@@ -160,9 +160,9 @@ public final class UrlQueue{
     ConcurrentQueue<String> queue = UrlQueue.FAIL_VISITED_URLS.get(seedName);
     if(queue == null){
       queue = new ConcurrentQueue<String>();
+      UrlQueue.FAIL_VISITED_URLS.put(seedName, queue);
     }
     queue.add(failurl);
-    UrlQueue.FAIL_VISITED_URLS.put(seedName, queue);
   }
 
   /**

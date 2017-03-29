@@ -18,11 +18,12 @@ import com.bytegriffin.get4j.fetch.ListDetailFetcher;
 import com.bytegriffin.get4j.fetch.SingleFetcher;
 import com.bytegriffin.get4j.fetch.SiteFetcher;
 import com.bytegriffin.get4j.net.http.HttpClientEngine;
+import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
 import com.bytegriffin.get4j.net.http.HttpUnitEngine;
-import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.parse.AutoDelegateParser;
 import com.bytegriffin.get4j.store.DBStorage;
+import com.bytegriffin.get4j.store.FailUrlStorage;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.bytegriffin.get4j.util.UrlQueue;
@@ -128,7 +129,7 @@ public class SpiderEngine {
 				System.exit(1);
 			}
 		}
-		Constants.HTTPPROBE_CACHE.put(seed.getSeedName(), probe);
+		Constants.HTTP_ENGINE_CACHE.put(seed.getSeedName(), probe);
 	}
 
 	/**
@@ -215,7 +216,10 @@ public class SpiderEngine {
 //				subProcess.append("-LuceneIndexStorage");
 //			}
 
-
+			// 添加坏链接存储功能
+			FailUrlStorage.init(seed);
+			
+			// list_detail 已经在init方法中保存了未访问链接了，因为分页的问题要特殊处理
 			if (!FetchMode.list_detail.equals(seed.getFetchMode())) {
 				// 添加每个seed对应的未访问url
 				UrlQueue.newUnVisitedLink(seedName, seed.getFetchUrl());

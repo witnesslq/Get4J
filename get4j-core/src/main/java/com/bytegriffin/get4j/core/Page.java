@@ -70,7 +70,7 @@ public class Page {
 	/**
 	 * 当启动list_detail抓取模式时，每个列表所对应的详情页
 	 */
-	private HashSet<Page> detailPages = new HashSet<Page>();
+	private HashSet<String> detailLinks = new HashSet<String>();
 
 	/**
 	 * 自定义动态字段
@@ -214,11 +214,13 @@ public class Page {
 		}
 		try {
 			// title中也可能带有单引号之类的特殊字符，所以需要转义处理
-			if (!(this.getTitle() == null ? dbPage.getTitle() == null : URLEncoder.encode(this.getTitle(),"UTF-8").equals(dbPage.getTitle()))) {
+			if (!(this.getTitle() == null ? dbPage.getTitle() == null
+					: URLEncoder.encode(this.getTitle(), "UTF-8").equals(dbPage.getTitle()))) {
 				flag = true;
 			}
-			//html页面首先要解码，因为之前存进去的时候是编码的（为了过滤某些单引号之类的字符串）
-			if (!(this.getHtmlContent() == null ? dbPage.getHtmlContent() == null : URLEncoder.encode(this.getHtmlContent(),"UTF-8").equals(dbPage.getHtmlContent()))) {
+			// html页面首先要解码，因为之前存进去的时候是编码的（为了过滤某些单引号之类的字符串）
+			if (!(this.getHtmlContent() == null ? dbPage.getHtmlContent() == null
+					: URLEncoder.encode(this.getHtmlContent(), "UTF-8").equals(dbPage.getHtmlContent()))) {
 				flag = true;
 			}
 		} catch (UnsupportedEncodingException e) {
@@ -230,10 +232,11 @@ public class Page {
 			flag = true;
 		}
 
-		if (!(this.getCookies() == null ? dbPage.getCookies() == null : this.getCookies().equals(dbPage.getCookies()))) {
+		if (!(this.getCookies() == null ? dbPage.getCookies() == null
+				: this.getCookies().equals(dbPage.getCookies()))) {
 			flag = true;
 		}
-		
+
 		if (!(this.getAvatar() == null ? dbPage.getAvatar() == null : this.getAvatar().equals(dbPage.getAvatar()))) {
 			flag = true;
 		}
@@ -296,15 +299,13 @@ public class Page {
 		this.resources = resources;
 	}
 
-	public HashSet<Page> getDetailPages() {
-		return detailPages;
+	public HashSet<String> getDetailLinks() {
+		return detailLinks;
 	}
 
-	public void setDetailPages(HashSet<Page> detailPages) {
-		this.detailPages = detailPages;
+	public void setDetailLinks(HashSet<String> detailLinks) {
+		this.detailLinks = detailLinks;
 	}
-
-
 
 	public String getFetchTime() {
 		return fetchTime;
