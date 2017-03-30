@@ -8,7 +8,7 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.Process;
 
 public class HdfsDownloader implements Process{
-	
+
 	private static final Logger logger = LogManager.getLogger(HdfsDownloader.class);
 
 	public HdfsDownloader() {

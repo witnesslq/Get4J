@@ -21,7 +21,7 @@ public class TestInnerClass {
 	}
 
 	public static void main(String[] args) throws Exception{
-		Spider.create().annotation(InnerClass.class).start();
+		Spider.annotation(InnerClass.class).start();
 	}
 
 }

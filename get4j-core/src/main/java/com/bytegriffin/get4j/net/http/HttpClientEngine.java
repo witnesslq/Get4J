@@ -24,15 +24,19 @@ import org.apache.http.HeaderElement;
 import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.GzipDecompressingEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.ConnectionConfig;
@@ -197,10 +201,12 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			public void checkClientTrusted(java.security.cert.X509Certificate[] paramArrayOfX509Certificate,
 					String paramString) throws CertificateException {
 			}
+
 			@Override
 			public void checkServerTrusted(java.security.cert.X509Certificate[] paramArrayOfX509Certificate,
 					String paramString) throws CertificateException {
 			}
+
 			@Override
 			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
 				return null;
@@ -230,7 +236,8 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 		httpclient = builder.build();
 		HttpGet httpget = null;
 		try {
-			RequestConfig config = RequestConfig.custom().setProxy(httpProxy.getHttpHost()).setConnectTimeout(3000).build();
+			RequestConfig config = RequestConfig.custom().setProxy(httpProxy.getHttpHost()).setConnectTimeout(3000)
+					.build();
 			httpget = new HttpGet(url);
 			httpget.setConfig(config);
 			HttpResponse response = httpclient.execute(httpget);
@@ -245,7 +252,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			logger.error("Http代理[" + httpProxy.toString() + "]测试出错，请重新检查。");
 			return false;
 		} finally {
-			if(httpget != null){
+			if (httpget != null) {
 				httpget.releaseConnection();
 			}
 			close(httpclient);
@@ -256,7 +263,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 	 * 负责使用连接管理器清空失效连接和过长连接
 	 */
 	public static void closeIdleConnection() {
-		if(connManager != null){
+		if (connManager != null) {
 			// 关闭失效连接
 			connManager.closeExpiredConnections();
 			// 关闭空闲超过30秒的连接
@@ -351,9 +358,8 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
 		DnsResolver dnsResolver = new SystemDefaultDnsResolver();
 		// Create a connection manager with custom configuration.
-		connManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry,
-				connFactory, dnsResolver);
-		
+		connManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry, connFactory, dnsResolver);
+
 		// Create socket configuration
 		SocketConfig socketConfig = SocketConfig.custom().setTcpNoDelay(true).build();
 		// Configure the connection manager to use socket configuration either
@@ -392,8 +398,9 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 		// BasicCredentialsProvider();
 		// Create global request configuration
 		RequestConfig defaultRequestConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.DEFAULT)
-				.setSocketTimeout(soket_timeout).setConnectTimeout(conn_timeout)
-				.setConnectionRequestTimeout(conn_timeout).setExpectContinueEnabled(true)
+				.setRelativeRedirectsAllowed(true).setSocketTimeout(soket_timeout).setConnectTimeout(conn_timeout)
+				.setCircularRedirectsAllowed(true).setConnectionRequestTimeout(conn_timeout)
+				.setExpectContinueEnabled(true)
 				.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
 				.setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC)).build();
 
@@ -401,7 +408,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 		LaxRedirectStrategy redirectStrategy = new LaxRedirectStrategy();
 
 		ConnectionKeepAliveStrategy keepAliveStrategy = new DefaultConnectionKeepAliveStrategy() {
-
 			/**
 			 * 服务器端配置（以tomcat为例）：keepAliveTimeout=60000，表示在60s内内，服务器会一直保持连接状态。
 			 * 也就是说，如果客户端一直请求服务器，且间隔未超过60s，则该连接将一直保持，如果60s内未请求，则超时。
@@ -437,15 +443,43 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			}
 		};
 
+		// gzip请求
+		HttpRequestInterceptor gzipRequestInterceptor = new HttpRequestInterceptor() {
+			public void process(final HttpRequest request, final HttpContext context)
+					throws HttpException, IOException {
+				if (!request.containsHeader("Accept-Encoding")) {
+					request.addHeader("Accept-Encoding", "gzip");
+				}
+			}
+		};
+
+		// gzip解析
+		HttpResponseInterceptor gzipResponseInterceptor = new HttpResponseInterceptor() {
+			public void process(final HttpResponse response, final HttpContext context)
+					throws HttpException, IOException {
+				HttpEntity entity = response.getEntity();
+				Header ceheader = entity.getContentEncoding();
+				if (ceheader != null) {
+					HeaderElement[] codecs = ceheader.getElements();
+					for (int i = 0; i < codecs.length; i++) {
+						if (codecs[i].getName().equalsIgnoreCase("gzip")) {
+							response.setEntity(new GzipDecompressingEntity(response.getEntity()));
+							break;
+						}
+					}
+				}
+			}
+		};
+
 		// Create an HttpClient with the given custom dependencies and
 		// configuration.
 		HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManager(connManager)
+				.addInterceptorFirst(gzipRequestInterceptor).addInterceptorLast(gzipResponseInterceptor)
 				.setConnectionTimeToLive(1, TimeUnit.DAYS).setRedirectStrategy(redirectStrategy)
 				.setConnectionManagerShared(true).setRetryHandler(retryHandler).setKeepAliveStrategy(keepAliveStrategy)
 				.setDefaultRequestConfig(defaultRequestConfig);
 
 		Constants.HTTP_CLIENT_BUILDER_CACHE.put(siteName, httpClientBuilder);
-	
 	}
 
 	/**
@@ -487,7 +521,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
 	/**
 	 * 设置请求中的Http代理
-	 * 
 	 * @param site
 	 */
 	private static void setHttpProxy(String seedName) {
@@ -519,19 +552,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 	}
 
 	/**
-	 * 判断HttpClient下载是否为Json文件
-	 * 
-	 * @param contentType
-	 * @return
-	 */
-	public static boolean isDownloadJsonFile(String contentType) {
-		if (contentType.contains("json") || contentType.contains("JSON") || contentType.contains("Json")) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
 	 * 获取并设置page的页面内容（包含Html、Json）
 	 * 注意：有的站点链接是Post操作，只需在浏览器中找到真实link，保证参数完整，Get也可以获取。
 	 * 
@@ -549,12 +569,20 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
 			request = new HttpGet(url);
 			HttpResponse response = httpClient.execute(request);
+			int statusCode = response.getStatusLine().getStatusCode();
+			boolean isvisit = isVisit(statusCode, page, logger);
+			if(!isvisit){
+				return page;
+			}
 			HttpEntity entity = response.getEntity();
+			if (entity == null) {
+				logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容为空。");
+			}
 			Header ctHeader = entity.getContentType();
 			if (ctHeader != null) {
 				String contentType = ctHeader.getValue();
 				// 转换内容字节
-				byte[] bytes = transfer(entity.getContent());
+				byte[] bytes = EntityUtils.toByteArray(entity);
 				String content = new String(bytes);
 
 				// 设置页面编码
@@ -566,15 +594,8 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 				// 记录站点防止频繁抓取的页面链接
 				frequentAccesslog(page.getSeedName(), url, content, logger);
 
-				if (isDownloadJsonFile(contentType)) {
-					page.setJsonContent(content);
-				} else if (contentType.contains("text/html") || contentType.contains("text/plain")) {
-					page.setHtmlContent(content);// 注意：有时text/plain这种文本格式里面放的是json字符串，但是有种特殊情况是这个json字符串里也包含html
-					page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent(), page.getCharset()));// json文件中一般不好嗅探titile属性
-				} else { // 不是html也不是json，那么只能是resource的链接了
-					HashSet<String> resources = page.getResources();
-					resources.add(url);
-				}
+				// 设置page内容
+				setContent(contentType, content, page);
 			}
 
 			// 设置Response Cookie
@@ -584,10 +605,10 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			}
 		} catch (Exception e) {
 			UrlQueue.newUnVisitedLink(page.getSeedName(), url);
-			logger.error("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]内容失败。", e);
+			logger.error("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+ page.getUrl() + "]内容失败。", e);
 			request.abort();
 		} finally {
-			if(request != null){
+			if (request != null) {
 				request.releaseConnection();
 			}
 		}
@@ -596,7 +617,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
 	/**
 	 * 下载网页中的资源文件（JS/CSS/JPG等）<br>
-	 * 无需调用HttpUnit引擎，因为它已是被解析出来的资源<br>
+	 * 不管HttpEngine是不是HttpClient，都默认使用它下载资源文件，因为当HttpEngine是HtmlUnit时下载速度极其慢。<br>
 	 * 
 	 * @param site
 	 * @return
@@ -617,7 +638,18 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			try {
 				request = new HttpGet(url);
 				HttpResponse response = httpClient.execute(request);
+				int statusCode = response.getStatusLine().getStatusCode();
+				boolean isvisit = isVisit(statusCode, page, logger);
+				if(!isvisit){
+					continue;
+				}
 				HttpEntity entity = response.getEntity();
+				if (entity == null) {
+					EntityUtils.consume(entity);
+					logger.warn("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url["
+							+ page.getUrl() + "]资源内容为空。");
+					return;
+				}
 				byte[] content = EntityUtils.toByteArray(entity);
 				String resourceName = folderName + File.separator;
 				Header header = entity.getContentType();
@@ -655,11 +687,12 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 				resourceName += FileUtil.generateResourceName(page.getSeedName(), url, suffix);
 				FileUtil.writeFileToDisk(resourceName, content);
 			} catch (Exception e) {
-				UrlQueue.newUnVisitedResource(page.getSeedName() , url);
-				logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url["+url+"]资源失败。", e);
+				UrlQueue.newUnVisitedResource(page.getSeedName(), url);
+				logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + url
+						+ "]资源失败。", e);
 				request.isAborted();
 			} finally {
-				if(request != null){
+				if (request != null) {
 					request.releaseConnection();
 				}
 			}
@@ -668,7 +701,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
 	/**
 	 * 下载avatar资源文件<br>
-	 * 无需调用HttpUnit引擎，因为它已是被解析出来的资源<br>
+	 * 不管HttpEngine是不是HttpClient，都默认使用它下载资源文件，因为当HttpEngine是HtmlUnit时下载速度极其慢。<br>
 	 * 
 	 * @param page
 	 */
@@ -683,7 +716,17 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 		try {
 			request = new HttpGet(url);
 			HttpResponse response = httpClient.execute(request);
+			int statusCode = response.getStatusLine().getStatusCode();
+			boolean isvisit = isVisit(statusCode, page, logger);
+			if(!isvisit){
+				return;
+			}
 			HttpEntity entity = response.getEntity();
+			if (entity == null) {
+				EntityUtils.consume(entity);
+				logger.warn("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]资源内容为空。");
+				return;
+			}
 			byte[] content = EntityUtils.toByteArray(entity);
 			String resourceName = folderName + File.separator;
 			Header header = entity.getContentType();
@@ -722,11 +765,12 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			FileUtil.writeFileToDisk(resourceName, content);
 			page.setAvatar(resourceName);
 		} catch (Exception e) {
-			UrlQueue.newUnVisitedResource(page.getSeedName() , url);
-			logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url["+url+"]资源失败。", e);
+			UrlQueue.newUnVisitedResource(page.getSeedName(), url);
+			logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + url
+					+ "]资源失败。", e);
 			request.isAborted();
 		} finally {
-			if(request != null){
+			if (request != null) {
 				request.releaseConnection();
 			}
 		}

@@ -1,7 +1,6 @@
 package com.bytegriffin.get4j.net.http;
 
 import java.net.URL;
-import java.util.HashSet;
 import java.util.List;
 
 import org.apache.http.HttpStatus;
@@ -163,8 +162,19 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 			setUserAgent(page.getSeedName(), request);
 			HtmlPage htmlpage = webClient.getPage(request);
 			WebResponse response = htmlpage.getWebResponse();
+
+			int statusCode = response.getStatusCode();
+			boolean isvisit = isVisit(statusCode, page, logger);
+			if(!isvisit){
+				return page;
+			}
+			
 			String content = response.getContentAsString();
 			String contentType = response.getContentType();
+			if(StringUtil.isNullOrBlank(content)){
+				logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]内容为空。");
+				return page;
+			}
 
 			// 设置页面编码
 			page.setCharset(getCharset(contentType, content));
@@ -174,17 +184,10 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 			
 			// 记录站点防止频繁抓取的页面链接
 			frequentAccesslog(page.getSeedName(), url, content, logger);
-	
-			if (HttpClientEngine.isDownloadJsonFile(contentType)) {
-				page.setJsonContent(content);
-			} else if (contentType.contains("text/html") || contentType.contains("text/plain")) {
-				page.setHtmlContent(content);
-				// 设置title
-				page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent(), page.getCharset()));//json文件中一般不好嗅探titile属性
-			} else { //不是html也不是json，那么只能是resource的链接了
-				HashSet<String> resources = page.getResources();
-				resources.add(url);
-			}
+
+			// 设置page内容
+			setContent(contentType, content, page);
+
 			//设置Response Cookie
 			page.setCookies(response.getResponseHeaderValue("Set-Cookie"));
 

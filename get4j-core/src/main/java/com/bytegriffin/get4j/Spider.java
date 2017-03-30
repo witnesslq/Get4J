@@ -34,6 +34,13 @@ public class Spider {
 	private static Spider me;
 
 	private static Seed seed;
+	
+	private Spider(){
+	}
+	
+	private Spider(PageMode pageMode){
+		pageMode(pageMode);
+	}
 
 	/**
 	 * 设置种子名称<br>
@@ -54,7 +61,7 @@ public class Spider {
 	 * @param pageMode
 	 * @return
 	 */
-	public Spider pageMode(PageMode pageMode) {
+	private Spider pageMode(PageMode pageMode) {
 		seed.setPageMode(pageMode);
 		return this;
 	}
@@ -298,12 +305,21 @@ public class Spider {
 	}
 	
 	/**
-	 * annotation入口，如果不像一项一项设置seed属性，也可以写一个annotation
+	 * annotation入口，如果不想一项一项设置Api，也可以写一个annotation
+	 * annotation类：ListDetail（列表-详情页面）、Single（单个页面，不抓取页面上链接)、Cascade（单个页面，包括所有链接）、Site（单个站点）
 	 * @param clazz
 	 * @return
 	 * @throws Exception 
 	 */
-	public Spider annotation(Class<?> clazz) throws Exception{
+	public static Spider annotation(Class<?> clazz) throws Exception{
+		// 关闭httpclient中的日志，否则信息打印太多了。
+		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+		me = new Spider();
+		seed = new Seed();
+		return me.getAnnotation(clazz);
+	}
+	
+	private Spider getAnnotation(Class<?> clazz){
 		Annotation[] ans = clazz.getDeclaredAnnotations();
 		if(ans == null || ans.length == 0){
 			logger.error("类["+clazz.getName()+"]没有配置任何Annotation。");
@@ -322,7 +338,9 @@ public class Spider {
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
 				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
-				this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+				if(hp != null){
+					this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+				}
 				this.userAgent(seed.userAgent());
 				this.resourceSelector(seed.resourceSelector());
 				this.downloadDisk(seed.downloadDisk());
@@ -342,7 +360,9 @@ public class Spider {
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
 				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
-				this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+				if(hp != null){
+					this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+				}
 				this.userAgent(seed.userAgent());
 				this.resourceSelector(seed.resourceSelector());
 				this.downloadDisk(seed.downloadDisk());
@@ -363,7 +383,9 @@ public class Spider {
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
 				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
-				this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+				if(hp != null){
+					this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+				}
 				this.userAgent(seed.userAgent());
 				this.resourceSelector(seed.resourceSelector());
 				this.downloadDisk(seed.downloadDisk());
@@ -383,7 +405,9 @@ public class Spider {
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
 				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
-				this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+				if(hp != null){
+					this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+				}
 				this.userAgent(seed.userAgent());
 				this.resourceSelector(seed.resourceSelector());
 				this.downloadDisk(seed.downloadDisk());
@@ -394,21 +418,55 @@ public class Spider {
 				this.hbase(seed.hbase());
 			}
 		}
-
 		this.parser(clazz);
-		
 		return this;
 	}
 
 	/**
-	 * 创建爬虫
+	 * 创建针对列表-详情页面格式的爬虫<br>
 	 * @return
 	 */
-	public static Spider create() {
+	public static Spider list_detail() {
 		// 关闭httpclient中的日志，否则信息打印太多了。
 		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
-		seed = new Seed(MD5Util.generateID());
-		me = new Spider();
+		seed = new Seed();
+		me = new Spider(PageMode.list_detail);
+		return me;
+	}
+
+	/**
+	 * 创建针对单个页面（不抓取页面上的链接）的爬虫<br>
+	 * @return
+	 */
+	public static Spider single() {
+		// 关闭httpclient中的日志，否则信息打印太多了。
+		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+		seed = new Seed();
+		me = new Spider(PageMode.single);
+		return me;
+	}
+
+	/**
+	 * 创建针对单页面上（包括所有链接）格式的爬虫<br>
+	 * @return
+	 */
+	public static Spider cascade() {
+		// 关闭httpclient中的日志，否则信息打印太多了。
+		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+		seed = new Seed();
+		me = new Spider(PageMode.cascade);
+		return me;
+	}
+
+	/**
+	 * 创建针对整站（不包括外链）格式的爬虫<br>
+	 * @return
+	 */
+	public static Spider site() {
+		// 关闭httpclient中的日志，否则信息打印太多了。
+		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+		seed = new Seed();
+		me = new Spider(PageMode.site);
 		return me;
 	}
 
@@ -417,8 +475,12 @@ public class Spider {
 	 * 检查Api设置是否设置正确，否则启动失败
 	 */
 	public void start(){
+		// 自动生成seed name
+		if(StringUtil.isNullOrBlank(seed.getSeedName())){
+			seed.setSeedName(MD5Util.generateID());
+		}
 		if(StringUtil.isNullOrBlank(seed.getFetchUrl())){
-			logger.error("没有配置要抓取的url。");
+			logger.error("种子["+seed.getSeedName()+"]没有配置要抓取的url。");
 			System.exit(1);
 		}
 		SpiderEngine.create().setSeed(seed).build();

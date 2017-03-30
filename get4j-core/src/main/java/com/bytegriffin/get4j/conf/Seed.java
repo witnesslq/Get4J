@@ -122,6 +122,9 @@ public class Seed {
 	 * 保存结果到lucene索引中，默认值/data/index/seedName/，绝对路径不用写classpath
 	 */
 	private String storeLuceneIndex;
+	
+	public Seed(){
+	}
 
 	public Seed(String seedName){
 		this.seedName = seedName;

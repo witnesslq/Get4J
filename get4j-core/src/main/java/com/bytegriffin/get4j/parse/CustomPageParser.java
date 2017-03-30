@@ -16,7 +16,7 @@ public class CustomPageParser implements PageParser{
 	}
 
 	public static void main(String[] args) throws Exception{
-		Spider.create().annotation(CustomPageParser.class).start();
+		Spider.annotation(CustomPageParser.class).start();
 	}
 
 }

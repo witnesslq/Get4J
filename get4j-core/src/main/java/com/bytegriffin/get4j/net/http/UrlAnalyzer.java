@@ -147,7 +147,7 @@ public final class UrlAnalyzer {
 			String path = uri.getPath();
 			siteprefix = domain + path.substring(0, path.lastIndexOf("/") + 1);
 		} catch (URISyntaxException e) {
-			logger.error("种子[" + page.getSeedName() + "]在嗅探整站链接提取url前缀时出错：", e);
+			logger.error("线程[" + Thread.currentThread().getName() + "]嗅探种子[" + page.getSeedName() + "]在嗅探整站链接提取url前缀时出错：", e);
 		}
 		if (page.isHtmlContent()) {// html格式会启动jsoup抓取各种资源的src和href
 

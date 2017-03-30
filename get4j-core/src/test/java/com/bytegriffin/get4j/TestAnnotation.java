@@ -5,7 +5,7 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;
 
 // 测试Annotation
-@Site(url="http://www.baidu.com/")
+@Site(url="http://news.baidu.com/", thread=2)
 public class TestAnnotation implements PageParser{
 
 
@@ -16,6 +16,6 @@ public class TestAnnotation implements PageParser{
 	}
 
 	public static void main(String[] args) throws Exception{
-		Spider.create().annotation(TestAnnotation.class).start();
+		Spider.annotation(TestAnnotation.class).start();
 	}
 }
