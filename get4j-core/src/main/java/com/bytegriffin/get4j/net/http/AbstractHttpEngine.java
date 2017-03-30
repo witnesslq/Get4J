@@ -134,7 +134,7 @@ public abstract class AbstractHttpEngine {
 			page.setJsonContent(content);
 		} else if (contentType.contains("text/html") || contentType.contains("text/plain")) {
 			page.setHtmlContent(content);// 注意：有时text/plain这种文本格式里面放的是json字符串，但是有种特殊情况是这个json字符串里也包含html
-			page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent(), page.getCharset()));// json文件中一般不好嗅探titile属性
+			page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent()));// json文件中一般不好嗅探titile属性
 		} else { // 不是html也不是json，那么只能是resource的链接了，xml也是
 			HashSet<String> resources = page.getResources();
 			resources.add(page.getUrl());

@@ -63,8 +63,8 @@ public final class UrlAnalyzer {
 	 * @param html
 	 * @return
 	 */
-	public static String getTitle(String html, String charset) {
-		Document document = Jsoup.parse(html, charset);
+	public static String getTitle(String html) {
+		Document document = Jsoup.parse(html);
 		String title = document.title();
 		return title;
 	}
@@ -155,7 +155,7 @@ public final class UrlAnalyzer {
 			if (StringUtil.isNullOrBlank(content)) {
 				return null;
 			}
-			Document doc = Jsoup.parse(content);
+			Document doc = Jsoup.parse(content, siteUrl);
 			Elements eles = doc.select("a[href], frame[src], iframe[src], area[src]");// a标签、frame标签、iframe标签、map>area标签
 			Elements opteles = doc.select("option[value]");// select_option
 			HashSet<String> href = getAllUrlByElement("href", siteUrl, eles);// a标签
