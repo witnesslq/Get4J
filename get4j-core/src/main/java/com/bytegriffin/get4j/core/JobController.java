@@ -6,7 +6,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.bytegriffin.get4j.core.PageMode;
+import com.bytegriffin.get4j.net.http.HttpClientEngine;
+import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.store.FailUrlStorage;
 
 /**
@@ -61,6 +62,11 @@ public class JobController extends TimerTask {
 		Set<String> seedNameKeys = Constants.CHAIN_CACHE.keySet();
 		for (String seedName : seedNameKeys) {
 			FailUrlStorage.dumpFile(seedName);
+		}
+		// 关闭闲置链接，以便下一次多线程调用
+		HttpEngine he = Constants.HTTP_ENGINE_CACHE.get(seedName);
+		if(he instanceof HttpClientEngine){
+			HttpClientEngine.closeIdleConnection();
 		}
 	}
 

@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -265,10 +264,8 @@ public final class UrlAnalyzer {
 				String siteUrl = page.getUrl();
 				Document doc = Jsoup.parse(page.getHtmlContent());
 				//注意link[href]有时候是xml文件，例如：<link type="application/rss+xml" href="rss"/><link type="application/wlwmanifest+xml" href="wlwmanifest.xml"/>
-				Elements eles = doc
-						.select("link[href], script[src], img[src], embed[src], video[src], audio[src], track[src]");// css、script、img、flv|mp4|mp3|ogg、srt
-				Elements ahref = doc.select("a[href~=(?i)." + FetchResourceSelector.BINARY_FILTERS + "]");// 这个是有具体后缀名的链接集合，例如：<a
-																											// href="xxx.doc/exe/....">
+				Elements eles = doc.select("link[href], script[src], img[src], embed[src], video[src], audio[src], track[src]");// css、script、img、flv|mp4|mp3|ogg、srt
+				Elements ahref = doc.select("a[href~=(?i)." + FetchResourceSelector.BINARY_FILTERS + "]");// 这个是有具体后缀名的链接集合，例如：<a href="xxx.doc/exe/....">
 				HashSet<String> css = getAllUrlByElement("href", siteUrl, eles);
 				HashSet<String> others = getAllUrlByElement("src", siteUrl, eles);
 				HashSet<String> abinary = getAllUrlByElement("href", siteUrl, ahref);
@@ -429,7 +426,6 @@ public final class UrlAnalyzer {
 		}
 		return urls;
 	}
-	
 
 	/**
 	 * 递归遍历Json文件查找出所有http或者https开头的url
@@ -458,13 +454,14 @@ public final class UrlAnalyzer {
 			}
 		}
 		return url;
-
 	}
 
-
 	/**
-	 * 获取某个元素包含的所有url，如果是相对链接将其转换为绝对链接
-	 * @param eleAt   href or src 等
+	 * 获取某个元素包含的所有url，如果是相对链接将其转换为绝对链接<br>
+	 * 注意：有的链接是以data开头的小资源文件不支持抓取（即：二进制数据转换成为Base64的资源文件，直接在页面上引用）
+	 * 例如文字格式：data:text/plain;charset=UTF-8;base64,5L2g5aW977yM5Lit5paH77yB 
+	 * 图片格式：data:image/gif;base64,R0lGODlhAQAcALMAAMXh96HR97XZ98
+	 * @param eleAt href or src 等
 	 * @param siteUrl 
 	 * @param element
 	 * @return
@@ -495,7 +492,6 @@ public final class UrlAnalyzer {
 						urls.add(newurl);
 					}
 				}
-
 			}
 		}
 		return urls;
@@ -532,13 +528,14 @@ public final class UrlAnalyzer {
 	 * @return
 	 */
 	public final static boolean isStartHttpUrl(String url) {
-		Pattern pattern = Pattern
-				.compile("^([hH][tT]{2}[pP]://|[hH][tT]{2}[pP][sS]://)(([A-Za-z0-9-~]+).)+([A-Za-z0-9-~\\/])+$");
-		boolean flag = pattern.matcher(url).matches();
-		return flag;
+		if(url.startsWith("http")){
+			return true;
+		}
+		return false;
 	}
 
 	public static void main(String... args) throws Exception {
+
 		List<String> ha = new ArrayList<String>();
 		ha.add("asdfa");
 		ha.add("333s3dfasd");

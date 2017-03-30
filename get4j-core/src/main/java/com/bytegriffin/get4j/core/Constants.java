@@ -26,14 +26,14 @@ public final class Constants {
 	public static final Map<String, Chain> CHAIN_CACHE = new HashMap<String, Chain>();
 
 	/**
-	 * 全局http_proxy缓存 key:seed_name value: HttpProxyLooper
+	 * 全局http_proxy缓存 key:seed_name value: HttpProxySelector
 	 */
-	public static final Map<String, HttpProxySelector> HTTP_PROXY_LOOPER_CACHE = new HashMap<String, HttpProxySelector>();
+	public static final Map<String, HttpProxySelector> HTTP_PROXY_CACHE = new HashMap<String, HttpProxySelector>();
 
 	/**
 	 * 全局user_agent缓存 key:seed_name value: UserAgentLooper
 	 */
-	public static final Map<String, UserAgentSelector> USER_AGENT_LOOPER_CACHE = new HashMap<String, UserAgentSelector>();
+	public static final Map<String, UserAgentSelector> USER_AGENT_CACHE = new HashMap<String, UserAgentSelector>();
 
 	/**
 	 * 全局httpclientbuilder缓存 key:seed_name value: HttpClientBuilder

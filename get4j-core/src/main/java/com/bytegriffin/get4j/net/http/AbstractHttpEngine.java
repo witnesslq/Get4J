@@ -1,11 +1,11 @@
 package com.bytegriffin.get4j.net.http;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,16 +70,14 @@ public abstract class AbstractHttpEngine {
 		}
 		return sb.toString();
 	}
-
+	
 	/**
-	 * 复制输入流<br>
-	 * 为了获取页面上的charset，需要对页面的inputstream进行两次转码<br>
-	 * 
+	 * 将输入流转换成字节数组
 	 * @param inputStream
 	 * @return
 	 * @throws IOException
 	 */
-	public  InputStream[] copyInputStream(InputStream inputStream) throws IOException {
+	public byte[] transfer(InputStream inputStream) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		byte[] buffer = new byte[1024];
 		int len;
@@ -87,9 +85,8 @@ public abstract class AbstractHttpEngine {
 			baos.write(buffer, 0, len);
 		}
 		baos.flush();
-		InputStream is1 = new ByteArrayInputStream(baos.toByteArray());
-		InputStream is2 = new ByteArrayInputStream(baos.toByteArray());
-		return new InputStream[] { is1, is2 };
+		baos.close();
+		return baos.toByteArray();
 	}
 
 	/**
@@ -117,7 +114,7 @@ public abstract class AbstractHttpEngine {
 			} else if (!eles2.isEmpty() && eles2.get(0) != null) {// 也可以是这种类型：
 				charset = eles2.get(0).attr("charset");
 			} else {// 如果html页面内也没有含Content-Type的meta标签，那就默认为utf-8
-				charset = "utf-8";
+				charset = Charset.defaultCharset().name();
 			}
 
 		}

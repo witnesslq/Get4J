@@ -60,7 +60,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 		if (httpProxys != null && httpProxys.size() > 0) {
 			HttpProxySelector hplooper = new HttpProxySelector();
 			hplooper.setQueue(httpProxys);
-			Constants.HTTP_PROXY_LOOPER_CACHE.put(seed.getSeedName(), hplooper);
+			Constants.HTTP_PROXY_CACHE.put(seed.getSeedName(), hplooper);
 		}
 
 		// 3.初始化Http UserAgent
@@ -68,7 +68,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 		if (userAgents != null && userAgents.size() > 0) {
 			UserAgentSelector ualooper = new UserAgentSelector();
 			ualooper.setQueue(userAgents);
-			Constants.USER_AGENT_LOOPER_CACHE.put(seed.getSeedName(), ualooper);
+			Constants.USER_AGENT_CACHE.put(seed.getSeedName(), ualooper);
 		}
 
 		// 4.设置HttpClient请求的间隔时间
@@ -117,7 +117,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 	 * @param site
 	 */
 	private static void setHttpProxy(String siteName, WebClient webClient, WebRequest request) {
-		HttpProxySelector hpl = Constants.HTTP_PROXY_LOOPER_CACHE.get(siteName);
+		HttpProxySelector hpl = Constants.HTTP_PROXY_CACHE.get(siteName);
 		if (hpl == null) {
 			return;
 		}
@@ -137,7 +137,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 	 * 设置User_Agent
 	 */
 	private static void setUserAgent(String seedName,  WebRequest request) {
-		UserAgentSelector ual = Constants.USER_AGENT_LOOPER_CACHE.get(seedName);
+		UserAgentSelector ual = Constants.USER_AGENT_CACHE.get(seedName);
 		if (ual == null) {
 			return;
 		}
@@ -165,7 +165,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 			WebResponse response = htmlpage.getWebResponse();
 			String content = response.getContentAsString();
 			String contentType = response.getContentType();
-			
+
 			// 设置页面编码
 			page.setCharset(getCharset(contentType, content));
 			
@@ -187,10 +187,11 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 			}
 			//设置Response Cookie
 			page.setCookies(response.getResponseHeaderValue("Set-Cookie"));
+
 		} catch (Exception e) {
 			UrlQueue.newUnVisitedLink(page.getSeedName(), url);
 			logger.error("线程["+Thread.currentThread().getName()+"]种子[" + page.getSeedName() + "]获取链接[" + url + "]内容失败。", e);
-		} 
+		}
 		
 		return page;
 	}

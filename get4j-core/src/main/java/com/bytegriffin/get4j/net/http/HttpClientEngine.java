@@ -2,7 +2,6 @@ package com.bytegriffin.get4j.net.http;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.UnknownHostException;
 import java.nio.charset.CodingErrorAction;
@@ -21,6 +20,8 @@ import javax.net.ssl.X509TrustManager;
 
 import org.apache.http.Consts;
 import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
@@ -40,6 +41,7 @@ import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.DnsResolver;
 import org.apache.http.conn.HttpConnectionFactory;
 import org.apache.http.conn.ManagedHttpClientConnection;
@@ -49,6 +51,7 @@ import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.DefaultHttpResponseFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.LaxRedirectStrategy;
@@ -63,8 +66,10 @@ import org.apache.http.io.HttpMessageParserFactory;
 import org.apache.http.io.HttpMessageWriterFactory;
 import org.apache.http.io.SessionInputBuffer;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.message.BasicLineParser;
 import org.apache.http.message.LineParser;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.CharArrayBuffer;
 import org.apache.http.util.EntityUtils;
@@ -78,21 +83,21 @@ import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.bytegriffin.get4j.util.UrlQueue;
 
-public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
+public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
 	private static final Logger logger = LogManager.getLogger(HttpClientEngine.class);
 	/** 连接超时时间，单位毫秒 **/
 	private final static int conn_timeout = 30000;
 	/** 获取数据的超时时间，单位毫秒。 如果访问一个接口，多少时间内无法返回数据，就直接放弃此次调用。 **/
 	private final static int soket_timeout = 30000;
-	/** 连接池中最大连接数 **/
-	private final static int pool_total_conn = 100;
+	/** 连接池中socket最大连接数上限 **/
+	private final static int pool_total_conn = 400;
 	/** 连接池中每个线程最大连接数 **/
-	private final static int per_route_conn = 10;
+	private final static int per_route_conn = 20;
 	/** 最大重试次数 **/
-	private final static int max_retry_count = 3;
-
-	// private static HttpAsyncClientBuilder httpAsyncClientBuilder = null;
+	private final static int max_retry_count = 5;
+	/** 链接管理器，提取成属性是主要是用于关闭闲置链接 **/
+	private static PoolingHttpClientConnectionManager connManager;
 
 	@Override
 	public void init(Seed seed) {
@@ -104,7 +109,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 		if (httpProxys != null && httpProxys.size() > 0) {
 			HttpProxySelector hplooper = new HttpProxySelector();
 			hplooper.setQueue(httpProxys);
-			Constants.HTTP_PROXY_LOOPER_CACHE.put(seed.getSeedName(), hplooper);
+			Constants.HTTP_PROXY_CACHE.put(seed.getSeedName(), hplooper);
 		}
 
 		// 3.初始化Http UserAgent
@@ -112,7 +117,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 		if (userAgents != null && userAgents.size() > 0) {
 			UserAgentSelector ualooper = new UserAgentSelector();
 			ualooper.setQueue(userAgents);
-			Constants.USER_AGENT_LOOPER_CACHE.put(seed.getSeedName(), ualooper);
+			Constants.USER_AGENT_CACHE.put(seed.getSeedName(), ualooper);
 		}
 
 		// 4.设置HttpClient请求的间隔时间
@@ -192,12 +197,10 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 			public void checkClientTrusted(java.security.cert.X509Certificate[] paramArrayOfX509Certificate,
 					String paramString) throws CertificateException {
 			}
-
 			@Override
 			public void checkServerTrusted(java.security.cert.X509Certificate[] paramArrayOfX509Certificate,
 					String paramString) throws CertificateException {
 			}
-
 			@Override
 			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
 				return null;
@@ -225,10 +228,10 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 			builder.setDefaultCredentialsProvider(httpProxy.getCredsProvider());
 		}
 		httpclient = builder.build();
+		HttpGet httpget = null;
 		try {
-			RequestConfig config = RequestConfig.custom().setProxy(httpProxy.getHttpHost()).setConnectTimeout(3000)
-					.build();
-			HttpGet httpget = new HttpGet(url);
+			RequestConfig config = RequestConfig.custom().setProxy(httpProxy.getHttpHost()).setConnectTimeout(3000).build();
+			httpget = new HttpGet(url);
 			httpget.setConfig(config);
 			HttpResponse response = httpclient.execute(httpget);
 			if (HttpStatus.SC_OK == response.getStatusLine().getStatusCode()) {
@@ -242,7 +245,22 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 			logger.error("Http代理[" + httpProxy.toString() + "]测试出错，请重新检查。");
 			return false;
 		} finally {
+			if(httpget != null){
+				httpget.releaseConnection();
+			}
 			close(httpclient);
+		}
+	}
+
+	/**
+	 * 负责使用连接管理器清空失效连接和过长连接
+	 */
+	public static void closeIdleConnection() {
+		if(connManager != null){
+			// 关闭失效连接
+			connManager.closeExpiredConnections();
+			// 关闭空闲超过30秒的连接
+			connManager.closeIdleConnections(30, TimeUnit.SECONDS);
 		}
 	}
 
@@ -333,9 +351,9 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 
 		DnsResolver dnsResolver = new SystemDefaultDnsResolver();
 		// Create a connection manager with custom configuration.
-		PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry,
+		connManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry,
 				connFactory, dnsResolver);
-
+		
 		// Create socket configuration
 		SocketConfig socketConfig = SocketConfig.custom().setTcpNoDelay(true).build();
 		// Configure the connection manager to use socket configuration either
@@ -379,16 +397,55 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 				.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
 				.setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC)).build();
 
+		// 处理301：永久重定向 302、303、307
 		LaxRedirectStrategy redirectStrategy = new LaxRedirectStrategy();
+
+		ConnectionKeepAliveStrategy keepAliveStrategy = new DefaultConnectionKeepAliveStrategy() {
+
+			/**
+			 * 服务器端配置（以tomcat为例）：keepAliveTimeout=60000，表示在60s内内，服务器会一直保持连接状态。
+			 * 也就是说，如果客户端一直请求服务器，且间隔未超过60s，则该连接将一直保持，如果60s内未请求，则超时。
+			 * 
+			 * getKeepAliveDuration返回超时时间；
+			 */
+			@Override
+			public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+
+				// 如果服务器指定了超时时间，则以服务器的超时时间为准
+				HeaderElementIterator it = new BasicHeaderElementIterator(
+						response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+				while (it.hasNext()) {
+					HeaderElement he = it.nextElement();
+					String param = he.getName();
+					String value = he.getValue();
+					if (value != null && param.equalsIgnoreCase("timeout")) {
+						try {// 服务器指定时间
+							return Long.parseLong(value) * 1000;
+						} catch (NumberFormatException ignore) {
+							ignore.printStackTrace();
+						}
+					}
+				}
+
+				long keepAlive = super.getKeepAliveDuration(response, context);
+
+				// 如果服务器未指定超时时间，则客户端默认30s超时
+				if (keepAlive == -1) {
+					keepAlive = 30 * 1000;
+				}
+				return keepAlive;
+			}
+		};
 
 		// Create an HttpClient with the given custom dependencies and
 		// configuration.
 		HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManager(connManager)
 				.setConnectionTimeToLive(1, TimeUnit.DAYS).setRedirectStrategy(redirectStrategy)
-				.setConnectionManagerShared(true).setRetryHandler(retryHandler)
+				.setConnectionManagerShared(true).setRetryHandler(retryHandler).setKeepAliveStrategy(keepAliveStrategy)
 				.setDefaultRequestConfig(defaultRequestConfig);
 
 		Constants.HTTP_CLIENT_BUILDER_CACHE.put(siteName, httpClientBuilder);
+	
 	}
 
 	/**
@@ -434,7 +491,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 	 * @param site
 	 */
 	private static void setHttpProxy(String seedName) {
-		HttpProxySelector hpl = Constants.HTTP_PROXY_LOOPER_CACHE.get(seedName);
+		HttpProxySelector hpl = Constants.HTTP_PROXY_CACHE.get(seedName);
 		if (hpl == null) {
 			return;
 		}
@@ -451,7 +508,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 	 * 设置User_Agent
 	 */
 	private static void setUserAgent(String seedName) {
-		UserAgentSelector ual = Constants.USER_AGENT_LOOPER_CACHE.get(seedName);
+		UserAgentSelector ual = Constants.USER_AGENT_CACHE.get(seedName);
 		if (ual == null) {
 			return;
 		}
@@ -477,35 +534,38 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 	/**
 	 * 获取并设置page的页面内容（包含Html、Json）
 	 * 注意：有的站点链接是Post操作，只需在浏览器中找到真实link，保证参数完整，Get也可以获取。
+	 * 
 	 * @param page
 	 * @return
 	 */
 	public Page getPageContent(Page page) {
 		CloseableHttpClient httpClient = null;
 		String url = page.getUrl();
+		HttpGet request = null;
 		try {
 			sleepTimeout(page.getSeedName());
 			setHttpProxy(page.getSeedName());
 			setUserAgent(page.getSeedName());
 			httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
-			HttpGet request = new HttpGet(url);
-			// request.addHeader("Content-Type","application/x-www-form-urlencoded; charset=UTF-8");
+			request = new HttpGet(url);
 			HttpResponse response = httpClient.execute(request);
 			HttpEntity entity = response.getEntity();
 			Header ctHeader = entity.getContentType();
-			if(ctHeader != null){
+			if (ctHeader != null) {
 				String contentType = ctHeader.getValue();
-				InputStream[] inputStreams = copyInputStream(entity.getContent());
-				String content = getContentAsString(inputStreams[0], "utf-8");
+				// 转换内容字节
+				byte[] bytes = transfer(entity.getContent());
+				String content = new String(bytes);
+
 				// 设置页面编码
 				page.setCharset(getCharset(contentType, content));
 
 				// 重新设置content编码
-				content = getContentAsString(inputStreams[1], page.getCharset());
-				
+				content = new String(bytes, page.getCharset());
+
 				// 记录站点防止频繁抓取的页面链接
 				frequentAccesslog(page.getSeedName(), url, content, logger);
-		
+
 				if (isDownloadJsonFile(contentType)) {
 					page.setJsonContent(content);
 				} else if (contentType.contains("text/html") || contentType.contains("text/plain")) {
@@ -516,7 +576,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 					resources.add(url);
 				}
 			}
-			
+
 			// 设置Response Cookie
 			Header header = response.getLastHeader("Set-Cookie");
 			if (header != null) {
@@ -524,11 +584,12 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 			}
 		} catch (Exception e) {
 			UrlQueue.newUnVisitedLink(page.getSeedName(), url);
-			logger.error(
-					"线程[" + Thread.currentThread().getName() + "]种子[" + page.getSeedName() + "]获取链接[" + url + "]内容失败。",
-					e);
+			logger.error("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]内容失败。", e);
+			request.abort();
 		} finally {
-			close(httpClient);
+			if(request != null){
+				request.releaseConnection();
+			}
 		}
 		return page;
 	}
@@ -552,8 +613,9 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 		setUserAgent(page.getSeedName());
 		CloseableHttpClient httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
 		for (String url : resources) {
+			HttpGet request = null;
 			try {
-				HttpGet request = new HttpGet(url);
+				request = new HttpGet(url);
 				HttpResponse response = httpClient.execute(request);
 				HttpEntity entity = response.getEntity();
 				byte[] content = EntityUtils.toByteArray(entity);
@@ -593,9 +655,13 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 				resourceName += FileUtil.generateResourceName(page.getSeedName(), url, suffix);
 				FileUtil.writeFileToDisk(resourceName, content);
 			} catch (Exception e) {
-				logger.error("Seed[" + page.getSeedName() + "]连接[" + url + "]失败。", e);
+				UrlQueue.newUnVisitedResource(page.getSeedName() , url);
+				logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url["+url+"]资源失败。", e);
+				request.isAborted();
 			} finally {
-				close(httpClient);
+				if(request != null){
+					request.releaseConnection();
+				}
 			}
 		}
 	}
@@ -613,8 +679,9 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 		setHttpProxy(page.getSeedName());
 		setUserAgent(page.getSeedName());
 		CloseableHttpClient httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
+		HttpGet request = null;
 		try {
-			HttpGet request = new HttpGet(url);
+			request = new HttpGet(url);
 			HttpResponse response = httpClient.execute(request);
 			HttpEntity entity = response.getEntity();
 			byte[] content = EntityUtils.toByteArray(entity);
@@ -655,9 +722,13 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine{
 			FileUtil.writeFileToDisk(resourceName, content);
 			page.setAvatar(resourceName);
 		} catch (Exception e) {
-			logger.error("Seed[" + page.getSeedName() + "]连接[" + url + "]失败。", e);
+			UrlQueue.newUnVisitedResource(page.getSeedName() , url);
+			logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url["+url+"]资源失败。", e);
+			request.isAborted();
 		} finally {
-			close(httpClient);
+			if(request != null){
+				request.releaseConnection();
+			}
 		}
 
 	}
