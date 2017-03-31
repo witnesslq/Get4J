@@ -57,7 +57,7 @@ public class ListDetailFetcher implements Process {
 		// 4.根据总页数来初始化列表url集合
 		String fetchUrl = seed.getFetchUrl();
 		String totalPages = seed.getFetchTotalPages();
-		if (!StringUtil.isNullOrBlank(totalPages) && !isNumeric(totalPages)) {
+		if (!StringUtil.isNullOrBlank(totalPages) && !StringUtil.isNumeric(totalPages)) {
 			Page page = Constants.HTTP_ENGINE_CACHE.get(seed.getSeedName()).getPageContent(
 					new Page(seed.getSeedName(), fetchUrl.replace(Constants.FETCH_LIST_URL_VAR_LEFT, "")
 							.replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "")));
@@ -76,16 +76,6 @@ public class ListDetailFetcher implements Process {
 		// 5.根据输入的列表Url生成当前页面的Url
 		generateListUrl(seed.getSeedName(), fetchUrl, Integer.valueOf(totalPages));
 		logger.info("Seed[" + seed.getSeedName() + "]的组件ListDetailFetcher的初始化完成。");
-	}
-
-	/**
-	 * 是否是数字
-	 * 
-	 * @param str
-	 * @return
-	 */
-	public static boolean isNumeric(String str) {
-		return str.matches("[0-9]{1,}");
 	}
 
 	/**

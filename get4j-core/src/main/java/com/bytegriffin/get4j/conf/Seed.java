@@ -80,9 +80,13 @@ public class Seed {
 	 */
 	private Map<String, String> fetchCookies = new LinkedHashMap<String, String>();
 	/**
-	 * 每次http请求之后都要延迟固定时间(毫秒)再次请求
+	 * 每次http请求之后都要延迟固定时间(秒)再次请求
 	 */
-	private Long fetchSleepTimeout;
+	private Long fetchSleep = 0l;
+	/**
+	 * 每次http请求之后都要延迟随机时间(秒)范围再次请求，范围上下限中间用横杠表示，例如：2-4，表示每次请求间隔2到4秒
+	 */
+	private String fetchSleepRange;
 	/**
 	 * 非必填项。页面资源的抓取选择器，支持Jsoup原生的css选择器和正则表达式或Jsonpath，一般用于在LIST_DETAIL模式，抓取每个详情页的avatar图。
 	 * 例想抓取图片：[*.jpg]或者$.data[*].img。当此内容为JsonPath字符串的时候，如果json中提供的detail的链接是相对路径，那么此时这个值的格式为：链接前缀+jsonpath，
@@ -122,7 +126,7 @@ public class Seed {
 	 * 保存结果到lucene索引中，默认值/data/index/seedName/，绝对路径不用写classpath
 	 */
 	private String storeLuceneIndex;
-	
+
 	public Seed(){
 	}
 
@@ -205,6 +209,26 @@ public class Seed {
 			fetchUrl = fetchUrl.replace(Constants.FETCH_LIST_URL_VAR_LEFT, "").replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "");
 		}
 		this.fetchUrl = fetchUrl;
+	}
+	
+	/**
+	 * 将毫秒改成秒
+	 * @param fetchSleep
+	 */
+	public void setFetchSleep(Long fetchSleep) {
+		this.fetchSleep = fetchSleep * 1000;
+	}
+
+	public Long getFetchSleep() {
+		return fetchSleep;
+	}
+
+	public String getFetchSleepRange() {
+		return fetchSleepRange;
+	}
+
+	public void setFetchSleepRange(String fetchSleepRange) {
+		this.fetchSleepRange = fetchSleepRange;
 	}
 
 	public void setDownloadDisk(String downloadDisk) {
@@ -379,14 +403,6 @@ public class Seed {
 		this.parseElementSelector = parseElementSelector;
 	}
 
-
-	public Long getFetchSleepTimeout() {
-		return fetchSleepTimeout;
-	}
-
-	public void setFetchSleepTimeout(Long fetchSleepTimeout) {
-		this.fetchSleepTimeout = fetchSleepTimeout;
-	}
 
 	public boolean isFetchJavascriptSupport() {
 		return fetchJavascriptSupport;

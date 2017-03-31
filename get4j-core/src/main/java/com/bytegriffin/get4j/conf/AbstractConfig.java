@@ -42,7 +42,8 @@ public abstract class AbstractConfig {
 	protected static final String fetch_timer_start = "fetch.timer.start";
 	protected static final String fetch_http_proxy = "fetch.http.proxy";
 	protected static final String fetch_http_user_agent = "fetch.http.user_agent";
-	protected static final String fetch_sleep_timeout = "fetch.sleep.timeout";
+	protected static final String fetch_sleep = "fetch.sleep";
+	protected static final String fetch_sleep_range = "fetch.sleep.range";
 	protected static final String fetch_javascript_support = "fetch.javascript.support";
 	protected static final String fetch_resource_selector = "fetch.resource.selector";
 	protected static final String download_disk = "download.disk";

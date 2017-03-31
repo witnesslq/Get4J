@@ -59,10 +59,12 @@ public class CoreSeedsXmlHandler extends AbstractConfig{
 					seed.setFetchHttpProxyFile(value);
 				} else if (name.equalsIgnoreCase(fetch_http_user_agent)) {
 					seed.setFetchUserAgentFile(value);
-				} else if (name.equalsIgnoreCase(fetch_sleep_timeout)) {
+				} else if (name.equalsIgnoreCase(fetch_sleep)) {
 					if(!StringUtil.isNullOrBlank(value)){
-						seed.setFetchSleepTimeout(Long.valueOf(value));
+						seed.setFetchSleep(Long.valueOf(value));
 					}
+				} else if (name.equalsIgnoreCase(fetch_sleep_range)) {
+					seed.setFetchSleepRange(value);
 				} else if (name.equalsIgnoreCase(fetch_page_mode)) {
 					seed.setPageMode(value);
 				} else if (name.equalsIgnoreCase(fetch_resource_selector)) {
@@ -73,8 +75,6 @@ public class CoreSeedsXmlHandler extends AbstractConfig{
 					}
 				} else if (name.equalsIgnoreCase(download_disk)) {
 					seed.setDownloadDisk(value);
-//				} else if (name.equalsIgnoreCase(download_resource_disk)) {
-//					seed.setDownloadResourceDisk(value);
 				} else if (name.equalsIgnoreCase(download_hdfs)) {
 					seed.setDownloadHdfs(value);
 				} else if (name.equalsIgnoreCase(parse_class_impl)) {

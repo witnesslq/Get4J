@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.bytegriffin.get4j.annotation.Cascade;
 import com.bytegriffin.get4j.annotation.ListDetail;
 import com.bytegriffin.get4j.annotation.Single;
 import com.bytegriffin.get4j.annotation.Site;
@@ -127,13 +128,26 @@ public class Spider {
 	}
 
 	/**
-	 * 抓取延迟<br>
-	 * 非必填项。表示每两次http请求之间的间隔时间(毫秒)，以防止频繁访问站点抓取不到内容，默认值为0
-	 * @param timeout
+	 * 抓取延迟策略<br>
+	 * 非必填项。每两次http请求之间的间隔时间(单位：秒)，以防止频繁访问站点抓取不到内容，默认值为0
+	 * @param time
 	 * @return
 	 */
-	public Spider sleep(Long timeout) {
-		seed.setFetchSleepTimeout(timeout);
+	public Spider sleep(Long time) {
+		seed.setFetchSleep(time);
+		return this;
+	}
+	
+	/**
+	 * 抓取随机延迟策略<br>
+	 * 非必填项。格式：2-7 表示2秒到7秒直接随机延迟，其中范围中间用横杠连接时间的上下限<br>
+	 * 每两次http请求之间的间隔时间(单位：秒)范围，每次请求时间间隔都是这个范围内的随机值，
+	 * 主要用于某些网站防爬策略检测出固定时间间隔访问网站的请求，默认值为0
+	 * @param timerange
+	 * @return
+	 */
+	public Spider sleepRange(String timerange) {
+		seed.setFetchSleepRange(timerange);
 		return this;
 	}
 
@@ -337,6 +351,7 @@ public class Spider {
 				this.thread(seed.thread());
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
+				this.sleepRange(seed.sleepRange());
 				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
 				if(hp != null){
 					this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
@@ -359,6 +374,7 @@ public class Spider {
 				this.thread(seed.thread());
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
+				this.sleepRange(seed.sleepRange());
 				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
 				if(hp != null){
 					this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
@@ -382,6 +398,7 @@ public class Spider {
 				this.thread(seed.thread());
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
+				this.sleepRange(seed.sleepRange());
 				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
 				if(hp != null){
 					this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
@@ -398,12 +415,13 @@ public class Spider {
 		} else if("Cascade".equalsIgnoreCase(type)){
 			boolean anno = clazz.isAnnotationPresent(Site.class);
 			if(anno){//有两个Seed类，一个是annotation，一个是实体类
-				Site seed = (Site) clazz.getAnnotation(Site.class);
+				Cascade seed = (Cascade) clazz.getAnnotation(Site.class);
 				this.pageMode(PageMode.cascade);
 				this.fetchUrl(seed.url());
 				this.thread(seed.thread());
 				this.timer(seed.startTime(), seed.interval());
 				this.sleep(seed.sleep());
+				this.sleepRange(seed.sleepRange());
 				HttpProxy hp = FileUtil.formatProxy(seed.proxy());
 				if(hp != null){
 					this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));

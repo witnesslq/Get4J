@@ -1,7 +1,6 @@
 package com.bytegriffin.get4j.net.http;
 
 import java.net.URL;
-import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -54,27 +53,9 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 //		webClient.getOptions().setPopupBlockerEnabled(true);
 		Constants.WEBCLIENT_CACHE.put(seed.getSeedName(), webClient);
 
-		// 2.初始化Http Proxy
-		List<HttpProxy> httpProxys = seed.getFetchHttpProxy();
-		if (httpProxys != null && httpProxys.size() > 0) {
-			HttpProxySelector hplooper = new HttpProxySelector();
-			hplooper.setQueue(httpProxys);
-			Constants.HTTP_PROXY_CACHE.put(seed.getSeedName(), hplooper);
-		}
+		// 2.初始化参数
+		initParams(seed, logger);
 
-		// 3.初始化Http UserAgent
-		List<String> userAgents = seed.getFetchUserAgent();
-		if (userAgents != null && userAgents.size() > 0) {
-			UserAgentSelector ualooper = new UserAgentSelector();
-			ualooper.setQueue(userAgents);
-			Constants.USER_AGENT_CACHE.put(seed.getSeedName(), ualooper);
-		}
-
-		// 4.设置HttpClient请求的间隔时间
-		if (seed.getFetchSleepTimeout() != null) {
-			Constants.FETCH_SLEEP_TIMEOUT_CACHE.put(seed.getSeedName(), seed.getFetchSleepTimeout());
-		}
-		
 		logger.info("Seed[" + seed.getSeedName() + "]的Http引擎HttpUnitEngine的初始化完成。");
 	}
 
@@ -155,7 +136,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 	public Page getPageContent(Page page) {
 		WebClient webClient = Constants.WEBCLIENT_CACHE.get(page.getSeedName());
 		String url = page.getUrl();
-		HttpClientEngine.sleepTimeout(page.getSeedName());
+		sleep(page.getSeedName(), logger);
 		try {
 			WebRequest request = new WebRequest(new URL(url));
 			setHttpProxy(page.getSeedName(), webClient, request);
@@ -168,7 +149,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 			if(!isvisit){
 				return page;
 			}
-			
+
 			String content = response.getContentAsString();
 			String contentType = response.getContentType();
 			if(StringUtil.isNullOrBlank(content)){
@@ -178,13 +159,13 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 
 			// 设置页面编码
 			page.setCharset(getCharset(contentType, content));
-			
+
 			// 重新设置content编码
 			content = getContentAsString(response.getContentAsStream(), page.getCharset());
-			
+
 			// 重新设置url编码
 			// page.setUrl(decodeUrl(page.getUrl(), page.getCharset()));
-			
+
 			// 记录站点防止频繁抓取的页面链接
 			frequentAccesslog(page.getSeedName(), url, content, logger);
 

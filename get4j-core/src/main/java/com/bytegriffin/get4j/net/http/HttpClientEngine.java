@@ -10,7 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -106,47 +105,14 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 	@Override
 	public void init(Seed seed) {
 		// 1.初始化HttpClientBuilder
-		initHttpAsyncClientBuilder(seed.getSeedName());
+		initHttpClientBuilder(seed.getSeedName());
 
-		// 2.初始化Http Proxy
-		List<HttpProxy> httpProxys = seed.getFetchHttpProxy();
-		if (httpProxys != null && httpProxys.size() > 0) {
-			HttpProxySelector hplooper = new HttpProxySelector();
-			hplooper.setQueue(httpProxys);
-			Constants.HTTP_PROXY_CACHE.put(seed.getSeedName(), hplooper);
-		}
-
-		// 3.初始化Http UserAgent
-		List<String> userAgents = seed.getFetchUserAgent();
-		if (userAgents != null && userAgents.size() > 0) {
-			UserAgentSelector ualooper = new UserAgentSelector();
-			ualooper.setQueue(userAgents);
-			Constants.USER_AGENT_CACHE.put(seed.getSeedName(), ualooper);
-		}
-
-		// 4.设置HttpClient请求的间隔时间
-		if (seed.getFetchSleepTimeout() != null) {
-			Constants.FETCH_SLEEP_TIMEOUT_CACHE.put(seed.getSeedName(), seed.getFetchSleepTimeout());
-		}
+		// 2.初始化配置参数
+		initParams(seed, logger);
+		
 		logger.info("Seed[" + seed.getSeedName() + "]的Http引擎HttpClientEngine的初始化完成。");
 	}
 
-	/**
-	 * 设计Http请求间隔时间
-	 * 
-	 * @param seedName
-	 */
-	public static void sleepTimeout(String seedName) {
-		Long millis = Constants.FETCH_SLEEP_TIMEOUT_CACHE.get(seedName);
-		if (millis == null) {
-			return;
-		}
-		try {
-			Thread.sleep(millis);
-		} catch (InterruptedException e) {
-			logger.error("HttpClient请求时间间隔时出错：", e);
-		}
-	}
 
 	/**
 	 * 重试机制
@@ -276,7 +242,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 	 * 
 	 * @return
 	 */
-	public static void initHttpAsyncClientBuilder(String siteName) {
+	public static void initHttpClientBuilder(String siteName) {
 		// Use custom message parser / writer to customize the way HTTP
 		// messages are parsed from and written out to the data stream.
 		HttpMessageParserFactory<HttpResponse> responseParserFactory = new DefaultHttpResponseParserFactory() {
@@ -563,7 +529,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 		String url = page.getUrl();
 		HttpGet request = null;
 		try {
-			sleepTimeout(page.getSeedName());
+			sleep(page.getSeedName(), logger);
 			setHttpProxy(page.getSeedName());
 			setUserAgent(page.getSeedName());
 			httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
@@ -590,7 +556,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
 				// 重新设置content编码
 				content = new String(bytes, page.getCharset());
-				
+
 				// 重新设置url编码
 			//	page.setUrl(decodeUrl(page.getUrl(), page.getCharset()));
 
@@ -632,7 +598,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 		}
 		String folderName = Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
 		HashSet<String> resources = page.getResources();
-		sleepTimeout(page.getSeedName());
+		sleep(page.getSeedName(), logger);
 		setHttpProxy(page.getSeedName());
 		setUserAgent(page.getSeedName());
 		CloseableHttpClient httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
@@ -711,7 +677,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 	public static void downloadAvatar(Page page) {
 		String folderName = Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
 		String url = page.getAvatar();
-		sleepTimeout(page.getSeedName());
+		sleep(page.getSeedName(), logger);
 		setHttpProxy(page.getSeedName());
 		setUserAgent(page.getSeedName());
 		CloseableHttpClient httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();

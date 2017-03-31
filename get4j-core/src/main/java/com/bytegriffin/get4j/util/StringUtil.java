@@ -4,6 +4,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StringUtil {
+	
+	/**
+	 * 是否是数字
+	 * 
+	 * @param str
+	 * @return
+	 */
+	public static boolean isNumeric(String str) {
+		return str.matches("[0-9]{1,}");
+	}
 
 	
 	/**

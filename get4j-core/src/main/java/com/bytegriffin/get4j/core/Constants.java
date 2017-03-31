@@ -7,10 +7,10 @@ import javax.sql.DataSource;
 
 import org.apache.http.impl.client.HttpClientBuilder;
 
-import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.HttpProxySelector;
+import com.bytegriffin.get4j.net.http.SleepRandomSelector;
 import com.bytegriffin.get4j.net.http.UserAgentSelector;
 import com.bytegriffin.get4j.parse.PageParser;
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -31,9 +31,19 @@ public final class Constants {
 	public static final Map<String, HttpProxySelector> HTTP_PROXY_CACHE = new HashMap<String, HttpProxySelector>();
 
 	/**
-	 * 全局user_agent缓存 key:seed_name value: UserAgentLooper
+	 * 全局user_agent缓存 key:seed_name value: UserAgentSelector
 	 */
 	public static final Map<String, UserAgentSelector> USER_AGENT_CACHE = new HashMap<String, UserAgentSelector>();
+	
+	/**
+	 * 全局http请求间隔缓存 key:seed_name value: fetch.sleep 
+	 */
+	public static final Map<String, Long> FETCH_SLEEP_CACHE = new HashMap<String, Long>();
+
+	/**
+	 * 全局sleep_selector缓存 key:seed_name value: SleepRangeSelector
+	 */
+	public static final Map<String, SleepRandomSelector> FETCH_SLEEP_RANGE_CACHE = new HashMap<String, SleepRandomSelector>();
 
 	/**
 	 * 全局httpclientbuilder缓存 key:seed_name value: HttpClientBuilder
@@ -102,12 +112,11 @@ public final class Constants {
 	 * LIST_DETAIL模式下的详情页面url选择
 	 */
 	public static final Map<String, String> FETCH_DETAIL_SELECT_CACHE = new HashMap<String, String>();
-	
+
 	/**
 	 * 全局FetchFilter缓存 key:seed_name value: FetchResourceUrl
 	 */
 	public static final Map<String, FetchResourceSelector> FETCH_RESOURCE_SELECTOR_CACHE = new HashMap<String, FetchResourceSelector>();
-
 
 	/**
 	 * 自定义的page_parser解析器缓存
@@ -118,15 +127,13 @@ public final class Constants {
 	 * key : seedName value: datasource
 	 */
 	public static HashMap<String, DataSource> DATASOURCE_CACHE = new HashMap<String, DataSource>();
-	
-	/**
-	 * 全局http请求间隔缓存 key:seed_name value: fetch.sleep.timeout 
-	 */
-	public static final Map<String, Long> FETCH_SLEEP_TIMEOUT_CACHE = new HashMap<String, Long>();
+
+
 	/**
 	 * 全局http_proxy缓存 key:seed_name value: WebClient
 	 */
 	public static final Map<String, WebClient> WEBCLIENT_CACHE = new HashMap<String, WebClient>();
+
 	/**
 	 * 全局Http探针缓存 key:seed_name value: HttpProbe
 	 */

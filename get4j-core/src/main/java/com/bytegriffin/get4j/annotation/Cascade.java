@@ -20,6 +20,8 @@ public @interface Cascade {
 	long interval() default 0;
 
 	long sleep() default 0;
+	
+	String sleepRange() default "";
 
 	String proxy() default "";
 	
