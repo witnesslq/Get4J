@@ -1,6 +1,5 @@
 package com.bytegriffin.get4j.net.http;
 
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -70,16 +69,33 @@ public final class UrlAnalyzer {
 	}
 
 	/**
-	 * 获取html中的title属性
+	 * 获取html中指定的元素
 	 * 
-	 * @param html
+	 * @param page
 	 * @param select
 	 * @return
 	 */
-	public static String select(String html, String select) {
-		Document document = Jsoup.parse(html);
+	public static String select(Page page, String select) {
+		Document document = Jsoup.parse(page.getHtmlContent(), page.getUrl());
 		Elements eles = document.select(select);
 		return eles.text();
+	}
+	
+	/**
+	 * 判断Html中select标签中option的值<br>
+	 * [option value='http://www.aaa.com/bbb']这种情况下出现的url比较特殊，<br>
+	 * 一是出现url的情况不多，二是不好判断哪个属于相对路径，只能判断出绝对路径来
+	 * @param doc
+	 * @param urls
+	 */
+	private void addOptionUrl(Document doc, HashSet<String> urls){
+		Elements opteles = doc.select("option[value]");// select_option
+		for (Element link : opteles) {
+			String absLink = link.absUrl("value");
+			if (isStartHttpUrl(absLink)) {
+				urls.add(absLink);
+			}
+		}
 	}
 
 	/**
@@ -95,31 +111,22 @@ public final class UrlAnalyzer {
 		HashSet<String> urls = new HashSet<String>();
 		if (page.isHtmlContent()) {// html格式会启动jsoup抓取各种资源的src和href
 			String siteUrl = page.getUrl();
-			Document doc = Jsoup.parse(page.getHtmlContent());
+			Document doc = Jsoup.parse(page.getHtmlContent(), siteUrl);
 			Elements eles = doc.select("a[href], frame[src], iframe[src], area[src]");// a标签、frame标签、iframe标签、map>area标签
-			Elements opteles = doc.select("option[value]");// select_option
-			HashSet<String> href = getAllUrlByElement("href", siteUrl, eles);// a标签
-			HashSet<String> other = getAllUrlByElement("src", siteUrl, eles);// frame标签、iframe标签、map>area标签
-			/**
-			 * <option value>这种情况下出现的url比较特殊，一是出现url的情况不多，
-			 * 二是不好判断哪个属于相对路径，只能判断出绝对路径来
-			 */
-			for (Element link : opteles) {
-				String absLink = link.absUrl("value");
-				if (isStartHttpUrl(absLink)) {
-					urls.add(absLink);
-				}
-			}
-
+			HashSet<String> href = getAllUrlByElement(eles);// a标签、frame标签、iframe标签、map>area标签
+			HashSet<String> resources = page.getResources();
 			// 过滤<a>标签中的资源
 			for (String link : href) {
 				if (!FetchResourceSelector.isFindResources(link)) {
 					urls.add(link);
+				} else {
+					resources.add(link);
 				}
 			}
-			if (other.size() > 0) {
-				urls.addAll(other);
-			}
+
+			// 寻找并增加<select> <options value="http://www.aaa.com/bb">中的url
+			addOptionUrl(doc, urls);
+
 		} else { // json格式：程序会自动嗅探出所有非资源文件的带绝对路径的url
 			HashSet<String> url = sniffUrlFromJson(page.getJsonContent(), false);
 			urls.addAll(url);
@@ -157,35 +164,22 @@ public final class UrlAnalyzer {
 			}
 			Document doc = Jsoup.parse(content, siteUrl);
 			Elements eles = doc.select("a[href], frame[src], iframe[src], area[src]");// a标签、frame标签、iframe标签、map>area标签
-			Elements opteles = doc.select("option[value]");// select_option
-			HashSet<String> href = getAllUrlByElement("href", siteUrl, eles);// a标签
-			HashSet<String> other = getAllUrlByElement("src", siteUrl, eles);// frame标签、iframe标签、map>area标签
-
-			/**
-			 * <option value>这种情况下出现的url比较特殊，一是出现url的情况不多，
-			 * 二是不好判断哪个属于相对路径，只能判断出绝对路径来
-			 */
-			for (Element link : opteles) {
-				String absLink = link.absUrl("value");
-				if (isStartHttpUrl(absLink) && absLink.contains(siteprefix)) {
-					urls.add(absLink);
-				}
-			}
-
+			HashSet<String> href = getAllUrlByElement(eles);// a标签、frame标签、iframe标签、map>area标签
+			HashSet<String> resources = page.getResources();
+			
 			// 过滤<a>标签中的资源，剩下来的都是可访问的url链接，但是有些动态资源文件也是没有后缀名的链接，
-			// 对于这种情况，交给HttpClient的Response.ContentType来判断处理
+			// 对于这种情况，需要请求服务器根据返回的Response.ContentType来判断处理才行，因此默认会把这种链接当成非资源型的link来处理
 			for (String link : href) {
 				if (link.contains(siteprefix) && !FetchResourceSelector.isFindResources(link)) {
 					urls.add(link);
+				} else {
+					resources.add(link);
 				}
 			}
-			if (other.size() > 0) {
-				for (String url : other) {
-					if (url.contains(siteprefix)) {
-						urls.add(url);
-					}
-				}
-			}
+
+			// 寻找并增加<select> <options value="http://www.aaa.com/bb">中的url
+			addOptionUrl(doc, urls);
+
 		} else { // json格式
 			HashSet<String> url = sniffUrlFromJson(page.getJsonContent(), false);
 			urls.addAll(url);
@@ -215,9 +209,9 @@ public final class UrlAnalyzer {
 			if (StringUtil.isNullOrBlank(content)) {
 				return null;
 			}
-			Document doc = Jsoup.parse(content);
+			Document doc = Jsoup.parse(content, siteUrl);
 			Elements eles = doc.select(detailSelect);// a标签
-			HashSet<String> href = getAllUrlByElement("href", siteUrl, eles);// a标签
+			HashSet<String> href = getAllUrlByElement(eles);// a标签
 			// 过滤<a>标签中的资源，
 			for (String link : href) {
 				urls.add(link);
@@ -230,9 +224,9 @@ public final class UrlAnalyzer {
 						if(field == null){
 							continue;
 						}
-						Document doc = Jsoup.parse(field);
+						Document doc = Jsoup.parseBodyFragment(field, page.getUrl());
 						Elements eles = doc.select(detailSelect);
-						HashSet<String> href = getAllUrlByElement("href", page.getUrl(), eles);// a标签
+						HashSet<String> href = getAllUrlByElement(eles);// a标签
 						// 过滤<a>标签中的资源，
 						for (String link : href) {
 							urls.add(link);
@@ -262,18 +256,14 @@ public final class UrlAnalyzer {
 		if (resourceselector == null || resourceselector.isConfigAll()) {// 如果ResourceSelector配置了all或者默认没有配置此项
 			if (page.isHtmlContent()) {// html格式在all模式下会启动jsoup抓取各种资源的src和href
 				String siteUrl = page.getUrl();
-				Document doc = Jsoup.parse(page.getHtmlContent());
+				Document doc = Jsoup.parse(page.getHtmlContent(), siteUrl);
 				//注意link[href]有时候是xml文件，例如：<link type="application/rss+xml" href="rss"/><link type="application/wlwmanifest+xml" href="wlwmanifest.xml"/>
 				Elements eles = doc.select("link[href], script[src], img[src], embed[src], video[src], audio[src], track[src]");// css、script、img、flv|mp4|mp3|ogg、srt
-				Elements ahref = doc.select("a[href~=(?i)." + FetchResourceSelector.BINARY_FILTERS + "]");// 这个是有具体后缀名的链接集合，例如：<a href="xxx.doc/exe/....">
-				HashSet<String> css = getAllUrlByElement("href", siteUrl, eles);
-				HashSet<String> others = getAllUrlByElement("src", siteUrl, eles);
-				HashSet<String> abinary = getAllUrlByElement("href", siteUrl, ahref);
-				if (css.size() > 0) {
-					resources.addAll(css);
-				}
-				if (others.size() > 0) {
-					resources.addAll(others);
+				Elements ahref = doc.select("a[href~=(?i)." + FetchResourceSelector.BINARY_FILTERS + "]");// 这个是有具体后缀名的链接集合，例如：<a href="abc.doc/exe/....">
+				HashSet<String> resourceLink = getAllUrlByElement(eles);
+				HashSet<String> abinary = getAllUrlByElement(ahref);
+				if (resourceLink.size() > 0) {
+					resources.addAll(resourceLink);
 				}
 				if (abinary.size() > 0) {
 					resources.addAll(abinary);
@@ -334,9 +324,7 @@ public final class UrlAnalyzer {
 							|| dlink.contains("javascript:") || dlink.contains("mailto:") || dlink.contains("about:blank")){
 						continue;
 					}			
-					if(dlink.startsWith("//")){
-						dlink = "http:" + dlink;
-					} else if(dlink.startsWith(".")){
+					if(dlink.startsWith(".")){
 						dlink = dlink.replace(".", "");
 					}
 					dlink = getAbsoluteURL(page.getUrl(), dlink);
@@ -344,9 +332,6 @@ public final class UrlAnalyzer {
 					String avatar = avatars.get(i);
 					if (StringUtil.isNullOrBlank(avatar) || avatar.startsWith("#") || avatar.equalsIgnoreCase("null")){
 						avatar = null;
-					}
-					if (avatar.startsWith("//")) {
-						avatar = "http:" + avatar;
 					}
 					if(!StringUtil.isNullOrBlank(avatar)){
 						avatar =  getAbsoluteURL(page.getUrl(),avatar);
@@ -362,12 +347,12 @@ public final class UrlAnalyzer {
 				if(StringUtil.isNullOrBlank(select)){
 					continue;
 				}
-				Document doc = Jsoup.parse(page.getHtmlContent());
+				Document doc = Jsoup.parse(page.getHtmlContent(), page.getUrl());
 				Elements ahref = doc.select(select);
 				String imgSelector = "img[src]";
 				for (Element ele : ahref) {
 					List<Node> nodes = ele.childNodes();
-					Document d = Jsoup.parse(nodes.toString());
+					Document d = Jsoup.parseBodyFragment(nodes.toString() , page.getUrl());
 					// detailLink不管是不是绝对地址都可以把它当作key值用，以备以后与avatar映射用
 					Elements detailLink = d.select(detailSelect);
 					// 假设每个detail link只对应一个img图像，如果是多个img就不好处理了（默认取第一个），地址需要转换成绝对地址.....
@@ -377,9 +362,7 @@ public final class UrlAnalyzer {
 							|| dlink.contains("javascript:") || dlink.contains("mailto:") || dlink.contains("about:blank")){
 						dlink = detailLink.next().attr("href");
 					}			
-					if(dlink.startsWith("//")){
-						dlink = "http:" + dlink;
-					} else if(dlink.startsWith(".")){
+					if(dlink.startsWith(".")){
 						dlink = dlink.replace(".", "");
 					}
 					dlink = getAbsoluteURL(page.getUrl(), dlink);
@@ -387,9 +370,6 @@ public final class UrlAnalyzer {
 					//当然第一个img如果是空，就获取第二个
 					if (StringUtil.isNullOrBlank(avatar) || avatar.startsWith("#") || avatar.equalsIgnoreCase("null")){
 						avatar = avatarLink.next().attr("src");
-					}
-					if (avatar.startsWith("//")) {
-						avatar = "http:" + avatar;
 					}
 					if(!StringUtil.isNullOrBlank(avatar)){
 						avatar =  getAbsoluteURL(page.getUrl(),avatar);
@@ -457,45 +437,33 @@ public final class UrlAnalyzer {
 	}
 
 	/**
-	 * 获取某个元素包含的所有url，如果是相对链接将其转换为绝对链接<br>
+	 * 获取某个元素包含的所有url<br>
 	 * 注意：有的链接是以data开头的小资源文件不支持抓取（即：二进制数据转换成为Base64的资源文件，直接在页面上引用）
 	 * 例如文字格式：data:text/plain;charset=UTF-8;base64,5L2g5aW977yM5Lit5paH77yB 
 	 * 图片格式：data:image/gif;base64,R0lGODlhAQAcALMAAMXh96HR97XZ98
-	 * @param eleAt href or src 等
-	 * @param siteUrl 
+	 * 
 	 * @param element
 	 * @return
 	 */
-	public final HashSet<String> getAllUrlByElement(String eleAt, String siteUrl, Elements element) {
+	public final HashSet<String> getAllUrlByElement(Elements element) {
 		HashSet<String> urls = new HashSet<String>();
 		for (Element link : element) {
-			// 相对路径、javascript、页面定位（<a href='#abc'>）
-			String href = link.attr(eleAt);
-			// 绝对路径
-			String absLink = link.absUrl(eleAt);
-			// 基本路径 一般在<head>标签中设置，例如：<base href="http://www.w3school.com.cn/i/" />
-			// 如果基本路径不为空，那么相对路径的前缀就是它，如果为空，则需要程序重新获取
-			String baseUri = link.baseUri();
-
-			if (!StringUtil.isNullOrBlank(absLink) && !absLink.startsWith("#") && isStartHttpUrl(absLink)
-					&& !absLink.equalsIgnoreCase("null") && !urls.contains(absLink)) {
-				urls.add(absLink);
-			} else if (!StringUtil.isNullOrBlank(href) && !href.contains("javascript:") && !href.contains("mailto:")
-					&& !href.startsWith("#") && !href.equalsIgnoreCase("null") && !href.contains("about:blank") && !urls.contains(href)) {
-				if (href.startsWith("//")) {// 当遇到//时，它的协议是由当前网页决定的：http/https/file，例如<a target="_blank" href="//miaosha.aaa.com">秒杀</a>
-					href = "http:" + href;// 这里写死了http，当然有时可能是https/file
-					urls.add(href);
-				} else {
-					siteUrl = siteUrl.startsWith(".") ? siteUrl.replace(".", "") : siteUrl;
-					String newurl = StringUtil.isNullOrBlank(baseUri) ? getAbsoluteURL(siteUrl, href) : baseUri + siteUrl;
-					if (!StringUtil.isNullOrBlank(newurl)) {
-						urls.add(newurl);
-					}
-				}
+			//链接只考虑href 与 src 两种
+			String source = link.toString().contains("href") ? "href" : "src";
+			
+			// 绝对路径：之前由于Jsoup调用的是parse(content, baseUri)方法，所以这个值绝对不为空
+			String absLink = link.absUrl(source);
+			String url = page.getUrl()+"#";
+			if(StringUtil.isNullOrBlank(absLink) || url.equals(absLink) || url.startsWith("#") || url.equalsIgnoreCase("null") 
+					|| url.contains("javascript:") || url.contains("mailto:") || url.contains("about:blank")) {
+				continue;
 			}
+
+			urls.add(absLink);
 		}
 		return urls;
 	}
+	
 
 	/**
 	 * 相对路径转换为绝对路径 <br/>
@@ -535,13 +503,11 @@ public final class UrlAnalyzer {
 	}
 
 	public static void main(String... args) throws Exception {
+		
+		String str = UrlAnalyzer.custom(new Page("","")).toString();
+				
 
-		List<String> ha = new ArrayList<String>();
-		ha.add("asdfa");
-		ha.add("333s3dfasd");
-
-		Document doc = Jsoup.connect("http://mvnrepository.com/artifact/org.apache.karaf.shell/org.apache.karaf.shell.console").get();
-		System.out.println(doc.quirksMode().toString()+" --- "+doc.tag().toString());
+		System.out.println(str+" --- ");
 	}
 
 }

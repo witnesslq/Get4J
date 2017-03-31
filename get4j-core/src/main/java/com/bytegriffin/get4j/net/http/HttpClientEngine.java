@@ -590,6 +590,9 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
 				// 重新设置content编码
 				content = new String(bytes, page.getCharset());
+				
+				// 重新设置url编码
+			//	page.setUrl(decodeUrl(page.getUrl(), page.getCharset()));
 
 				// 记录站点防止频繁抓取的页面链接
 				frequentAccesslog(page.getSeedName(), url, content, logger);

@@ -154,10 +154,12 @@ public class ListDetailFetcher implements Process {
 				if (detailLinkAvatar.containsKey(page.getUrl())) {
 					detailPage.setAvatar(detailLinkAvatar.get(page.getUrl()));
 				}
+			} else {
+				// 3.获取并设置详情页DetailPage的Resource属性
+				UrlAnalyzer.custom(detailPage).sniffAndSetResources();
 			}
 
-			// 3.获取并设置详情页DetailPage的Resource属性
-			UrlAnalyzer.custom(detailPage).sniffAndSetResources();
+			
 
 			// 4.设置详情页DetailPage其它属性
 			detailPage.setFetchTime(DateUtil.getCurrentDate());

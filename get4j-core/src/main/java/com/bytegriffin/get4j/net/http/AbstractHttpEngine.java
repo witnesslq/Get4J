@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.regex.Matcher;
@@ -51,7 +53,7 @@ public abstract class AbstractHttpEngine {
 	 * @param content
 	 * @param logger
 	 */
-	public void frequentAccesslog(String seedName, String url, String content, Logger logger) {
+	protected void frequentAccesslog(String seedName, String url, String content, Logger logger) {
 		if (isFind(content)) {
 			logger.warn("线程[" + Thread.currentThread().getName() + "]种子[" + seedName + "]访问[" + url + "]时太过频繁。");
 		}
@@ -64,7 +66,7 @@ public abstract class AbstractHttpEngine {
 	 * @return
 	 * @throws IOException
 	 */
-	public String getContentAsString(InputStream is, String charset) throws IOException {
+	protected String getContentAsString(InputStream is, String charset) throws IOException {
 		String str = "";
 		BufferedReader reader = new BufferedReader(new InputStreamReader(is, charset));
 		StringBuffer sb = new StringBuffer();
@@ -74,6 +76,21 @@ public abstract class AbstractHttpEngine {
 		return sb.toString();
 	}
 
+	/**
+	 * 对url进行解码，否则就是类似这种格式：http://news.baidu.com/n?cmd=6&loc=0&name=%B1%B1%BE%A9
+	 * @param url
+	 * @param charset
+	 * @return
+	 */
+	@Deprecated
+	protected String decodeUrl(String url, String charset){
+		try {
+			url = URLDecoder.decode(url, charset);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		return url;
+	}
 
 	/**
 	 * 判断HttpClient下载是否为Json文件
@@ -133,8 +150,19 @@ public abstract class AbstractHttpEngine {
 		if (isDownloadJsonFile(contentType)) {			
 			page.setJsonContent(content);
 		} else if (contentType.contains("text/html") || contentType.contains("text/plain")) {
-			page.setHtmlContent(content);// 注意：有时text/plain这种文本格式里面放的是json字符串，但是有种特殊情况是这个json字符串里也包含html
-			page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent()));// json文件中一般不好嗅探titile属性
+			// 注意：有两种特殊情况
+			// 1.有时text/plain这种文本格式里面放的是json字符串，并且是这个json字符串里的属性值却是html
+			// 2.有时text/html反应出来的是rss的xml格式
+			if(content.contains("<?xml") || content.contains("<rss")){
+				// 如果是xml格式，则当成资源来处理
+				HashSet<String> resources = page.getResources();
+				resources.add(page.getUrl());
+			} else {
+				page.setHtmlContent(content);
+				// json文件中一般不好嗅探titile属性
+				page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent()));
+			}
+		
 		} else { // 不是html也不是json，那么只能是resource的链接了，xml也是
 			HashSet<String> resources = page.getResources();
 			resources.add(page.getUrl());
@@ -150,7 +178,9 @@ public abstract class AbstractHttpEngine {
 	 * @return 
 	 */
 	protected static boolean isVisit(int statusCode, Page page, Logger logger){
-		if(HttpStatus.SC_NOT_FOUND == statusCode || HttpStatus.SC_FORBIDDEN == statusCode){
+		// 404/403/500/503
+		if(HttpStatus.SC_NOT_FOUND == statusCode || HttpStatus.SC_FORBIDDEN == statusCode || HttpStatus.SC_INTERNAL_SERVER_ERROR == statusCode
+				|| HttpStatus.SC_SERVICE_UNAVAILABLE == statusCode){
 			UrlQueue.newFailVisitedUrl(page.getSeedName(), page.getUrl());
 			logger.error("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]时发生["+statusCode+"]错误。");
 			return false;

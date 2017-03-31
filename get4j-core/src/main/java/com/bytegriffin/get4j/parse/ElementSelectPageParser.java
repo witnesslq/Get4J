@@ -28,7 +28,7 @@ public class ElementSelectPageParser implements PageParser{
 	public void parse(Page page) {
 		String text = null;
 		if(page.isHtmlContent()){//用jsoup的css选择器或正则表达式解析html
-			text = UrlAnalyzer.select(page.getHtmlContent(),elementSeletor);
+			text = UrlAnalyzer.select(page,elementSeletor);
 			page.setHtmlContent(text);
 		} else if(page.isJsonContent()){//用jsonpath解析json
 			try{

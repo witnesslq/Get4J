@@ -1,6 +1,5 @@
 package com.bytegriffin.get4j.fetch;
 
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -165,10 +164,9 @@ public class FetchResourceSelector{
      * @return
      */
     public HashSet<String> cssSelect(Page page,String cssQuery){
-    	String eleAt = cssQuery.contains("href") ? "href" : "src";
-    	Document doc = Jsoup.parse(page.getHtmlContent());
+    	Document doc = Jsoup.parse(page.getHtmlContent(), page.getUrl());
     	Elements eles = doc.select(cssQuery);
-    	HashSet<String> newurls = UrlAnalyzer.custom(page).getAllUrlByElement(eleAt, page.getUrl(), eles);
+    	HashSet<String> newurls = UrlAnalyzer.custom(page).getAllUrlByElement(eles);
     	return newurls;
     }
 
