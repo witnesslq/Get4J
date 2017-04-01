@@ -134,7 +134,7 @@ public class DBStorage implements Process {
 	 * @return
 	 */
 	private String buildUpdateSql(Page page, String dbId) {
-		String sql = "SEED_NAME='" + page.getSeedName() + "',";
+		String sql = "";
 		if (StringUtil.isNullOrBlank(page.getAvatar())) {
 			sql += "AVATAR=" + null + ",";
 		} else {

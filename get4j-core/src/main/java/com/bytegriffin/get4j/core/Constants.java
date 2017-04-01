@@ -107,6 +107,11 @@ public final class Constants {
 	 * Json类型ContentType页面格式
 	 */
 	public static final String JSON_PAGE_SUFFIX = "json";
+	
+	/**
+	 * Xml类型ConentType页面格式
+	 */
+	public static final String XML_PAGE_SUFFIX = "xml";
 
 	/**
 	 * LIST_DETAIL模式下的详情页面url选择

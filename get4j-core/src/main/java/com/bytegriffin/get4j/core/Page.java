@@ -44,6 +44,10 @@ public class Page {
 	 */
 	private String jsonContent;
 	/**
+	 * 当前页面是xml内容
+	 */
+	private String xmlContent;
+	/**
 	 * 当前页面的url
 	 */
 	private String url;
@@ -55,6 +59,7 @@ public class Page {
 	 * Response的cookie字符串
 	 */
 	private String cookies;
+	
 	/**
 	 * 当前页面中的资源文件：js、jpg、css等文件
 	 */
@@ -75,7 +80,6 @@ public class Page {
 	 * 当启动list_detail抓取模式时，每个列表所对应的详情页
 	 */
 	private HashSet<String> detailLinks = new HashSet<String>();
-
 	/**
 	 * 自定义动态字段
 	 */
@@ -90,7 +94,7 @@ public class Page {
 	}
 
 	/**
-	 * 包含Json格式
+	 * 内容是否为Json格式
 	 * 
 	 * @return
 	 */
@@ -102,12 +106,24 @@ public class Page {
 	}
 
 	/**
-	 * 包含Html格式
+	 * 内容是否为Html格式
 	 * 
 	 * @return
 	 */
 	public boolean isHtmlContent() {
 		if (!StringUtil.isNullOrBlank(this.htmlContent)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * 内容是否为Xml格式
+	 * 
+	 * @return
+	 */
+	public boolean isXmlContent() {
+		if (!StringUtil.isNullOrBlank(this.xmlContent)) {
 			return true;
 		}
 		return false;
@@ -277,6 +293,14 @@ public class Page {
 
 	public void setJsonContent(String jsonContent) {
 		this.jsonContent = jsonContent;
+	}
+
+	public String getXmlContent() {
+		return xmlContent;
+	}
+
+	public void setXmlContent(String xmlContent) {
+		this.xmlContent = xmlContent;
 	}
 
 	public String getSeedName() {

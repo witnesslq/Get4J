@@ -15,9 +15,12 @@ import java.util.Map.Entry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import com.alibaba.fastjson.JSONArray;
@@ -80,7 +83,7 @@ public final class UrlAnalyzer {
 		Elements eles = document.select(select);
 		return eles.text();
 	}
-	
+
 	/**
 	 * 判断Html中select标签中option的值<br>
 	 * [option value='http://www.aaa.com/bbb']这种情况下出现的url比较特殊，<br>
@@ -126,9 +129,11 @@ public final class UrlAnalyzer {
 
 			// 寻找并增加<select> <options value="http://www.aaa.com/bb">中的url
 			addOptionUrl(doc, urls);
-
-		} else { // json格式：程序会自动嗅探出所有非资源文件的带绝对路径的url
+		}  else if (page.isJsonContent()) { // json格式：程序会自动嗅探出所有非资源文件的带绝对路径的url
 			HashSet<String> url = sniffUrlFromJson(page.getJsonContent(), false);
+			urls.addAll(url);
+		} else if (page.isXmlContent()) { // xml格式：程序会自动嗅探出所有非资源文件的带绝路径的url
+			HashSet<String> url = sniffUrlFromXml(page.getXmlContent(), false);
 			urls.addAll(url);
 		}
 
@@ -180,11 +185,13 @@ public final class UrlAnalyzer {
 			// 寻找并增加<select> <options value="http://www.aaa.com/bb">中的url
 			addOptionUrl(doc, urls);
 
-		} else { // json格式
+		} else if(page.isJsonContent()) { // json格式
 			HashSet<String> url = sniffUrlFromJson(page.getJsonContent(), false);
 			urls.addAll(url);
+		} else if(page.isXmlContent()){ // xml格式
+			HashSet<String> url = sniffUrlFromXml(page.getXmlContent(), false);
+			urls.addAll(url);
 		}
-
 		return urls;
 	}
 
@@ -216,7 +223,7 @@ public final class UrlAnalyzer {
 			for (String link : href) {
 				urls.add(link);
 			}
-		} else { // json格式：通过jsonpath来获取detail链接
+		} else if(page.isJsonContent()){ // json格式：通过jsonpath来获取detail链接
 			if (detailSelect.startsWith(Constants.JSON_PATH_PREFIX)) {// json字符串里的detail页面提供的是绝对路径
 				if(detailSelect.contains(Constants.FETCH_DETAIL_JSON_HTML_SPLIT)){ // 特殊情况：当Json属性中包含Html，并且Html中存在Detail Link时，之间用逗号隔开，所以需要jsonpath和jsoup两个解析
 					List<String> contents = FetchResourceSelector.jsonPath2List(page.getJsonContent(), detailSelect, "");
@@ -241,6 +248,8 @@ public final class UrlAnalyzer {
 				String jsonpath = Constants.JSON_PATH_PREFIX + str[1];
 				urls = FetchResourceSelector.jsonPath(page.getJsonContent(), jsonpath, urlpath);
 			}
+		} else if(page.isXmlContent()){ // xml格式
+			urls = FetchResourceSelector.xmlSelect(page.getXmlContent(), detailSelect, "");
 		}
 		return urls;
 	}
@@ -271,6 +280,9 @@ public final class UrlAnalyzer {
 			} else if(page.isJsonContent()) { // json格式在all模式下，也会自动嗅探出资源文件
 				HashSet<String> resourceurl = sniffUrlFromJson(page.getJsonContent(), true);
 				resources.addAll(resourceurl);
+			} else if(page.isXmlContent()) { // xml格式在all模式下，也会自动嗅探出资源文件 
+				HashSet<String> resourceurl = sniffUrlFromXml(page.getXmlContent(), true);
+				resources.addAll(resourceurl);
 			} else {// 这种情况就是动态url是资源文件的情况，所以htmlContent与jsonContent全部为空
 				resources.add(page.getUrl());
 			}
@@ -278,15 +290,7 @@ public final class UrlAnalyzer {
 			// 什么都不做，即表示：什么资源都不抓取，全部过滤
 		} else { // 如果配置了具体参数，则表示抓取符合参数的具体资源
 			List<String> selectors = resourceselector.getSelectors();
-			if (page.isJsonContent()) { // json格式
-				for (String select : selectors) {
-					String[] str = select.split("\\" + Constants.JSON_PATH_PREFIX);
-					String urlpath = str[0];
-					String jsonpath = Constants.JSON_PATH_PREFIX + str[1];
-					HashSet<String> url = FetchResourceSelector.jsonPath(page.getJsonContent(), jsonpath, urlpath);
-					resources.addAll(url);
-				}
-			} else {// html格式
+			if (page.isHtmlContent()){// html格式
 				for (String select : selectors) {
 					if(StringUtil.isNullOrBlank(select)){
 						continue;
@@ -294,10 +298,31 @@ public final class UrlAnalyzer {
 					HashSet<String> url = resourceselector.cssSelect(page, select);
 					resources.addAll(url);
 				}
+			} else if (page.isJsonContent()) { // json格式
+				for (String select : selectors) {
+					if(StringUtil.isNullOrBlank(select)){
+						continue;
+					}
+					String[] str = select.split("\\" + Constants.JSON_PATH_PREFIX);
+					String urlpath = str[0];
+					String jsonpath = Constants.JSON_PATH_PREFIX + str[1];
+					HashSet<String> url = FetchResourceSelector.jsonPath(page.getJsonContent(), jsonpath, urlpath);
+					resources.addAll(url);
+				}
+			} else if (page.isXmlContent()){ // xml 格式：扩展Jsoup搜索xml属性的问题支持中括号来搜索属性例如： node[name] ===> <node name="123"></node>
+				for (String select : selectors) {
+					if(StringUtil.isNullOrBlank(select)){
+						continue;
+					}
+					HashSet<String> url = FetchResourceSelector.xmlSelect(page.getXmlContent(), select, page.getUrl());
+					resources.addAll(url);
+				}
 			}
 		}
 		page.setResources(resources);
 	}
+	
+
 
 	/**
 	 * 使list页面中的avatar资源与detail link一一映射
@@ -308,38 +333,7 @@ public final class UrlAnalyzer {
 		Map<String, String> map = new HashMap<String, String>();
 		FetchResourceSelector resourceselector = Constants.FETCH_RESOURCE_SELECTOR_CACHE.get(page.getSeedName());
 		List<String> selectors = resourceselector.getSelectors();
-		if (page.isJsonContent()) { // json格式：只支持avatar资源与detaillink一一映射的结果
-			List<String> detailink = FetchResourceSelector.jsonPath2List(page.getJsonContent(), detailSelect, "");
-			List<String> avatars = new ArrayList<String>();
-			for (String select : selectors) {// 最多只有一条记录
-				String[] str = select.split("\\" + Constants.JSON_PATH_PREFIX);
-				String urlpath = str[0];
-				String jsonpath = Constants.JSON_PATH_PREFIX + str[1];
-				avatars = FetchResourceSelector.jsonPath2List(page.getJsonContent(), jsonpath, urlpath);
-			}
-			if(detailink.size() == avatars.size()){//json字符串中只有detaillink与avatar资源一一对应才行，否则没办法实现映射
-				for(int i=0; i < detailink.size(); i++){
-					String dlink = detailink.get(i);
-					if (StringUtil.isNullOrBlank(dlink) || dlink.startsWith("#") || dlink.equalsIgnoreCase("null") 
-							|| dlink.contains("javascript:") || dlink.contains("mailto:") || dlink.contains("about:blank")){
-						continue;
-					}			
-					if(dlink.startsWith(".")){
-						dlink = dlink.replace(".", "");
-					}
-					dlink = getAbsoluteURL(page.getUrl(), dlink);
-					//当然第一个img如果是空，就获取第二个
-					String avatar = avatars.get(i);
-					if (StringUtil.isNullOrBlank(avatar) || avatar.startsWith("#") || avatar.equalsIgnoreCase("null")){
-						avatar = null;
-					}
-					if(!StringUtil.isNullOrBlank(avatar)){
-						avatar =  getAbsoluteURL(page.getUrl(),avatar);
-					}
-					map.put(dlink, avatar);
-				}
-			}
-		} else if (page.isHtmlContent()) {
+		if (page.isHtmlContent()) {
 			// html格式：默认只认为在list_detail模式下的resource.selector选择出来的资源
 			// 是avatar与detail_link共同外面的css选择器或正则表达式，这样才能一一映射，
     	    // 缺点是：在List_Detail模式下配置fetch.resource.selector时，程序只认为它是与detail link数量一一对应的资源，而非其它资源
@@ -377,6 +371,78 @@ public final class UrlAnalyzer {
 					map.put(dlink, avatar);
 				}
 			}
+		} else if (page.isJsonContent()) { // json格式：只支持avatar资源与detaillink一一映射的结果
+			List<String> detailink = FetchResourceSelector.jsonPath2List(page.getJsonContent(), detailSelect, "");
+			if(detailink == null || detailink.size() == 0){
+				return map;
+			}
+			List<String> avatars = new ArrayList<String>();
+			for (String select : selectors) {// 最多只有一条记录
+				String[] str = select.split("\\" + Constants.JSON_PATH_PREFIX);
+				String urlpath = str[0];
+				String jsonpath = Constants.JSON_PATH_PREFIX + str[1];
+				avatars = FetchResourceSelector.jsonPath2List(page.getJsonContent(), jsonpath, urlpath);
+			}
+			if(avatars == null || avatars.size() == 0){
+				return map;
+			}
+			if(detailink.size() == avatars.size()){//json字符串中只有detaillink与avatar资源一一对应才行，否则没办法实现映射
+				for(int i=0; i < detailink.size(); i++){
+					String dlink = detailink.get(i);
+					if (StringUtil.isNullOrBlank(dlink) || dlink.startsWith("#") || dlink.equalsIgnoreCase("null") 
+							|| dlink.contains("javascript:") || dlink.contains("mailto:") || dlink.contains("about:blank")){
+						continue;
+					}			
+					if(dlink.startsWith(".")){
+						dlink = dlink.replace(".", "");
+					}
+					dlink = getAbsoluteURL(page.getUrl(), dlink);
+					//当然第一个img如果是空，就获取第二个
+					String avatar = avatars.get(i);
+					if (StringUtil.isNullOrBlank(avatar) || avatar.startsWith("#") || avatar.equalsIgnoreCase("null")){
+						avatar = null;
+					}
+					if(!StringUtil.isNullOrBlank(avatar)){
+						avatar =  getAbsoluteURL(page.getUrl(),avatar);
+					}
+					map.put(dlink, avatar);
+				}
+			}
+		} else if (page.isXmlContent()) {
+			List<String> detailink = FetchResourceSelector.xmlSelect2List(page.getXmlContent(), detailSelect, "");
+			if(detailink == null || detailink.size() == 0){
+				return map;
+			}
+			List<String> avatars = new ArrayList<String>();
+			for (String select : selectors) {// 最多只有一条记录
+				avatars = FetchResourceSelector.xmlSelect2List(page.getXmlContent(), select, "");
+			}
+			if(avatars == null || avatars.size() == 0){
+				return map;
+			}
+			if(detailink.size() == avatars.size()){//xml字符串中只有detaillink与avatar资源一一对应才行，否则没办法实现映射
+				for(int i=0; i < detailink.size(); i++){
+					String dlink = detailink.get(i);
+					if (StringUtil.isNullOrBlank(dlink) || dlink.startsWith("#") || dlink.equalsIgnoreCase("null") 
+							|| dlink.contains("javascript:") || dlink.contains("mailto:") || dlink.contains("about:blank")){
+						continue;
+					}			
+					if(dlink.startsWith(".")){
+						dlink = dlink.replace(".", "");
+					}
+					dlink = getAbsoluteURL(page.getUrl(), dlink);
+					//当然第一个img如果是空，就获取第二个
+					String avatar = avatars.get(i);
+					if (StringUtil.isNullOrBlank(avatar) || avatar.startsWith("#") || avatar.equalsIgnoreCase("null")){
+						avatar = null;
+					}
+					if(!StringUtil.isNullOrBlank(avatar)){
+						avatar =  getAbsoluteURL(page.getUrl(),avatar);
+					}
+					map.put(dlink, avatar);
+				}
+			}
+		
 		}
 		return map;
 	}
@@ -408,7 +474,7 @@ public final class UrlAnalyzer {
 	}
 
 	/**
-	 * 递归遍历Json文件查找出所有http或者https开头的url
+	 * 递归遍历Json文件查找出所有以http开头的url
 	 * @param jsonObj
 	 * @return
 	 */
@@ -431,6 +497,66 @@ public final class UrlAnalyzer {
 				}
 			} else if(obj instanceof String && isStartHttpUrl(obj.toString())){
 				url.add(obj.toString());
+			}
+		}
+		return url;
+	}
+	
+	/**
+	 * 嗅探Xml文件中的所有url链接，不支持相对路径
+	 * @param xmlContent
+	 * @param isResource 是否是资源链接 true：是  false：不是
+	 * @return
+	 */
+	private HashSet<String> sniffUrlFromXml(String xmlContent, boolean isResource){
+		HashSet<String> urls = new HashSet<String>();
+		Document doc = Jsoup.parse(xmlContent, "", Parser.xmlParser());
+		List<Node> nodelist = doc.childNodes();
+		HashSet<String> sets = new HashSet<String>(); 
+		sets = travel(nodelist, sets);
+		for(String url : sets){
+			if(FetchResourceSelector.isFindResources(url) == isResource){
+				urls.add(url);
+			}
+		}
+		return urls;
+	}
+	
+	/**
+	 * 递归遍历Xml文件查找出所有属性以及节点内容中以http开头的url
+	 * @param nodelist
+	 * @param url
+	 */
+	private HashSet<String> travel(List<Node> nodelist, HashSet<String> url) {
+		if(nodelist == null || nodelist.size() == 0){
+			return  url;
+		}
+		for(Node node : nodelist) {
+			if("#declaration".equalsIgnoreCase(node.nodeName()) || node == null){
+				continue;//declaration是指xml文件最开头的标签：<?xml ....>
+			}
+			if(node.childNodeSize() > 0){
+				Attributes atts = node.attributes();
+				for(Attribute attr : atts.asList()){
+					String attrname = attr.getKey().trim();
+					String link = attr.getValue().trim();
+					if(isStartHttpUrl(link) && !attrname.startsWith("xmlns")){
+						url.add(link);
+					}
+				}
+				travel(node.childNodes() , url);
+			} else {
+				Attributes atts = node.attributes();
+				for(Attribute attr : atts.asList()){
+					String attrname = attr.getKey().trim();
+					String link = attr.getValue().trim();
+					if(isStartHttpUrl(link) && !attrname.startsWith("xmlns")){
+						url.add(link);
+					}
+				}
+				if(isStartHttpUrl(node.toString().trim())){
+					url.add(node.toString().trim());
+				}
 			}
 		}
 		return url;

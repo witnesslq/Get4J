@@ -476,16 +476,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 	}
 
 	/**
-	 * 删除url的protocal http://www.website.com ===> www.website.com
-	 */
-	public static String deleteUrlSchema(String url) {
-		if (StringUtil.isNullOrBlank(url)) {
-			return url;
-		}
-		return url.replaceAll("http://", "").replaceAll("https://", "");
-	}
-
-	/**
 	 * 设置请求中的Http代理
 	 * @param site
 	 */
@@ -627,8 +617,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 				}
 				String contentType = header.getValue();
 				String suffix = "";
-				if (isDownloadJsonFile(contentType) || contentType.contains("text/html")
-						|| contentType.contains("text/plain")) {
+				if (isJsonFile(contentType) || isPage(contentType) || isXmlFile(contentType, new String(content))) {
 					continue;// 如果是页面就直接过滤掉
 				} else if (contentType.contains("svg")) {
 					suffix = "svg";
@@ -704,8 +693,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			}
 			String contentType = header.getValue();
 			String suffix = "";
-			if (isDownloadJsonFile(contentType) || contentType.contains("text/html")
-					|| contentType.contains("text/plain")) {
+			if (isJsonFile(contentType) || isPage(contentType) || isXmlFile(contentType,  new String(content))) {
 				return;// 如果是页面就直接过滤掉
 			} else if (contentType.contains("svg")) {
 				suffix = "svg";

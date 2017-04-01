@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Constants;
 import com.bytegriffin.get4j.core.Page;
+import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.net.http.HttpClientEngine;
 import com.bytegriffin.get4j.util.FileUtil;
@@ -28,9 +29,6 @@ public class DiskDownloader implements Process {
 	private static String staticServer = "";
 	// 默认avatar存储路径，当配置静态服务器时系统会自动调用它暂存图片
 	private static String defaultAvatarPath = "";
-	// 当启动list_detail模式，并且配置resource.selector时，是否会默认下载页面 true：会 flase:不会
-	public static final boolean isDownloadPage = false;
-
 	// 创建每个site的文件夹
 	public void init(Seed seed) {
 		String diskpath = seed.getDownloadDisk();
@@ -50,9 +48,11 @@ public class DiskDownloader implements Process {
 	@Override
 	public void execute(Page page) {
 		// 1.在磁盘上生成页面
-		if (isDownloadPage) {
+		PageMode fm = Constants.FETCH_PAGE_MODE_CACHE.get(page.getSeedName());
+		if (!PageMode.list_detail.equals(fm) ) {// 当启动list_detail模式，默认不会下载页面的
 			FileUtil.downloadPagesToDisk(page);
 		}
+
 		// 2.下载页面中的资源文件
 		HttpClientEngine.downloadResources(page);
 

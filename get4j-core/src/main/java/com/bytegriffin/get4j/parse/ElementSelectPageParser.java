@@ -37,6 +37,9 @@ public class ElementSelectPageParser implements PageParser{
 				logger.error("Seed["+page.getSeedName()+"]在使用Jsonpath["+elementSeletor+"]定位解析Json字符串时出错，",p);
 			}
 			page.setJsonContent(text);
+		} else if(page.isXmlContent()){// 用jsoup解析xml
+			text = UrlAnalyzer.select(page,elementSeletor);
+			page.setXmlContent(text);
 		}
 		logger.info("线程[" + Thread.currentThread().getName() + "]解析种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	}

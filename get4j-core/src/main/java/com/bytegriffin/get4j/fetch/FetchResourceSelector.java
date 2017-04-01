@@ -1,6 +1,5 @@
 package com.bytegriffin.get4j.fetch;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -9,12 +8,15 @@ import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Constants;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
+import com.bytegriffin.get4j.util.StringUtil;
 import com.jayway.jsonpath.JsonPath;
 
 /**
@@ -41,7 +43,7 @@ public class FetchResourceSelector{
             .compile(".*(\\.(css|js|bmp|gif|jpe?g|png|ico|tiff?|svg|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf"
                     + "|rm|rmvb|smil|wmv|swf|wma|7z|tar|zip|rar|gz|tgz|exe|asf|iso|3gp|mkv|flac|ape|dll|OCX|rtf|jar"
                     + "|psd|lzh|pdf|dat|apk|ipa|epub|mobi|deb|sisx|cab|pxl|csv|doc|xls|ppt|pptx|msi|chm|torrent|docx"
-                    + "|pptx|xlsx|xv|xvx|tp|tl|hqx|mdf|arj|txt|xml))$");
+                    + "|pptx|xlsx|xv|xvx|tp|tl|hqx|mdf|arj|txt))$");
 	
 	private static final FetchResourceSelector fetchResourceSelector =  new FetchResourceSelector();;
 
@@ -220,8 +222,63 @@ public class FetchResourceSelector{
     	return links;
     }
 
-    public static void main(String... args) throws IOException {	
+	/**
+	 * 使用Jsoup找出xml文件中的url资源 <br>
+	 * 
+	 * @param xmlContent
+	 * @param select
+	 * @param urls
+	 */
+    public static HashSet<String> xmlSelect(String xmlContent, String select, String baseUri){
+    	HashSet<String> urls = new HashSet<String>();
+		Document doc = Jsoup.parse(xmlContent, "", Parser.xmlParser());
+		String attrKey = "";
+		if(select.contains("[") && select.contains("]")){
+			attrKey = select.substring(select.indexOf("[") + 1, select.lastIndexOf("]"));
+		}
+		Elements eles = doc.select(select);
+		for (Element link : eles) {
+			if(!StringUtil.isNullOrBlank(attrKey) && link.hasAttr(attrKey)){
+				String attrValue = link.attr(attrKey).trim();
+				urls.add(baseUri +attrValue);
+			} else {
+				String url = link.text().trim();
+				if(!StringUtil.isNullOrBlank(url)){
+					urls.add(baseUri + link.text().trim());
+				}
+			}
+		}
+		return urls;
+	}
 
+	/**
+	 * 使用Jsoup找出xml文件中的url资源 <br>
+	 * 
+	 * @param xmlContent
+	 * @param select
+	 * @param baseUri
+	 * @return
+	 */
+	public static List<String> xmlSelect2List(String xmlContent, String select, String baseUri){
+		List<String> list = new ArrayList<String>();
+		Document doc = Jsoup.parse(xmlContent, "", Parser.xmlParser());
+		String attrKey = "";
+		if(select.contains("[") && select.contains("]")){
+			attrKey = select.substring(select.indexOf("[") + 1, select.lastIndexOf("]"));
+		}
+		Elements eles = doc.select(select);
+		for (Element link : eles) {
+			if(!StringUtil.isNullOrBlank(attrKey) && link.hasAttr(attrKey)){
+				String attrValue = link.attr(attrKey).trim();
+				list.add(baseUri + attrValue);
+			} else {
+				String url = link.text().trim();
+				if(!StringUtil.isNullOrBlank(url)){
+					list.add(baseUri +link.text().trim());
+				}
+			}
+		}
+		return list;
 	}
 
 }

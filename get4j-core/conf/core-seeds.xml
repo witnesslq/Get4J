@@ -80,7 +80,7 @@
 		<property>
 			<name>fetch.sleep</name>
 			<value></value>
-			<description>非必填项。延迟策略，每两次http请求之间的间隔时间(单位：秒)，以防止频繁访问站点抓取不到内容，默认值为0
+			<description>非必填项。延迟策略，每两次http请求之间的间隔时间(单位：秒)，以防止频繁访问站点抓取不到内容，默认值为0，注意每两次请求还跟当时网速等有关，并非真正起到完全固定的时间
 			</description>
 		</property>
 		<property>

@@ -17,6 +17,8 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Node;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import com.bytegriffin.get4j.conf.Seed;
@@ -191,8 +193,32 @@ public abstract class AbstractHttpEngine {
 	 * @param contentType
 	 * @return
 	 */
-	protected static boolean isDownloadJsonFile(String contentType) {
+	protected static boolean isJsonFile(String contentType) {
 		if (contentType.contains("json") || contentType.contains("JSON") || contentType.contains("Json")) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * 判断是否为普通页面
+	 * @param contentType
+	 * @return
+	 */
+	protected static boolean isPage(String contentType) {
+		if (contentType.contains("text/html") || contentType.contains("text/plain")) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * 判断是否为xml文件
+	 * @param contentType
+	 * @return
+	 */
+	protected static boolean isXmlFile(String contentType, String content) {
+		if (contentType.contains("xml") || content.contains("<?xml")) {
 			return true;
 		}
 		return false;
@@ -208,18 +234,20 @@ public abstract class AbstractHttpEngine {
 	 * 4.如果都没有那只能返回utf-8
 	 * 
 	 * @param contentType
-	 * @param content
-	 *            转码前的content，有可能是乱码
+	 * @param content  转码前的content，有可能是乱码
 	 * @return
 	 */
 	protected String getCharset(String contentType, String content) {
 		String charset = "";
-		if (contentType.contains("charset=")) {// 如果Response的Header中有
-												// Content-Type:text/html;
-												// charset=utf-8直接获取
+		if (contentType.contains("charset=")) {// 如果Response的Header中有 Content-Type:text/html; charset=utf-8直接获取
 			charset = contentType.split("charset=")[1];
 		} else {// 但是有时Response的Header中只有 Content-Type:text/html;没有charset
-			if (contentType.contains("text/html") || contentType.contains("text/plain")) {// 如果是html，可以用jsoup解析html页面上的meta元素
+			if(isXmlFile(contentType, content)){ // 首先判断是不是xml文件，有的xml文件返回的也是text/html，但是根节点是<?xml ...>
+				Document doc = Jsoup.parse(content, "", Parser.xmlParser());
+				Node root = doc.root();
+				Node node = root.childNode(0);
+				charset = node.attr("encoding");
+			} else if (isPage(contentType)) {// 如果是html，可以用jsoup解析html页面上的meta元素
 				Document doc = Jsoup.parse(content);
 				Elements eles1 = doc.select("meta[http-equiv=Content-Type]");
 				Elements eles2 = doc.select("meta[charset]");
@@ -231,7 +259,7 @@ public abstract class AbstractHttpEngine {
 				} else {// 如果html页面内也没有含Content-Type的meta标签，那就默认为utf-8
 					charset = Charset.defaultCharset().name();
 				}
-			} else { // 如果不是html是json或者xml等，那么给他设置默认编码
+			} else if(isJsonFile(contentType)){ // 如果是json，那么给他设置默认编码
 				charset = Charset.defaultCharset().name();
 			}
 		}
@@ -242,27 +270,27 @@ public abstract class AbstractHttpEngine {
 	 * 根据ContentType设置page内容
 	 * 
 	 * @param contentType
-	 * @param content
-	 *            转码后的content
+	 * @param content 转码后的content
 	 * @param page
 	 */
 	protected void setContent(String contentType, String content, Page page) {
-		if (isDownloadJsonFile(contentType)) {
-			page.setJsonContent(content);
-		} else if (contentType.contains("text/html") || contentType.contains("text/plain")) {
+		if (isPage(contentType)) {
 			// 注意：有两种特殊情况
 			// 1.有时text/plain这种文本格式里面放的是json字符串，并且是这个json字符串里的属性值却是html
 			// 2.有时text/html反应出来的是rss的xml格式
-			if (content.contains("<?xml") || content.contains("<rss")) {
-				// 如果是xml格式，则当成资源来处理
-				HashSet<String> resources = page.getResources();
-				resources.add(page.getUrl());
+			if (content.contains("<?xml") || content.contains("<rss") || content.contains("<feed")) {
+				page.setXmlContent(content);
 			} else {
 				page.setHtmlContent(content);
-				// json文件中一般不好嗅探titile属性
-				page.setTitle(UrlAnalyzer.getTitle(page.getHtmlContent()));
 			}
-
+			// json文件中一般不好嗅探titile属性
+			page.setTitle(UrlAnalyzer.getTitle(content));
+		} else if (isJsonFile(contentType)) {
+			page.setJsonContent(content);
+		} else if(isXmlFile(contentType, content)){
+			page.setXmlContent(content);
+			// json文件中一般不好嗅探titile属性
+			page.setTitle(UrlAnalyzer.getTitle(content));
 		} else { // 不是html也不是json，那么只能是resource的链接了，xml也是
 			HashSet<String> resources = page.getResources();
 			resources.add(page.getUrl());

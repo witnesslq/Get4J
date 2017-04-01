@@ -224,6 +224,15 @@ public class Spider {
 		seed.setFetchHttpProxy(list);
 		return this;
 	}
+	
+	/**
+	 * 加载系统自带的http_proxy文件，需要人工手工设置 
+	 * @return
+	 */
+	public Spider proxyFile() {
+		seed.setFetchHttpProxyFile("classpath:conf/http_proxy");
+		return this;
+	}
 
 	/**
 	 * 自定义一个UserAgent
@@ -244,6 +253,15 @@ public class Spider {
 	 */
 	public Spider userAgents(List<String> userAgents) {
 		seed.setFetchUserAgent(userAgents);
+		return this;
+	}
+	
+	/**
+	 * 默认加载系统自带的UserAgent
+	 * @return
+	 */
+	public Spider defaultUserAgent(){
+		seed.setFetchUserAgentFile("classpath:conf/user_agent");
 		return this;
 	}
 

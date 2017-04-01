@@ -17,7 +17,6 @@ import org.apache.logging.log4j.Logger;
 import com.bytegriffin.get4j.core.Constants;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
-import com.bytegriffin.get4j.net.http.HttpClientEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
 
 /**
@@ -253,26 +252,28 @@ public final class FileUtil {
 	public static void downloadPagesToDisk(Page page) {
 		String folderName = Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
 		String fileName = folderName + File.separator;
-
 		if (page.isJsonContent()) {
 			fileName += generatePageName(page.getSeedName(), page.getUrl(), Constants.JSON_PAGE_SUFFIX);
 		} else if (page.isHtmlContent()) {
 			fileName += generatePageName(page.getSeedName(), page.getUrl(), Constants.DEFAULT_PAGE_SUFFIX);
+		} else if (page.isXmlContent()) {
+			fileName += generatePageName(page.getSeedName(), page.getUrl(), Constants.XML_PAGE_SUFFIX);
 		} else {// 这种情况为资源文件，直接返回
 			return;
 		}
 		byte[] content = null;
 		try {
 			if (page.isHtmlContent()) {
-				content = page.getHtmlContent().getBytes("UTF-8");
+				content = page.getHtmlContent().getBytes(page.getCharset());
 			} else if (page.isJsonContent()) {
-				content = page.getJsonContent().getBytes("UTF-8");
+				content = page.getJsonContent().getBytes(page.getCharset());
+			} else if (page.isXmlContent()) {
+				content = page.getXmlContent().getBytes(page.getCharset());
 			}
 		} catch (UnsupportedEncodingException e) {
 			logger.error("Seed[" + page.getSeedName() + "]通过线程[" + Thread.currentThread().getName() + "]往硬盘上写入名为["
 					+ fileName + "]时出错。", e);
 		}
-
 		FileUtil.writeFileToDisk(fileName, content);
 	}
 
@@ -309,6 +310,17 @@ public final class FileUtil {
 			}
 		}
 	}
+	
+
+	/**
+	 * 删除url的protocal http://www.website.com ===> www.website.com
+	 */
+	public static String deleteUrlSchema(String url) {
+		if (StringUtil.isNullOrBlank(url)) {
+			return url;
+		}
+		return url.replaceAll("http://", "").replaceAll("https://", "");
+	}
 
 	/**
 	 * 下载的网页文件名规则 <br />
@@ -319,12 +331,11 @@ public final class FileUtil {
 	 * 
 	 * @param seedName
 	 * @param url
-	 * @param suffix
-	 *            文件后缀名
+	 * @param suffix 文件后缀名
 	 * @return
 	 */
 	public static String generatePageName(String seedName, String url, String suffix) {
-		String newUrl = HttpClientEngine.deleteUrlSchema(url);
+		String newUrl = deleteUrlSchema(url);
 		String laststr = newUrl.substring(newUrl.length() - 1, newUrl.length());
 		if (laststr.equals("/")) {
 			newUrl = newUrl.substring(0, newUrl.length() - 1);
@@ -337,13 +348,9 @@ public final class FileUtil {
 
 		// 判断动态页面url中没有后缀名的自动加上相应的后缀名
 		if (!isFindPage(newUrl) && !FetchResourceSelector.isFindResources(newUrl)) {
-			if (Constants.JSON_PAGE_SUFFIX.equalsIgnoreCase(suffix)) {
-				newUrl += "." + Constants.JSON_PAGE_SUFFIX;
-			} else if (Constants.DEFAULT_PAGE_SUFFIX.equalsIgnoreCase(suffix)) {
-				newUrl += "." + Constants.DEFAULT_PAGE_SUFFIX;
-			} else {
-				newUrl += "." + suffix;
-			}
+			newUrl += "." + suffix;
+		} else {
+			newUrl += "." +Constants.DEFAULT_PAGE_SUFFIX;
 		}
 
 		if (StringUtil.isNullOrBlank(newUrl)) {
@@ -374,7 +381,7 @@ public final class FileUtil {
 	 * @return
 	 */
 	public static String generateResourceName(String seedName, String url, String suffix) {
-		String newUrl = HttpClientEngine.deleteUrlSchema(url);
+		String newUrl = deleteUrlSchema(url);
 		String laststr = newUrl.substring(newUrl.length() - 1, newUrl.length());
 		if (laststr.equals("/")) {
 			newUrl = newUrl.substring(0, newUrl.length() - 1);
