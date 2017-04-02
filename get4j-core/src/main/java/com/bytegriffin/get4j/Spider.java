@@ -1,5 +1,6 @@
 package com.bytegriffin.get4j;
 
+import java.io.File;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -226,11 +227,12 @@ public class Spider {
 	}
 	
 	/**
-	 * 加载系统自带的http_proxy文件，需要人工手工设置 
+	 * 加载系统自带的http_proxy文件
+	 * 注意：调用此方法之前请确保conf/http_proxy文件中有可用代理
 	 * @return
 	 */
-	public Spider proxyFile() {
-		seed.setFetchHttpProxyFile("classpath:conf/http_proxy");
+	public Spider defaultProxy() {
+		seed.setFetchHttpProxyFile("classpath:conf"+File.separator+"http_proxy");
 		return this;
 	}
 
@@ -261,7 +263,7 @@ public class Spider {
 	 * @return
 	 */
 	public Spider defaultUserAgent(){
-		seed.setFetchUserAgentFile("classpath:conf/user_agent");
+		seed.setFetchUserAgentFile("classpath:conf"+File.separator+"user_agent");
 		return this;
 	}
 
@@ -520,6 +522,27 @@ public class Spider {
 			System.exit(1);
 		}
 		SpiderEngine.create().setSeed(seed).build();
+	}
+
+	/**
+	 * 获取互联网上免费代理<br>
+	 * 并自动将可用的代理保存到本地http_proxy文件中<br>
+	 * 此方法一般在启动爬虫之前使用，下次在启动爬虫时需要代理时，
+	 * 可以直接调用defaultProxy方法即可
+	 */
+	public static void initFreeProxy(){
+		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+		List<Seed> seeds = new ArrayList<Seed>();
+		Seed xicidaili = new Seed("xicidaili");
+		xicidaili.setPageMode(PageMode.list_detail);
+		xicidaili.setFetchUrl("http://www.xicidaili.com/nn/{1}");
+		xicidaili.setThreadNumber(1);
+		xicidaili.setFetchTotalPages("5");
+		xicidaili.setParseClassImpl("com.bytegriffin.get4j.parse.FreeProxyPageParser");
+		xicidaili.setStoreFreeProxy("classpath:conf"+File.separator+"http_proxy");
+		xicidaili.setFetchUserAgentFile("classpath:conf"+File.separator+"user_agent");
+		seeds.add(xicidaili);
+		SpiderEngine.create().setSeeds(seeds).build();
 	}
 
 	/**

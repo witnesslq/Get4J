@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -222,6 +224,22 @@ public abstract class AbstractHttpEngine {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * 设置site url 可以将它当作request中header的host属性使用
+	 * @param url
+	 * @return
+	 */
+	protected void setSiteUrl(Page page) {
+		String siteUrl = "";
+		try {
+			URI uri = new URI(page.getUrl());
+			siteUrl = uri.getAuthority();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		page.setSiteUrl(siteUrl);
 	}
 
 	/**

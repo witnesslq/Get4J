@@ -103,6 +103,7 @@ public class ListDetailFetcher implements Process {
 				listLink.put(seedName, list);
 			}
 		}
+		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + seedName + "]列表Url总数是["+listLink.size()+"]个。");
 	}
 
 	@Override
@@ -132,7 +133,9 @@ public class ListDetailFetcher implements Process {
 			if (links != null && links.size() > 0) {
 				UrlQueue.addUnVisitedLinks(page.getSeedName(), links);
 				page.setDetailLinks(links);
+				logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]url["+page.getUrl()+"]的详情Url总数是["+UrlQueue.getUnVisitedLink(page.getSeedName()).size()+"]个。");
 			}
+			
 		} else {// 访问的是detail url
 
 			// 1.获取并设置详情页DetailPage的HtmlContent或JsonContent属性
@@ -148,8 +151,7 @@ public class ListDetailFetcher implements Process {
 				// 3.获取并设置详情页DetailPage的Resource属性
 				UrlAnalyzer.custom(detailPage).sniffAndSetResources();
 			}
-
-			
+	
 
 			// 4.设置详情页DetailPage其它属性
 			detailPage.setFetchTime(DateUtil.getCurrentDate());
@@ -167,9 +169,10 @@ public class ListDetailFetcher implements Process {
 			page.setSeedName(detailPage.getSeedName());
 			page.setSiteUrl(detailPage.getSiteUrl());
 			page.setUrl(detailPage.getUrl());
+
+			logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 		}
 
-		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	}
 
 }

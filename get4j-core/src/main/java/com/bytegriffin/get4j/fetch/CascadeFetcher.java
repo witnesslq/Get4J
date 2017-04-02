@@ -59,7 +59,7 @@ public class CascadeFetcher implements Process {
 			HashSet<String> links = UrlAnalyzer.custom(page).sniffAllLinks();
 			UrlQueue.addUnVisitedLinks(page.getSeedName(), links);
 			increment();
-			logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]级联抓取链接总数是["+UrlQueue.getUnVisitedLink(page.getSeedName()).size()+"]个。");
+			logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]级联url总数是["+UrlQueue.getUnVisitedLink(page.getSeedName()).size()+"]个。");
 		}
 
 		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");

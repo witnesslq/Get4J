@@ -25,7 +25,8 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 /**
- * 关系型数据库存储器
+ * 关系型数据库存储器<br>
+ * 增量式更新数据
  */
 public class DBStorage implements Process {
 

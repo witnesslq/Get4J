@@ -221,7 +221,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			if (httpget != null) {
 				httpget.releaseConnection();
 			}
-			close(httpclient);
 		}
 	}
 
@@ -448,18 +447,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 		Constants.HTTP_CLIENT_BUILDER_CACHE.put(siteName, httpClientBuilder);
 	}
 
-	/**
-	 * 关闭httpClient
-	 */
-	private static void close(CloseableHttpClient httpClient) {
-		try {
-			if (httpClient != null) {
-				httpClient.close();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 
 	/**
 	 * 格式化Url: www.website.com ===> http://www.website.com
@@ -509,8 +496,9 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
 	/**
 	 * 获取并设置page的页面内容（包含Html、Json）
-	 * 注意：有的站点链接是Post操作，只需在浏览器中找到真实link，保证参数完整，Get也可以获取。
-	 * 
+	 * 注意：
+	 * 1.有的站点链接是Post操作，只需在浏览器中找到真实link，保证参数完整，Get也可以获取。
+	 * 2.有些网站会检查header中的Referer是否合法
 	 * @param page
 	 * @return
 	 */
@@ -522,8 +510,11 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			sleep(page.getSeedName(), logger);
 			setHttpProxy(page.getSeedName());
 			setUserAgent(page.getSeedName());
+			// 生成site url
+			setSiteUrl(page);
 			httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
 			request = new HttpGet(url);
+			request.addHeader("Host", page.getSiteUrl());
 			HttpResponse response = httpClient.execute(request);
 			int statusCode = response.getStatusLine().getStatusCode();
 			boolean isvisit = isVisit(statusCode, page, logger);

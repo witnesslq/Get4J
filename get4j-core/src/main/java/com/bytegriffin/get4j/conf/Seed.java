@@ -126,6 +126,10 @@ public class Seed {
 	 * 保存结果到lucene索引中，默认值/data/index/seedName/，绝对路径不用写classpath
 	 */
 	private String storeLuceneIndex;
+	/**
+	 * 保存免费代理
+	 */
+	private String storeFreeProxy;
 
 	public Seed(){
 	}
@@ -403,13 +407,20 @@ public class Seed {
 		this.parseElementSelector = parseElementSelector;
 	}
 
-
 	public boolean isFetchJavascriptSupport() {
 		return fetchJavascriptSupport;
 	}
 
 	public void setFetchJavascriptSupport(boolean fetchJavascriptSupport) {
 		this.fetchJavascriptSupport = fetchJavascriptSupport;
+	}
+
+	public String getStoreFreeProxy() {
+		return storeFreeProxy;
+	}
+
+	public void setStoreFreeProxy(String storeFreeProxy) {
+		this.storeFreeProxy = storeFreeProxy;
 	}
 
 }

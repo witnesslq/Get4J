@@ -1,8 +1,6 @@
 package com.bytegriffin.get4j.store;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,37 +29,10 @@ public final class FailUrlStorage {
 
 	public static void dumpFile(String seedName) {
 		ConcurrentQueue<String> failurls = UrlQueue.getFailVisitedUrl(seedName);
-		if (failurls != null && !failurls.isEmpty()) {
-			FileWriter fw = null;
-			try {
-				fw = new FileWriter(failUrlFile, true);
-				for (int i = 0; i < failurls.size(); i++) {
-					Object obj = failurls.get(i);
-					if (obj == null) {
-						break;
-					}
-					String url = obj.toString();
-					fw.write(url+System.getProperty("line.separator"));
-				}
-				fw.flush();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					if(fw != null){
-						fw.close();
-					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			// FileUtil.append(failUrlFile, content);
-			// content = "";
-			logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + seedName + "]时一共有["
-					+ failurls.size() + "]个坏链产生。");
+		if(failurls != null && failurls.size() > 0 && failurls.list != null && failurls.list.size()>0){
+			FileUtil.append(failUrlFile, failurls.list);
+			logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + seedName + "]时一共有[" + failurls.size() + "]个坏链产生。");
 		}
-
 	}
 
 }

@@ -2,6 +2,7 @@ package com.bytegriffin.get4j.util;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -9,6 +10,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -42,7 +45,7 @@ public final class FileUtil {
 	 * @param classpath
 	 * @return
 	 */
-	private static String getAbsolutePath(String classpath) {
+	public static String getAbsolutePath(String classpath) {
 		String newpath = "";
 		if (classpath.contains("classpath:")) {
 			newpath = System.getProperty("user.dir") + File.separator;
@@ -78,7 +81,6 @@ public final class FileUtil {
 				String[] end = array[1].split(":");
 				hp = new HttpProxy(front[0], front[1], end[0], end[1]);
 			} else if (str.contains(":")) {
-				// 可能是没有IP，只有port
 				String[] front = str.split(":");
 				hp = new HttpProxy(front[0], front[1]);
 			} else {
@@ -105,7 +107,6 @@ public final class FileUtil {
 			String[] end = array[1].split(":");
 			hp = new HttpProxy(front[0], front[1], end[0], end[1]);
 		} else if (proxyString.contains(":")) {
-			// 可能是没有IP，只有port
 			String[] front = proxyString.split(":");
 			hp = new HttpProxy(front[0], front[1]);
 		} else {
@@ -120,7 +121,7 @@ public final class FileUtil {
 	 * @param configFile
 	 * @return
 	 */
-	private static List<String> readFileLine(String configFile) {
+	public static List<String> readFileLine(String configFile) {
 		configFile = getAbsolutePath(configFile);
 		boolean flag = FileUtil.isExists(configFile);
 		if (!flag) {
@@ -199,25 +200,76 @@ public final class FileUtil {
 
 	/**
 	 * 追加内容
+	 * 
 	 * @param file
 	 * @param content
 	 */
-	public static void append(File file, String content) {
-		FileWriter fw = null;
-		try {
-			fw = new FileWriter(file, true);
-		} catch (IOException e) {
-			e.printStackTrace();
+	public static void append(File file, Collection<String> contents) {
+		if (contents != null && !contents.isEmpty()) {
+			FileWriter fw = null;
+			try {
+				fw = new FileWriter(file, true);
+				Iterator<String> iter = contents.iterator();
+				while (iter.hasNext()) {
+					String str = (String) iter.next();
+					if (StringUtil.isNullOrBlank(str)) {
+						break;
+					}
+					fw.write(str + System.getProperty("line.separator"));
+				}
+				fw.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					if (fw != null) {
+						fw.close();
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
-		PrintWriter pw = new PrintWriter(fw);
-		pw.println(content);
-		pw.flush();
+	}
+
+	/**
+	 * 删除文件中的某行内容
+	 * 
+	 * @param file
+	 * @param proxy
+	 */
+	public static void removeLine(String file, String proxy) {
 		try {
-			fw.flush();
+			file = FileUtil.getAbsolutePath(file);
+			File inFile = new File(file);
+			File tempFile = new File(inFile.getAbsolutePath() + ".tmp");
+
+			BufferedReader br = new BufferedReader(new FileReader(file));
+			PrintWriter pw = new PrintWriter(new FileWriter(tempFile));
+			String line = null;
+
+			while ((line = br.readLine()) != null) {
+				if (line.trim().equals("")) {
+					continue;
+				} else if (!line.trim().equals(proxy)) {
+					pw.println(line);
+					pw.flush();
+				}
+			}
 			pw.close();
-			fw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+			br.close();
+			if (!inFile.delete()) {
+				System.out.println("不能删除原文件。");
+				return;
+			}
+			if (!tempFile.renameTo(inFile)) {
+				System.out.println("不能重命名新文件。");
+			}
+		} catch (FileNotFoundException ex) {
+			ex.printStackTrace();
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		}
 	}
 
@@ -310,7 +362,6 @@ public final class FileUtil {
 			}
 		}
 	}
-	
 
 	/**
 	 * 删除url的protocal http://www.website.com ===> www.website.com
@@ -331,7 +382,8 @@ public final class FileUtil {
 	 * 
 	 * @param seedName
 	 * @param url
-	 * @param suffix 文件后缀名
+	 * @param suffix
+	 *            文件后缀名
 	 * @return
 	 */
 	public static String generatePageName(String seedName, String url, String suffix) {
@@ -350,7 +402,7 @@ public final class FileUtil {
 		if (!isFindPage(newUrl) && !FetchResourceSelector.isFindResources(newUrl)) {
 			newUrl += "." + suffix;
 		} else {
-			newUrl += "." +Constants.DEFAULT_PAGE_SUFFIX;
+			newUrl += "." + Constants.DEFAULT_PAGE_SUFFIX;
 		}
 
 		if (StringUtil.isNullOrBlank(newUrl)) {

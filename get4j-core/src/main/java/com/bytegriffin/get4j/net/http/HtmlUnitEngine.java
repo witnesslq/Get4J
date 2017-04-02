@@ -138,9 +138,13 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 		String url = page.getUrl();
 		sleep(page.getSeedName(), logger);
 		try {
+			// 生成site url
+			setSiteUrl(page);
 			WebRequest request = new WebRequest(new URL(url));
 			setHttpProxy(page.getSeedName(), webClient, request);
 			setUserAgent(page.getSeedName(), request);
+			request.setAdditionalHeader("Host", page.getSiteUrl());
+
 			HtmlPage htmlpage = webClient.getPage(request);
 			WebResponse response = htmlpage.getWebResponse();
 

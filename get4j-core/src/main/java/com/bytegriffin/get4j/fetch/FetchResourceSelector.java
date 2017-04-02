@@ -36,8 +36,6 @@ public class FetchResourceSelector{
 
 	/**
 	 * 资源文件后缀名
-	 * 注意某些页面上的xml文件也看作是资源文件
-	 * 例如：<link type="application/rss+xml" href="rss"/> <link type="application/wlwmanifest+xml" href="wlwmanifest.xml"/>
 	 */
 	public static final Pattern BINARY_FILTERS = Pattern
             .compile(".*(\\.(css|js|bmp|gif|jpe?g|png|ico|tiff?|svg|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf"

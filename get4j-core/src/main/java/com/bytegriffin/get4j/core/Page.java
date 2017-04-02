@@ -1,17 +1,17 @@
 package com.bytegriffin.get4j.core;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
+import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.jayway.jsonpath.JsonPath;
 
@@ -198,6 +198,16 @@ public class Page {
 		Elements eles = doc.select(jsoupSelect);
 		return eles;
 	}
+	
+	/**
+	 * 根据Jsoup原生支持的cssSelect或正则表达式解析Xml
+	 * 
+	 * @param jsoupSelect
+	 * @return
+	 */
+	public List<String> jsoupXml(String jsoupSelect) {
+		return FetchResourceSelector.xmlSelect2List(this.xmlContent, jsoupSelect, "");
+	}
 
 	/**
 	 * 根据抓取url来获取域名
@@ -205,15 +215,6 @@ public class Page {
 	 * @return
 	 */
 	public String getSiteUrl() {
-		if (StringUtil.isNullOrBlank(this.url)) {
-			return this.siteUrl;
-		}
-		try {
-			URI uri = new URI(this.url);
-			return uri.getAuthority();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
 		return this.siteUrl;
 	}
 

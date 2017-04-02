@@ -17,7 +17,7 @@ import com.bytegriffin.get4j.util.UrlQueue;
 /**
  * 整站抓取 <br/>
  * 如果这个站点里有含其它站点的url，那么这些url是不会被抓取的，是被过滤的<br />
- * 并且默认不支持向上抓取，只抓取本层以及以下的站点 <br/>
+ * 并且默认不支持向上抓取，只抓取本层以及以下的站点，采用的是宽度优先遍历 <br/>
  * 例如抓取的站点是www.aaa.com/bbb/，那么就不会抓取www.aaa.com的内容
  */
 public class SiteFetcher implements Process {
@@ -48,7 +48,8 @@ public class SiteFetcher implements Process {
 		// 4.嗅探出新访问地址并增加新的访问链接交给爬虫队列
 		HashSet<String> links = UrlAnalyzer.custom(page).sniffSiteLinks();
 		UrlQueue.addUnVisitedLinks(page.getSeedName(), links);
-
+		
+		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]整站Url总数是["+UrlQueue.getUnVisitedLink(page.getSeedName()).size()+"]个。");
 		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
 	}
 
