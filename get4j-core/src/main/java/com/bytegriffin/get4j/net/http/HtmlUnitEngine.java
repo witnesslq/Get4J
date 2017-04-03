@@ -1,8 +1,11 @@
 package com.bytegriffin.get4j.net.http;
 
 import java.net.URL;
+import java.util.HashSet;
 
 import org.apache.http.HttpStatus;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -144,8 +147,9 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 			setHttpProxy(page.getSeedName(), webClient, request);
 			setUserAgent(page.getSeedName(), request);
 			request.setAdditionalHeader("Host", page.getSiteUrl());
+			request.setAdditionalHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
 
-			HtmlPage htmlpage = webClient.getPage(request);
+			com.gargoylesoftware.htmlunit.Page htmlpage = webClient.getPage(request);
 			WebResponse response = htmlpage.getWebResponse();
 
 			int statusCode = response.getStatusCode();
@@ -153,6 +157,17 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 			if(!isvisit){
 				return page;
 			}
+			
+			long contentlength = response.getContentLength();
+			if(contentlength > big_file_max_size){//大于10m
+				HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManagerShared(true);
+				Constants.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
+				boolean isdone = HttpClientEngine.downloadBigFile(page, contentlength);
+				if(isdone){
+					return page;
+				}
+			}
+			
 
 			String content = response.getContentAsString();
 			String contentType = response.getContentType();
@@ -160,10 +175,19 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 				logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]内容为空。");
 				return page;
 			}
+			
+			// 如果是资源文件的话
+			if (!isJsonFile(contentType) && !isPage(contentType) && !isXmlFile(contentType, new String(content))) {
+				HashSet<String> resources = page.getResources();
+				resources.add(page.getUrl());
+				HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManagerShared(true);
+				Constants.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
+				return page;
+			}
 
 			// 设置页面编码
 			page.setCharset(getCharset(contentType, content));
-
+			
 			// 重新设置content编码
 			content = getContentAsString(response.getContentAsStream(), page.getCharset());
 

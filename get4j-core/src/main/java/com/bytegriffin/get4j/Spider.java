@@ -276,6 +276,17 @@ public class Spider {
 		seed.setDownloadDisk(disk);
 		return this;
 	}
+	
+	private boolean isDefaultDownload = false;
+	/**
+	 * 默认的下载本地路径
+	 * 默认地址：$path/data/download/${seedname}
+	 * @return
+	 */
+	public Spider defaultDownloadDisk(){
+		isDefaultDownload = true;
+		return this;
+	}
 
 	/**
 	 * 下载到hdfs路径
@@ -516,6 +527,9 @@ public class Spider {
 		// 自动生成seed name
 		if(StringUtil.isNullOrBlank(seed.getSeedName())){
 			seed.setSeedName(MD5Util.generateID());
+		}
+		if(isDefaultDownload){
+			seed.setDownloadDisk("classpath:data"+File.separator+"download"+File.separator+seed.getSeedName());
 		}
 		if(StringUtil.isNullOrBlank(seed.getFetchUrl())){
 			logger.error("种子["+seed.getSeedName()+"]没有配置要抓取的url。");

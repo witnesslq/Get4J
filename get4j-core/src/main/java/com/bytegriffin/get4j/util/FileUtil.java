@@ -1,5 +1,6 @@
 package com.bytegriffin.get4j.util;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,7 +8,9 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -293,6 +296,7 @@ public final class FileUtil {
 				logger.warn("不能创建文件夹[" + diskDir + "]，它可能包含一些特殊字符串。", ex);
 			}
 		}
+		diskDir = diskDir.endsWith(File.separator) ? diskDir : diskDir + File.separator;
 		return diskDir;
 	}
 
@@ -399,7 +403,7 @@ public final class FileUtil {
 		}
 
 		// 判断动态页面url中没有后缀名的自动加上相应的后缀名
-		if (!isFindPage(newUrl) && !FetchResourceSelector.isFindResources(newUrl)) {
+		if (!isFindPage(newUrl)) {
 			newUrl += "." + suffix;
 		} else {
 			newUrl += "." + Constants.DEFAULT_PAGE_SUFFIX;
@@ -426,6 +430,7 @@ public final class FileUtil {
 	/**
 	 * 下载的资源命名规则：与页面命名类似，不同的是url后跟的参数全部删除掉，
 	 * 因为大多数页面都是动态，后面加上参数会代表不同的页面，而资源文件则不同，根本不需要
+	 * 注意：有些资源文件是一个页面经过跳转后的资源文件，比如www.aa.com/cc.php===>www.aa.com/img.jpg
 	 * 
 	 * @param seedName
 	 * @param url
@@ -438,10 +443,13 @@ public final class FileUtil {
 		if (laststr.equals("/")) {
 			newUrl = newUrl.substring(0, newUrl.length() - 1);
 		}
-
 		// 此时newUrl的格式为 www.aaa.com/path 或者 www.aaa.com
 		if (!Constants.IS_KEEP_FILE_URL) {
 			newUrl = newUrl.substring(newUrl.lastIndexOf("/") + 1, newUrl.length());
+		}
+		// 去除url中的参数
+		if (newUrl.indexOf("?") != -1) {
+			newUrl = newUrl.substring(0, newUrl.indexOf("?"));
 		}
 
 		// 判断动态url中没有后缀名的自动加上相应的后缀名，有的资源文件没有后缀名，比如css不用写后缀照样也能引用
@@ -452,11 +460,6 @@ public final class FileUtil {
 		if (!FetchResourceSelector.isFindResources(newUrl)) {
 			newUrl += "." + suffix;
 		}
-
-		if (newUrl.indexOf("?") != -1) {
-			newUrl = newUrl.substring(0, newUrl.indexOf("?"));
-		}
-
 		// 默认用下划线取代url中的特殊字符
 		newUrl = newUrl.replace("*", "_").replace("<", "_").replace(">", "_").replace("/", "_").replace("\\", "_")
 				.replace("|", "_").replace(":", "_").replace("\"", "_").replace("?", "_");
@@ -484,6 +487,86 @@ public final class FileUtil {
 			flag = true;
 		}
 		return flag;
+	}
+
+	/**
+	 * 事先创建指定大小的空内容的文件
+	 * 
+	 * @param fileName
+	 * @param fileSize
+	 * @throws IOException
+	 */
+	public static void createNullFile(String fileName, long fileSize) {
+		File newFile = new File(fileName);
+		RandomAccessFile raf = null;
+		try {
+			raf = new RandomAccessFile(newFile, "rw");
+			raf.setLength(fileSize);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (raf != null) {
+					raf.close();
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	/**
+	 * 下载文件到磁盘上
+	 * 
+	 * @param fileName
+	 * @param contentLength
+	 * @param content
+	 * @throws Exception
+	 */
+	public static void writeFile(String fileName, Long contentLength, InputStream content) {
+		long offset = 0;
+		BufferedInputStream bis = new BufferedInputStream(content);
+		byte[] buff = new byte[1024];
+		int bytesRead;
+		File newFile = new File(fileName);
+		RandomAccessFile raf = null;
+		try {
+			
+			int unit = (int) (contentLength / 100 );//将文件大小分成100分
+			int unitProgress = 0; //用于保存当前进度(1~100%)
+			raf = new RandomAccessFile(newFile, "rw");
+			while ((bytesRead = bis.read(buff, 0, buff.length)) != -1) {
+				raf.seek(offset);
+				raf.write(buff, 0, bytesRead);
+				offset = offset + bytesRead;
+				int temp = (int) (offset / unit); //计算当前百分比进度
+                if (temp >= 1 && temp > unitProgress) {//如果下载过程出现百分比变化
+                	unitProgress = temp;
+                	if(unitProgress % 20 == 0){
+                		logger.info("线程[" + Thread.currentThread().getName() + "]下载文件["+ fileName + "]的进度为["+unitProgress+"%]。");
+                	}
+					
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (raf != null) {
+					raf.close();
+				}
+				if (bis != null) {
+					bis.close();
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
+
 	}
 
 }

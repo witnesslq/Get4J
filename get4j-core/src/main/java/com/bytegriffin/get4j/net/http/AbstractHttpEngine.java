@@ -35,6 +35,11 @@ import com.bytegriffin.get4j.util.UrlQueue;
 public abstract class AbstractHttpEngine {
 
 	/**
+	 * 大文件判断标准（默认是超过10M就算）
+	 */
+	protected static final long big_file_max_size = 10485760;//10M
+
+	/**
 	 * 出现防止刷新页面的关键词， 当然有种可能是页面中的内容包含这些关键词，而网站并没有屏蔽频繁刷新的情况
 	 */
 	private static final Pattern KEY_WORDS = Pattern.compile(".*(\\.(刷新太过频繁|刷新太频繁|刷新频繁|频繁访问|访问频繁|访问太频繁|访问过于频繁))$");
@@ -216,11 +221,13 @@ public abstract class AbstractHttpEngine {
 
 	/**
 	 * 判断是否为xml文件
+	 * 有的xml文件返回的ContentType也是text/html，但是根节点是<?xml ...>
 	 * @param contentType
 	 * @return
 	 */
 	protected static boolean isXmlFile(String contentType, String content) {
-		if (contentType.contains("xml") || content.contains("<?xml")) {
+		if (contentType.contains("xml") || content.contains("<?xml") || 
+				content.contains("<rss") || content.contains("<feed")) {
 			return true;
 		}
 		return false;
@@ -260,7 +267,7 @@ public abstract class AbstractHttpEngine {
 		if (contentType.contains("charset=")) {// 如果Response的Header中有 Content-Type:text/html; charset=utf-8直接获取
 			charset = contentType.split("charset=")[1];
 		} else {// 但是有时Response的Header中只有 Content-Type:text/html;没有charset
-			if(isXmlFile(contentType, content)){ // 首先判断是不是xml文件，有的xml文件返回的也是text/html，但是根节点是<?xml ...>
+			if(isXmlFile(contentType, content)){ // 首先判断是不是xml文件
 				Document doc = Jsoup.parse(content, "", Parser.xmlParser());
 				Node root = doc.root();
 				Node node = root.childNode(0);
@@ -296,7 +303,7 @@ public abstract class AbstractHttpEngine {
 			// 注意：有两种特殊情况
 			// 1.有时text/plain这种文本格式里面放的是json字符串，并且是这个json字符串里的属性值却是html
 			// 2.有时text/html反应出来的是rss的xml格式
-			if (content.contains("<?xml") || content.contains("<rss") || content.contains("<feed")) {
+			if (isXmlFile(contentType, content)) {
 				page.setXmlContent(content);
 			} else {
 				page.setHtmlContent(content);
@@ -324,7 +331,7 @@ public abstract class AbstractHttpEngine {
 	 * @return
 	 */
 	protected static boolean isVisit(int statusCode, Page page, Logger logger) {
-		// 404/403/500/503
+		// 404/403/500/503 ：此类url不会重复请求，直接把url记录下来以便查明情况
 		if (HttpStatus.SC_NOT_FOUND == statusCode || HttpStatus.SC_FORBIDDEN == statusCode
 				|| HttpStatus.SC_INTERNAL_SERVER_ERROR == statusCode
 				|| HttpStatus.SC_SERVICE_UNAVAILABLE == statusCode) {
@@ -332,6 +339,11 @@ public abstract class AbstractHttpEngine {
 			logger.error("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["
 					+ page.getUrl() + "]时发生[" + statusCode + "]错误。");
 			return false;
+		} else if(HttpStatus.SC_MOVED_PERMANENTLY == statusCode || HttpStatus.SC_MOVED_TEMPORARILY == statusCode
+				|| HttpStatus.SC_SEE_OTHER == statusCode  || HttpStatus.SC_TEMPORARY_REDIRECT == statusCode){
+			// 301/302：此类url是跳转链接，访问连接后获取Response中头信息的Location属性才是真实地址
+			logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["
+					+ page.getUrl() + "]时发生[" + statusCode + "]错误。");
 		} else if (HttpStatus.SC_OK != statusCode) {
 			logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["
 					+ page.getUrl() + "]时发生[" + statusCode + "]错误。");

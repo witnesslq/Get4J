@@ -82,6 +82,7 @@ import org.apache.logging.log4j.Logger;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Constants;
 import com.bytegriffin.get4j.core.Page;
+import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.bytegriffin.get4j.util.UrlQueue;
@@ -241,7 +242,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 	 * 
 	 * @return
 	 */
-	public static void initHttpClientBuilder(String siteName) {
+	public static void initHttpClientBuilder(String seedName) {
 		// Use custom message parser / writer to customize the way HTTP
 		// messages are parsed from and written out to the data stream.
 		HttpMessageParserFactory<HttpResponse> responseParserFactory = new DefaultHttpResponseParserFactory() {
@@ -444,7 +445,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 				.setConnectionManagerShared(true).setRetryHandler(retryHandler).setKeepAliveStrategy(keepAliveStrategy)
 				.setDefaultRequestConfig(defaultRequestConfig);
 
-		Constants.HTTP_CLIENT_BUILDER_CACHE.put(siteName, httpClientBuilder);
+		Constants.HTTP_CLIENT_BUILDER_CACHE.put(seedName, httpClientBuilder);
 	}
 
 
@@ -514,6 +515,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			setSiteUrl(page);
 			httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
 			request = new HttpGet(url);
+			request.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
 			request.addHeader("Host", page.getSiteUrl());
 			HttpResponse response = httpClient.execute(request);
 			int statusCode = response.getStatusLine().getStatusCode();
@@ -527,10 +529,28 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			}
 			Header ctHeader = entity.getContentType();
 			if (ctHeader != null) {
+				long contentlength = entity.getContentLength();
+				boolean isdone = downloadBigFile(page, contentlength);
+				if(isdone){
+					return page;
+				}
 				String contentType = ctHeader.getValue();
+
 				// 转换内容字节
 				byte[] bytes = EntityUtils.toByteArray(entity);
 				String content = new String(bytes);
+
+				if(StringUtil.isNullOrBlank(content)){
+					logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]内容为空。");
+					return page;
+				}
+
+				// 如果是资源文件的话
+				if (!isJsonFile(contentType) && !isPage(contentType) && !isXmlFile(contentType, new String(content))) {
+					HashSet<String> resources = page.getResources();
+					resources.add(page.getUrl());
+					return page;
+				}
 
 				// 设置页面编码
 				page.setCharset(getCharset(contentType, content));
@@ -566,6 +586,54 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 	}
 
 	/**
+	 * 下载大文件，默认设置超过10M大小的文件算是大文件
+	 * 文件太大会抛异常，所以特此添加一个下载打文件的方法
+	 * @param page
+	 * @param contentlength
+	 */
+	public static boolean downloadBigFile(Page page, long contentlength){
+		if(contentlength <= big_file_max_size){//10M
+			return false;
+		}
+		String start = DateUtil.getCurrentDate();
+		String fileName = FileUtil.generateResourceName(page.getSeedName(), page.getUrl(), "");
+		fileName = Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName()) + fileName;
+		FileUtil.createNullFile(fileName, contentlength);
+		CloseableHttpClient httpClient = null;
+		String url = page.getUrl();
+		HttpGet request = null;
+		try {
+			setHttpProxy(page.getSeedName());
+			setUserAgent(page.getSeedName());
+			httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
+			request = new HttpGet(url);
+			//request.addHeader("Range", "bytes=" + offset + "-" + (this.offset + this.length - 1));
+			HttpResponse response = httpClient.execute(request);
+			FileUtil.writeFile(fileName, contentlength, response.getEntity().getContent());
+			String log = DateUtil.getCostDate(start);
+			logger.info("线程[" + Thread.currentThread().getName() + "]下载大小为["+contentlength/(1024*1024)+"]MB的文件["+ fileName + "]总共花费时间为["+log+"]。");
+		} catch (Exception e) {
+			logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的大文件["+ page.getUrl() + "]时失败。", e);
+			request.abort();
+		} finally {
+			if (request != null) {
+				request.releaseConnection();
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * 禁用redirect，为了能获取301、302跳转后的真实地址
+	 * 是下载资源文件时使用。
+	 * @param seedName
+	 */
+	private static void setRedirectFalse(String seedName) {
+		RequestConfig config = RequestConfig.custom().setRedirectsEnabled(false).build();//不允许重定向
+		Constants.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setDefaultRequestConfig(config);
+	}
+
+	/**
 	 * 下载网页中的资源文件（JS/CSS/JPG等）<br>
 	 * 不管HttpEngine是不是HttpClient，都默认使用它下载资源文件，因为当HttpEngine是HtmlUnit时下载速度极其慢。<br>
 	 * 
@@ -582,16 +650,35 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 		sleep(page.getSeedName(), logger);
 		setHttpProxy(page.getSeedName());
 		setUserAgent(page.getSeedName());
+		setRedirectFalse(page.getSeedName());
 		CloseableHttpClient httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
 		for (String url : resources) {
 			HttpGet request = null;
+			
 			try {
 				request = new HttpGet(url);
+				//request.setHeader("http.protocol.handle-redirects","false");
 				HttpResponse response = httpClient.execute(request);
-				int statusCode = response.getStatusLine().getStatusCode();
+				int statusCode = response.getStatusLine().getStatusCode();				
+
 				boolean isvisit = isVisit(statusCode, page, logger);
 				if(!isvisit){
 					continue;
+				}
+				// 301/302/303/307 获取真实地址
+				if(HttpStatus.SC_MOVED_PERMANENTLY == statusCode || HttpStatus.SC_MOVED_TEMPORARILY == statusCode
+						|| HttpStatus.SC_SEE_OTHER == statusCode  || HttpStatus.SC_TEMPORARY_REDIRECT == statusCode){
+					Header responseHeader = response.getFirstHeader("Location");
+					if(responseHeader != null){
+						if(!StringUtil.isNullOrBlank(responseHeader.getValue())){
+							request.releaseConnection();
+							url = responseHeader.getValue();
+							request = new HttpGet(url);
+							response = httpClient.execute(request);
+							logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["
+									+ page.getUrl() + "]时跳转到新的url[" + url + "]上。");
+						}
+					}
 				}
 				HttpEntity entity = response.getEntity();
 				if (entity == null) {
@@ -600,6 +687,13 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 							+ page.getUrl() + "]资源内容为空。");
 					return;
 				}
+				
+				long contentlength = entity.getContentLength();
+				boolean isdone = downloadBigFile(page, contentlength);
+				if(isdone){
+					return;
+				}
+				
 				byte[] content = EntityUtils.toByteArray(entity);
 				String resourceName = folderName + File.separator;
 				Header header = entity.getContentType();
@@ -660,6 +754,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 		sleep(page.getSeedName(), logger);
 		setHttpProxy(page.getSeedName());
 		setUserAgent(page.getSeedName());
+		setRedirectFalse(page.getSeedName());
 		CloseableHttpClient httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
 		HttpGet request = null;
 		try {
@@ -670,10 +765,30 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			if(!isvisit){
 				return;
 			}
+			// 301/302/303/307 获取真实地址
+			if(HttpStatus.SC_MOVED_PERMANENTLY == statusCode || HttpStatus.SC_MOVED_TEMPORARILY == statusCode
+					|| HttpStatus.SC_SEE_OTHER == statusCode  || HttpStatus.SC_TEMPORARY_REDIRECT == statusCode){
+				Header responseHeader = response.getFirstHeader("Location");
+				if(responseHeader != null){
+					if(!StringUtil.isNullOrBlank(responseHeader.getValue())){
+						request.releaseConnection();
+						url = responseHeader.getValue();
+						request = new HttpGet(url);
+						response = httpClient.execute(request);
+						logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["
+								+ page.getUrl() + "]时跳转到新的url[" + url + "]上。");
+					}
+				}
+			}
 			HttpEntity entity = response.getEntity();
 			if (entity == null) {
 				EntityUtils.consume(entity);
 				logger.warn("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]资源内容为空。");
+				return;
+			}
+			long contentlength = entity.getContentLength();
+			boolean isdone = downloadBigFile(page, contentlength);
+			if(isdone){
 				return;
 			}
 			byte[] content = EntityUtils.toByteArray(entity);
