@@ -155,6 +155,8 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine{
 			int statusCode = response.getStatusCode();
 			boolean isvisit = isVisit(statusCode, page, logger);
 			if(!isvisit){
+				HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManagerShared(true);
+				Constants.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
 				return page;
 			}
 			

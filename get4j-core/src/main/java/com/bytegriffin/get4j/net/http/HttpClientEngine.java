@@ -607,7 +607,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 			setUserAgent(page.getSeedName());
 			httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
 			request = new HttpGet(url);
-			//request.addHeader("Range", "bytes=" + offset + "-" + (this.offset + this.length - 1));
+			//request.addHeader("Range", "bytes=" + offset + "-" + (this.offset + this.length - 1));//断点续传的话需要设置Range属性，当然前提是服务器支持
 			HttpResponse response = httpClient.execute(request);
 			FileUtil.writeFile(fileName, contentlength, response.getEntity().getContent());
 			String log = DateUtil.getCostDate(start);
@@ -839,4 +839,5 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 		}
 
 	}
+
 }
