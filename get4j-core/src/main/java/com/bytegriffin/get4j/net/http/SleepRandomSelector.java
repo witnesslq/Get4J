@@ -7,16 +7,16 @@ import java.util.List;
  */
 public class SleepRandomSelector extends RandomSelector<Long> {
 
-	private List<Long> queue;
+    private List<Long> queue;
 
-	@Override
-	protected List<Long> getQueue() {
-		return queue;
-	}
+    @Override
+    protected List<Long> getQueue() {
+        return queue;
+    }
 
-	@Override
-	public void setQueue(List<Long> queue) {
-		this.queue = queue;
-	}
+    @Override
+    public void setQueue(List<Long> queue) {
+        this.queue = queue;
+    }
 
 }

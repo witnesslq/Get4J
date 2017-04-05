@@ -24,82 +24,84 @@ import com.bytegriffin.get4j.util.StringUtil;
  */
 public class DiskDownloader implements Process {
 
-	private static final Logger logger = LogManager.getLogger(DiskDownloader.class);
-	// 静态资源服务器地址
-	private static String staticServer = "";
-	// 默认avatar存储路径，当配置静态服务器时系统会自动调用它暂存图片
-	private static String defaultAvatarPath = "";
-	// 创建每个site的文件夹
-	public void init(Seed seed) {
-		String diskpath = seed.getDownloadDisk();
-		String folderName = null;
-		if (diskpath.startsWith("http")) {
-			defaultAvatarPath = System.getProperty("user.dir") + File.separator + "data" + File.separator + "download"
-					+ File.separator + seed.getSeedName() + File.separator;
-			staticServer = diskpath.endsWith("/") ? diskpath : diskpath + "/";// 静态资源服务器地址
-			folderName = FileUtil.makeDownloadDir(defaultAvatarPath);// 获取默认的服务器磁盘地址
-		} else {
-			folderName = FileUtil.makeDownloadDir(diskpath);// 获取用户配置的磁盘地址
-		}
-		Constants.DOWNLOAD_DIR_CACHE.put(seed.getSeedName(), folderName);
-		logger.info("Seed[" + seed.getSeedName() + "]的组件ResourceDiskDownloader的初始化完成。");
-	}
+    private static final Logger logger = LogManager.getLogger(DiskDownloader.class);
+    // 静态资源服务器地址
+    private static String staticServer = "";
+    // 默认avatar存储路径，当配置静态服务器时系统会自动调用它暂存图片
+    private static String defaultAvatarPath = "";
 
-	@Override
-	public void execute(Page page) {
-		// 1.在磁盘上生成页面
-		PageMode fm = Constants.FETCH_PAGE_MODE_CACHE.get(page.getSeedName());
-		if (!PageMode.list_detail.equals(fm) ) {// 当启动list_detail模式，默认不会下载页面的
-			FileUtil.downloadPagesToDisk(page);
-		}
+    // 创建每个site的文件夹
+    public void init(Seed seed) {
+        String diskpath = seed.getDownloadDisk();
+        String folderName;
+        if (diskpath.startsWith("http")) {
+            defaultAvatarPath = System.getProperty("user.dir") + File.separator + "data" + File.separator + "download"
+                    + File.separator + seed.getSeedName();
+            staticServer = diskpath.endsWith("/") ? diskpath : diskpath + "/";// 静态资源服务器地址
+            folderName = FileUtil.makeDownloadDir(defaultAvatarPath);// 获取默认的服务器磁盘地址
+        } else {
+            folderName = FileUtil.makeDownloadDir(diskpath);// 获取用户配置的磁盘地址
+        }
+        folderName = folderName.endsWith(File.separator)? folderName : folderName + File.separator;
+        Constants.DOWNLOAD_DIR_CACHE.put(seed.getSeedName(), folderName);
+        logger.info("Seed[" + seed.getSeedName() + "]的组件ResourceDiskDownloader的初始化完成。");
+    }
 
-		// 2.下载页面中的资源文件
-		HttpClientEngine.downloadResources(page);
+    @Override
+    public void execute(Page page) {
+        // 1.在磁盘上生成页面
+        PageMode fm = Constants.FETCH_PAGE_MODE_CACHE.get(page.getSeedName());
+        if (!PageMode.list_detail.equals(fm)) {// 当启动list_detail模式，默认不会下载页面的
+            FileUtil.downloadPagesToDisk(page);
+        }
 
-		// 3.判断是否包含avatar资源，有的话就下载
-		boolean isSync = false;
-		if (!StringUtil.isNullOrBlank(page.getAvatar())) {
-			isSync = true;
-			HttpClientEngine.downloadAvatar(page);// 下载avatar资源
-			String avatar = page.getAvatar().replace(defaultAvatarPath, staticServer);
-			page.setAvatar(avatar);// 将本地avatar资源文件的路径修改为静态服务器地址
-		}
+        // 2.下载页面中的资源文件
+        HttpClientEngine.downloadResources(page);
 
-		// 4.另开一个线程专门负责启用脚本同步avatar资源文件
-		if (isSync && !StringUtil.isNullOrBlank(defaultAvatarPath)) {
-			ExecutorService executorService = Executors.newCachedThreadPool();
-			executorService.submit(new SyncAvatar(defaultAvatarPath));
-			executorService.shutdown();
-		}
+        // 3.判断是否包含avatar资源，有的话就下载
+        boolean isSync = false;
+        if (!StringUtil.isNullOrBlank(page.getAvatar())) {
+            isSync = true;
+            HttpClientEngine.downloadAvatar(page);// 下载avatar资源
+            String avatar = page.getAvatar().replace(defaultAvatarPath, staticServer);
+            page.setAvatar(avatar);// 将本地avatar资源文件的路径修改为静态服务器地址
+        }
 
-		// 5.设置page的资源保存路径属性
-		page.setResourceSavePath(Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName()));
-		logger.info("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
-	}
+        // 4.另开一个线程专门负责启用脚本同步avatar资源文件
+        if (isSync && !StringUtil.isNullOrBlank(defaultAvatarPath)) {
+            ExecutorService executorService = Executors.newCachedThreadPool();
+            executorService.submit(new SyncAvatar(defaultAvatarPath));
+            executorService.shutdown();
+        }
 
-	/**
-	 * 同步Avatar资源文件
-	 */
-	static class SyncAvatar implements Runnable {
+        // 5.设置page的资源保存路径属性
+        page.setResourceSavePath(Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName()));
+        logger.info("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]完成。");
+    }
 
-		public String syncPath;
+    /**
+     * 同步Avatar资源文件
+     */
+    static class SyncAvatar implements Runnable {
 
-		SyncAvatar(String syncPath) {
-			this.syncPath = syncPath;
-		}
+        private String syncPath;
 
-		@Override
-		public void run() {
+        SyncAvatar(String syncPath) {
+            this.syncPath = syncPath;
+        }
 
-		}
+        @Override
+        public void run() {
 
-	}
+        }
 
-	public static void main(String... args) {
-		ExecutorService executorService = Executors.newCachedThreadPool();
-		executorService.submit(new SyncAvatar(""));
-		System.err.println("==============");
-		executorService.shutdown();
-	}
+    }
+
+    public static void main(String... args) {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        executorService.submit(new SyncAvatar(""));
+        System.err.println("==============");
+        executorService.shutdown();
+    }
 
 }

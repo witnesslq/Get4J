@@ -12,39 +12,39 @@ import java.lang.annotation.Target;
 @Documented
 public @interface ListDetail {
 
-	int thread() default 1;
+    int thread() default 1;
 
-	String url() ;//没有default值必须要设置
+    String url();//没有default值必须要设置
 
-	String detailSelector() default "";
+    String detailSelector() default "";
 
-	String totolPages() default "1";
+    String totolPages() default "1";
 
-	String startTime() default "";
+    String startTime() default "";
 
-	long interval() default 0;
+    long interval() default 0;
 
-	long sleep() default 0;
-	
-	String sleepRange() default "";
+    long sleep() default 0;
 
-	String proxy() default "";
-	
-	String userAgent() default "";
+    String sleepRange() default "";
 
-	String resourceSelector() default "";
+    String proxy() default "";
 
-	String downloadDisk() default "";
+    String userAgent() default "";
 
-	String downloadHdfs() default "";
-	
-	boolean javascriptSupport() default false;
+    String resourceSelector() default "";
 
-	String parser() default "";
-	
-	String jdbc() default "";
-	
-	String lucene() default "";
-	
-	String hbase() default "";
+    String downloadDisk() default "";
+
+    String downloadHdfs() default "";
+
+    boolean javascriptSupport() default false;
+
+    String parser() default "";
+
+    String jdbc() default "";
+
+    String lucene() default "";
+
+    String hbase() default "";
 }

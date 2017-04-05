@@ -7,16 +7,16 @@ import java.util.List;
  */
 public class UserAgentSelector extends RandomSelector<String> {
 
-	private List<String> queue;
+    private List<String> queue;
 
-	@Override
-	protected List<String> getQueue() {
-		return queue;
-	}
+    @Override
+    protected List<String> getQueue() {
+        return queue;
+    }
 
-	@Override
-	public void setQueue(List<String> queue) {
-		this.queue = queue;
-	}
+    @Override
+    public void setQueue(List<String> queue) {
+        this.queue = queue;
+    }
 
 }

@@ -7,16 +7,16 @@ package com.bytegriffin.get4j.core;
  */
 public enum PageMode {
 
-	list_detail("list_detail"), single("single"), cascade("cascade"), site("site");
+    list_detail("list_detail"), single("single"), cascade("cascade"), site("site");
 
-	private final String value;
+    private final String value;
 
-	private PageMode(String value) {
-		this.value = value;
-	}
+    PageMode(String value) {
+        this.value = value;
+    }
 
-	public String getValue() {
-		return value;
-	}
+    public String getValue() {
+        return value;
+    }
 
 }

@@ -5,17 +5,17 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;
 
 // 测试Annotation
-@Site(url="http://news.baidu.com/", thread=2)
-public class TestAnnotation implements PageParser{
+@Site(url = "http://news.baidu.com/", thread = 2)
+public class TestAnnotation implements PageParser {
 
 
-	@Override
-	public void parse(Page page) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void parse(Page page) {
+        // TODO Auto-generated method stub
 
-	public static void main(String[] args) throws Exception{
-		Spider.annotation(TestAnnotation.class).start();
-	}
+    }
+
+    public static void main(String[] args) throws Exception {
+        Spider.annotation(TestAnnotation.class).start();
+    }
 }

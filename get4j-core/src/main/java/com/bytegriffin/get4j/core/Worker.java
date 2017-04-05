@@ -14,36 +14,36 @@ import com.bytegriffin.get4j.util.UrlQueue;
  */
 public class Worker implements Runnable {
 
-	private static final Logger logger = LogManager.getLogger(Worker.class);
+    private static final Logger logger = LogManager.getLogger(Worker.class);
 
-	private String seedName;
-	private CountDownLatch latch;
+    private String seedName;
+    private CountDownLatch latch;
 
-	public Worker(String seedName, CountDownLatch latch) {
-		this.seedName = seedName;
-		this.latch = latch;
-	}
+    public Worker(String seedName, CountDownLatch latch) {
+        this.seedName = seedName;
+        this.latch = latch;
+    }
 
-	@Override
-	public void run() {
-		if (StringUtil.isNullOrBlank(seedName)) {
-			return;
-		}
-		Chain chain = Constants.CHAIN_CACHE.get(seedName);
-		ConcurrentQueue<String> urlQueue = UrlQueue.getUnVisitedLink(seedName);
-		logger.info("线程[" + Thread.currentThread().getName() + "]开始执行任务[" + seedName + "]。。。");
-		while (urlQueue != null && !urlQueue.isEmpty()) {
-			
-			Object obj = urlQueue.outFirst();
-			if (obj == null) {
-				break;
-			}
-			String url = obj.toString();
-			chain.execute(new Page(seedName, url));
-			UrlQueue.newVisitedLink(seedName, url);
-		}
-		logger.info("线程[" + Thread.currentThread().getName() + "]完成任务[" + seedName + "]。。。");
-		latch.countDown();
-	}
+    @Override
+    public void run() {
+        if (StringUtil.isNullOrBlank(seedName)) {
+            return;
+        }
+        Chain chain = Constants.CHAIN_CACHE.get(seedName);
+        ConcurrentQueue<String> urlQueue = UrlQueue.getUnVisitedLink(seedName);
+        logger.info("线程[" + Thread.currentThread().getName() + "]开始执行任务[" + seedName + "]。。。");
+        while (urlQueue != null && !urlQueue.isEmpty()) {
+
+            Object obj = urlQueue.outFirst();
+            if (obj == null) {
+                break;
+            }
+            String url = obj.toString();
+            chain.execute(new Page(seedName, url));
+            UrlQueue.newVisitedLink(seedName, url);
+        }
+        logger.info("线程[" + Thread.currentThread().getName() + "]完成任务[" + seedName + "]。。。");
+        latch.countDown();
+    }
 
 }

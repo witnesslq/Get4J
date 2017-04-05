@@ -22,35 +22,35 @@ import com.bytegriffin.get4j.util.UrlQueue;
  */
 public class SiteFetcher implements Process {
 
-	private static final Logger logger = LogManager.getLogger(SiteFetcher.class);
-	private HttpEngine http = null;
+    private static final Logger logger = LogManager.getLogger(SiteFetcher.class);
+    private HttpEngine http = null;
 
-	@Override
-	public void init(Seed seed) {
-		// 1.获取相应的http引擎
-		http = Constants.HTTP_ENGINE_CACHE.get(seed.getSeedName());
-		// 2.初始化url选择/过滤器缓存
-		FetchResourceSelector.init(seed);
-		logger.info("Seed[" + seed.getSeedName() + "]的组件SiteFetcher的初始化完成。");
-	}
+    @Override
+    public void init(Seed seed) {
+        // 1.获取相应的http引擎
+        http = Constants.HTTP_ENGINE_CACHE.get(seed.getSeedName());
+        // 2.初始化url选择/过滤器缓存
+        FetchResourceSelector.init(seed);
+        logger.info("种子[" + seed.getSeedName() + "]的组件SiteFetcher的初始化完成。");
+    }
 
-	@Override
-	public void execute(Page page) {
-		// 1.获取并设置Page的HtmlContent或JsonContent属性、Cookies属性
-		page = http.getPageContent(page);
+    @Override
+    public void execute(Page page) {
+        // 1.获取并设置Page的HtmlContent或JsonContent属性、Cookies属性
+        page = http.getPageContent(page);
 
-		// 2.获取并设置Page的Resource属性
-		UrlAnalyzer.custom(page).sniffAndSetResources();
+        // 2.获取并设置Page的Resource属性
+        UrlAnalyzer.custom(page).sniffAndSetResources();
 
-		// 3.设置Page其它属性
-		page.setFetchTime(DateUtil.getCurrentDate());
+        // 3.设置Page其它属性
+        page.setFetchTime(DateUtil.getCurrentDate());
 
-		// 4.嗅探出新访问地址并增加新的访问链接交给爬虫队列
-		HashSet<String> links = UrlAnalyzer.custom(page).sniffSiteLinks();
-		UrlQueue.addUnVisitedLinks(page.getSeedName(), links);
-		
-		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]整站Url总数是["+UrlQueue.getUnVisitedLink(page.getSeedName()).size()+"]个。");
-		logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url["+page.getUrl()+"]完成。");
-	}
+        // 4.嗅探出新访问地址并增加新的访问链接交给爬虫队列
+        HashSet<String> links = UrlAnalyzer.custom(page).sniffSiteLinks();
+        UrlQueue.addUnVisitedLinks(page.getSeedName(), links);
+
+        logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]整站Url总数是[" + UrlQueue.getUnVisitedLink(page.getSeedName()).size() + "]个。");
+        logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]完成。");
+    }
 
 }

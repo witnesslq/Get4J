@@ -7,6 +7,6 @@ import com.bytegriffin.get4j.core.Page;
  */
 public interface PageParser {
 
-	void parse(Page page);
-	
+    void parse(Page page);
+
 }

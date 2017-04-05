@@ -8,17 +8,17 @@ import java.util.List;
 public class HttpProxySelector extends RandomSelector<HttpProxy> {
 
 
-	private List<HttpProxy> queue;
+    private List<HttpProxy> queue;
 
-	@Override
-	protected List<HttpProxy> getQueue() {
-		return queue;
-	}
+    @Override
+    protected List<HttpProxy> getQueue() {
+        return queue;
+    }
 
 
-	@Override
-	public void setQueue(List<HttpProxy> queue) {
-		this.queue = queue;
-	}
+    @Override
+    public void setQueue(List<HttpProxy> queue) {
+        this.queue = queue;
+    }
 
 }

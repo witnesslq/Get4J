@@ -3,7 +3,6 @@ package com.bytegriffin.get4j.util;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -14,7 +13,6 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,22 +32,23 @@ public final class FileUtil {
 
 	/**
 	 * 读取User Agent文件到内存中
-	 * 
-	 * @return
+	 *
+	 * @return List<String>
 	 */
 	public static List<String> readUserAgentFile(String userAgentFile) {
-		List<String> list = readFileLine(userAgentFile);
-		return list;
+		return readFileLine(userAgentFile);
 	}
 
 	/**
-	 * 转换配置文件路径，将classpath:/conf/user_agent转换成/opt/work/xxx/conf/user_agent
-	 * 
+	 * 获取系统绝对路径 <br />
+	 * 将配置文件转换为爬虫系统的绝对路径，将classpath:/conf/user_agent转换成/opt/work/xxx/conf/user_agent
+	 *
 	 * @param classpath
-	 * @return
+	 *            String
+	 * @return String
 	 */
-	public static String getAbsolutePath(String classpath) {
-		String newpath = "";
+	public static String getSystemAbsolutePath(String classpath) {
+		String newpath;
 		if (classpath.contains("classpath:")) {
 			newpath = System.getProperty("user.dir") + File.separator;
 			classpath = classpath.replace("classpath:", "");
@@ -69,20 +68,35 @@ public final class FileUtil {
 	/**
 	 * 读取http代理文件转换为HttpProxy对象到内存中 http_proxy文件的格式是ip:port@username:password
 	 * 
-	 * @return
+	 * @param httpProxyFile
+	 *            String
+	 * @return List<HttpProxy>
 	 */
 	public static List<HttpProxy> readHttpProxyFile(String httpProxyFile) {
 		List<String> list = readFileLine(httpProxyFile);
-		List<HttpProxy> newList = new ArrayList<HttpProxy>();
+		if (list == null || list.size() == 0) {
+			return null;
+		}
+		List<HttpProxy> newList = new ArrayList<>();
 		for (String str : list) {
-			HttpProxy hp = null;
 			if (StringUtil.isNullOrBlank(str)) {
 				continue;
-			} else if (str.contains("@")) {
+			}
+			HttpProxy hp;
+			if (str.contains("@")) {
 				String[] array = str.split("@");
-				String[] front = array[0].split(":");
-				String[] end = array[1].split(":");
-				hp = new HttpProxy(front[0], front[1], end[0], end[1]);
+				if (array.length > 0) {
+					String[] front = array[0].split(":");
+					String[] end = array[1].split(":");
+					hp = new HttpProxy(front[0], front[1], end[0], end[1]);
+				} else {
+					if (str.contains(":")) {
+						String[] front = str.split(":");
+						hp = new HttpProxy(front[0], front[1]);
+					} else {
+						hp = new HttpProxy(str);
+					}
+				}
 			} else if (str.contains(":")) {
 				String[] front = str.split(":");
 				hp = new HttpProxy(front[0], front[1]);
@@ -96,15 +110,17 @@ public final class FileUtil {
 
 	/**
 	 * 将Proxy字符串解析成代理对象
-	 * 
+	 *
 	 * @param proxyString
-	 * @return
+	 *            代理字符串
+	 * @return HttpProxy
 	 */
 	public static HttpProxy formatProxy(String proxyString) {
-		HttpProxy hp = null;
 		if (StringUtil.isNullOrBlank(proxyString)) {
-			return hp;
-		} else if (proxyString.contains("@")) {
+			return null;
+		}
+		HttpProxy hp;
+		if (proxyString.contains("@")) {
 			String[] array = proxyString.split("@");
 			String[] front = array[0].split(":");
 			String[] end = array[1].split(":");
@@ -120,24 +136,25 @@ public final class FileUtil {
 
 	/**
 	 * 读取文件的每行数据将其放回到一个ArrayList中
-	 * 
+	 *
 	 * @param configFile
-	 * @return
+	 *            String
+	 * @return List<String>
 	 */
-	public static List<String> readFileLine(String configFile) {
-		configFile = getAbsolutePath(configFile);
-		boolean flag = FileUtil.isExists(configFile);
-		if (!flag) {
+	private static List<String> readFileLine(String configFile) {
+		configFile = getSystemAbsolutePath(configFile);
+		File file = new File(configFile);
+		if (!file.exists()) {
 			return null;
 		}
-		boolean fc = FileUtil.isExistContont(configFile);
+		boolean fc = isExistContont(configFile);
 		if (!fc) {
 			return null;
 		}
-		List<String> result = new ArrayList<String>();
+		List<String> result = new ArrayList<>();
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(configFile));// 构造一个BufferedReader类来读取文件
-			String s = null;
+			String s;
 			while ((s = br.readLine()) != null) {// 使用readLine方法，一次读一行
 				if (StringUtil.isNullOrBlank(s.trim())) {
 					continue;
@@ -156,34 +173,23 @@ public final class FileUtil {
 
 	/**
 	 * 判断文件是否为空，是否有内容
-	 * 
+	 *
 	 * @param filename
-	 * @return
+	 *            String
+	 * @return boolean
 	 */
-	public static boolean isExistContont(String filename) {
+	private static boolean isExistContont(String filename) {
 		File file = new File(filename);
-		if (file != null && file.length() == 0) {
-			return false;
-		}
-		return true;
-	}
-
-	/**
-	 * 判断文件是否存在
-	 * 
-	 * @param filename
-	 * @return
-	 */
-	public static boolean isExists(String filename) {
-		File file = new File(filename);
-		return file.exists();
+		return !(file.length() == 0);
 	}
 
 	/**
 	 * 生成dump文件夹以及dump下的文件
-	 * 
+	 *
 	 * @param folder
+	 *            String
 	 * @param filename
+	 *            String
 	 */
 	public static File makeDumpDir(String folder, String filename) {
 		File file = new File(folder);
@@ -203,18 +209,16 @@ public final class FileUtil {
 
 	/**
 	 * 追加内容
-	 * 
-	 * @param file
-	 * @param content
+	 *
+	 * @param file  File
+	 * @param contents Collection<String>
 	 */
-	public static void append(File file, Collection<String> contents) {
+	public static synchronized void append(File file, Collection<String> contents) {
 		if (contents != null && !contents.isEmpty()) {
 			FileWriter fw = null;
 			try {
 				fw = new FileWriter(file, true);
-				Iterator<String> iter = contents.iterator();
-				while (iter.hasNext()) {
-					String str = (String) iter.next();
+				for (String str : contents) {
 					if (StringUtil.isNullOrBlank(str)) {
 						break;
 					}
@@ -229,7 +233,6 @@ public final class FileUtil {
 						fw.close();
 					}
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -238,24 +241,24 @@ public final class FileUtil {
 
 	/**
 	 * 删除文件中的某行内容
-	 * 
+	 *
 	 * @param file
+	 *            String
 	 * @param proxy
+	 *            String
 	 */
 	public static void removeLine(String file, String proxy) {
 		try {
-			file = FileUtil.getAbsolutePath(file);
+			file = FileUtil.getSystemAbsolutePath(file);
 			File inFile = new File(file);
 			File tempFile = new File(inFile.getAbsolutePath() + ".tmp");
 
 			BufferedReader br = new BufferedReader(new FileReader(file));
 			PrintWriter pw = new PrintWriter(new FileWriter(tempFile));
-			String line = null;
+			String line;
 
 			while ((line = br.readLine()) != null) {
-				if (line.trim().equals("")) {
-					continue;
-				} else if (!line.trim().equals(proxy)) {
+				if (!line.trim().equals("") && !line.trim().equals(proxy)) {
 					pw.println(line);
 					pw.flush();
 				}
@@ -269,8 +272,6 @@ public final class FileUtil {
 			if (!tempFile.renameTo(inFile)) {
 				System.out.println("不能重命名新文件。");
 			}
-		} catch (FileNotFoundException ex) {
-			ex.printStackTrace();
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -278,42 +279,46 @@ public final class FileUtil {
 
 	/**
 	 * 在磁盘上创建下载文件夹
-	 * 
-	 * @param dir
+	 *
+	 * @param diskDir  String
 	 */
 	public static String makeDownloadDir(String diskDir) {
-		diskDir = getAbsolutePath(diskDir);
+		diskDir = getSystemAbsolutePath(diskDir);
 		String laststr = diskDir.substring(diskDir.length() - 1, diskDir.length());
 		if (laststr.equals(File.separator)) {
 			diskDir = diskDir.substring(0, diskDir.length() - 1);
 		}
 		// diskDir += File.separator + seed.getSeedName();
 		File homedir = new File(diskDir);
+		boolean iscreate = false;
 		if (!homedir.exists()) {
 			try {
-				homedir.mkdirs();
+				iscreate = homedir.mkdirs();
 			} catch (Exception ex) {
 				logger.warn("不能创建文件夹[" + diskDir + "]，它可能包含一些特殊字符串。", ex);
 			}
 		}
-		diskDir = diskDir.endsWith(File.separator) ? diskDir : diskDir + File.separator;
+		if (iscreate) {
+			diskDir = diskDir.endsWith(File.separator) ? diskDir : diskDir + File.separator;
+		}
 		return diskDir;
 	}
 
 	/**
 	 * 在本地磁盘生成页面
-	 * 
+	 *
 	 * @param page
+	 *            Page
 	 */
 	public static void downloadPagesToDisk(Page page) {
 		String folderName = Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
 		String fileName = folderName + File.separator;
 		if (page.isJsonContent()) {
-			fileName += generatePageName(page.getSeedName(), page.getUrl(), Constants.JSON_PAGE_SUFFIX);
+			fileName += generatePageName(page.getUrl(), Constants.JSON_PAGE_SUFFIX);
 		} else if (page.isHtmlContent()) {
-			fileName += generatePageName(page.getSeedName(), page.getUrl(), Constants.DEFAULT_PAGE_SUFFIX);
+			fileName += generatePageName(page.getUrl(), Constants.DEFAULT_PAGE_SUFFIX);
 		} else if (page.isXmlContent()) {
-			fileName += generatePageName(page.getSeedName(), page.getUrl(), Constants.XML_PAGE_SUFFIX);
+			fileName += generatePageName(page.getUrl(), Constants.XML_PAGE_SUFFIX);
 		} else {// 这种情况为资源文件，直接返回
 			return;
 		}
@@ -335,9 +340,11 @@ public final class FileUtil {
 
 	/**
 	 * 往硬盘上写文件
-	 * 
+	 *
 	 * @param fileName
+	 *            String
 	 * @param content
+	 *            byte[]
 	 */
 	public static void writeFileToDisk(String fileName, byte[] content) {
 		if (StringUtil.isNullOrBlank(fileName) || content == null) {
@@ -370,7 +377,7 @@ public final class FileUtil {
 	/**
 	 * 删除url的protocal http://www.website.com ===> www.website.com
 	 */
-	public static String deleteUrlSchema(String url) {
+	private static String deleteUrlSchema(String url) {
 		if (StringUtil.isNullOrBlank(url)) {
 			return url;
 		}
@@ -383,14 +390,14 @@ public final class FileUtil {
 	 * 不支持的特殊字符：<>,/,\,|,:,"",*,? 否则生成的文件名会出错 <br>
 	 * 默认生成的文件名是带url的，如果不想带可以将其过滤掉会更简洁，但是<br>
 	 * 人为发现不了某个资源（js或css等）文件是属于哪个（php或jsp）页面的
-	 * 
-	 * @param seedName
+	 *
 	 * @param url
+	 *            String
 	 * @param suffix
 	 *            文件后缀名
-	 * @return
+	 * @return String
 	 */
-	public static String generatePageName(String seedName, String url, String suffix) {
+	private static String generatePageName(String url, String suffix) {
 		String newUrl = deleteUrlSchema(url);
 		String laststr = newUrl.substring(newUrl.length() - 1, newUrl.length());
 		if (laststr.equals("/")) {
@@ -431,25 +438,26 @@ public final class FileUtil {
 	 * 下载的资源命名规则：与页面命名类似，不同的是url后跟的参数全部删除掉，
 	 * 因为大多数页面都是动态，后面加上参数会代表不同的页面，而资源文件则不同，根本不需要
 	 * 注意：有些资源文件是一个页面经过跳转后的资源文件，比如www.aa.com/cc.php===>www.aa.com/img.jpg
-	 * 
-	 * @param seedName
+	 *
 	 * @param url
+	 *            String
 	 * @param suffix
-	 * @return
+	 *            String
+	 * @return String
 	 */
-	public static String generateResourceName(String seedName, String url, String suffix) {
-		String newUrl = deleteUrlSchema(url);
-		String laststr = newUrl.substring(newUrl.length() - 1, newUrl.length());
+	public static String generateResourceName(String url, String suffix) {
+//		String newUrl = deleteUrlSchema(url);
+		String laststr = url.substring(url.length() - 1, url.length());
 		if (laststr.equals("/")) {
-			newUrl = newUrl.substring(0, newUrl.length() - 1);
+			url = url.substring(0, url.length() - 1);
 		}
 		// 此时newUrl的格式为 www.aaa.com/path 或者 www.aaa.com
 		if (!Constants.IS_KEEP_FILE_URL) {
-			newUrl = newUrl.substring(newUrl.lastIndexOf("/") + 1, newUrl.length());
+			url = url.substring(url.lastIndexOf("/") + 1, url.length());
 		}
 		// 去除url中的参数
-		if (newUrl.indexOf("?") != -1) {
-			newUrl = newUrl.substring(0, newUrl.indexOf("?"));
+		if (url.contains("?")) {
+			url = url.substring(0, url.indexOf("?"));
 		}
 
 		// 判断动态url中没有后缀名的自动加上相应的后缀名，有的资源文件没有后缀名，比如css不用写后缀照样也能引用
@@ -457,11 +465,11 @@ public final class FileUtil {
 		// href="rss"/>
 		// <link type="application/wlwmanifest+xml"
 		// href="wlwmanifest.xml"/>，所以要判断xml后缀
-		if (!FetchResourceSelector.isFindResources(newUrl)) {
-			newUrl += "." + suffix;
+		if (!FetchResourceSelector.isFindResources(url)) {
+			url += "." + suffix;
 		}
 		// 默认用下划线取代url中的特殊字符
-		newUrl = newUrl.replace("*", "_").replace("<", "_").replace(">", "_").replace("/", "_").replace("\\", "_")
+		url = url.replace("*", "_").replace("<", "_").replace(">", "_").replace("/", "_").replace("\\", "_")
 				.replace("|", "_").replace(":", "_").replace("\"", "_").replace("?", "_");
 		// 当然也可以对url中的特殊字符进行编码
 		// try {
@@ -470,20 +478,23 @@ public final class FileUtil {
 		// } catch (UnsupportedEncodingException e) {
 		// e.printStackTrace();
 		// }
-		return newUrl;
+		return url;
 	}
 
 	/**
-	 * 判断url是否包含.htm/.jsp/.asp等后缀名称
-	 * 
+	 * 根据url的后缀名（.htm/.jsp/.asp等）来判断是否为一个页面
+	 *
 	 * @param url
-	 * @return
+	 *            String
+	 * @return boolean
 	 */
 	private static boolean isFindPage(String url) {
 		boolean flag = false;
 		if (url.contains(".htm") || url.contains(".jsp") || url.contains(".asp") || url.contains(".action")
 				|| url.contains(".php") || url.contains(".xhtml") || url.contains(".shtm") || url.contains(".do")
-				|| url.contains(".cgi") || url.contains(".xml") || url.contains(".perl")) {
+				|| url.contains(".cgi") || url.contains(".xml") || url.contains(".perl") || url.contains(".ftm")
+				|| url.contains(".vm") || url.contains(".thymes") || url.contains(".tml") || url.contains(".xjsp")
+				|| url.contains(".jsf") || url.contains(".ftl")) {
 			flag = true;
 		}
 		return flag;
@@ -491,10 +502,11 @@ public final class FileUtil {
 
 	/**
 	 * 事先创建指定大小的空内容的文件
-	 * 
+	 *
 	 * @param fileName
+	 *            String
 	 * @param fileSize
-	 * @throws IOException
+	 *            long
 	 */
 	public static void createNullFile(String fileName, long fileSize) {
 		File newFile = new File(fileName);
@@ -510,7 +522,6 @@ public final class FileUtil {
 					raf.close();
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -519,11 +530,13 @@ public final class FileUtil {
 
 	/**
 	 * 下载文件到磁盘上
-	 * 
+	 *
 	 * @param fileName
+	 *            String
 	 * @param contentLength
+	 *            Long
 	 * @param content
-	 * @throws Exception
+	 *            InputStream
 	 */
 	public static void writeFile(String fileName, Long contentLength, InputStream content) {
 		long offset = 0;
@@ -533,21 +546,22 @@ public final class FileUtil {
 		File newFile = new File(fileName);
 		RandomAccessFile raf = null;
 		try {
-			
-			int unit = (int) (contentLength / 100 );//将文件大小分成100分
-			int unitProgress = 0; //用于保存当前进度(1~100%)
+
+			int unit = (int) (contentLength / 100);// 将文件大小分成100分
+			int unitProgress = 0; // 用于保存当前进度(1~100%)
 			raf = new RandomAccessFile(newFile, "rw");
 			while ((bytesRead = bis.read(buff, 0, buff.length)) != -1) {
 				raf.seek(offset);
 				raf.write(buff, 0, bytesRead);
 				offset = offset + bytesRead;
-				int temp = (int) (offset / unit); //计算当前百分比进度
-                if (temp >= 1 && temp > unitProgress) {//如果下载过程出现百分比变化
-                	unitProgress = temp;
-                	if(unitProgress % 20 == 0){
-                		logger.info("线程[" + Thread.currentThread().getName() + "]下载文件["+ fileName + "]的进度为["+unitProgress+"%]。");
-                	}
-					
+				int temp = (int) (offset / unit); // 计算当前百分比进度
+				if (temp >= 1 && temp > unitProgress) {// 如果下载过程出现百分比变化
+					unitProgress = temp;
+					if (unitProgress % 20 == 0) {
+						logger.info("线程[" + Thread.currentThread().getName() + "]下载文件[" + fileName + "]的进度为["
+								+ unitProgress + "%]。");
+					}
+
 				}
 			}
 		} catch (Exception e) {
@@ -557,11 +571,8 @@ public final class FileUtil {
 				if (raf != null) {
 					raf.close();
 				}
-				if (bis != null) {
-					bis.close();
-				}
+				bis.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 

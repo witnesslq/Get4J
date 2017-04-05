@@ -10,37 +10,37 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Single {
-	
-	int thread() default 1;
-	
-	String url() ;//没有default值必须要设置
 
-	String startTime() default "";
+    int thread() default 1;
 
-	long interval() default 0;
+    String url();//没有default值必须要设置
 
-	long sleep() default 0;
-	
-	String sleepRange() default "";
+    String startTime() default "";
 
-	String proxy() default "";
-	
-	String userAgent() default "";
+    long interval() default 0;
 
-	String resourceSelector() default "";
+    long sleep() default 0;
 
-	String downloadDisk() default "";
+    String sleepRange() default "";
 
-	String downloadHdfs() default "";
-	
-	boolean javascriptSupport() default false;
+    String proxy() default "";
 
-	String parser() default "";
-	
-	String jdbc() default "";
-	
-	String lucene() default "";
-	
-	String hbase() default "";
+    String userAgent() default "";
+
+    String resourceSelector() default "";
+
+    String downloadDisk() default "";
+
+    String downloadHdfs() default "";
+
+    boolean javascriptSupport() default false;
+
+    String parser() default "";
+
+    String jdbc() default "";
+
+    String lucene() default "";
+
+    String hbase() default "";
 
 }

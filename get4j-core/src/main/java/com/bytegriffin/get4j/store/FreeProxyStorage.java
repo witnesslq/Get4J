@@ -22,63 +22,62 @@ import com.bytegriffin.get4j.util.FileUtil;
  */
 public class FreeProxyStorage implements Process {
 
-	private static final Logger logger = LogManager.getLogger(FreeProxyStorage.class);
+    private static final Logger logger = LogManager.getLogger(FreeProxyStorage.class);
 
-	private static String http_proxy = "";
+    private static String http_proxy = "";
 
-	@Override
-	public void init(Seed seed) {
-		http_proxy = seed.getStoreFreeProxy();
-		String httpProxy = FileUtil.getAbsolutePath(http_proxy);
-		String folder = httpProxy.substring(0, httpProxy.lastIndexOf(File.separator));
-		String filename = httpProxy.substring(httpProxy.lastIndexOf(File.separator)+1, httpProxy.length());
-		FileUtil.makeDumpDir(folder, filename);
-	}
+    @Override
+    public void init(Seed seed) {
+        http_proxy = seed.getStoreFreeProxy();
+        String httpProxy = FileUtil.getSystemAbsolutePath(http_proxy);
+        String folder = httpProxy.substring(0, httpProxy.lastIndexOf(File.separator));
+        String filename = httpProxy.substring(httpProxy.lastIndexOf(File.separator) + 1, httpProxy.length());
+        FileUtil.makeDumpDir(folder, filename);
+    }
 
-	@SuppressWarnings("unchecked" )
-	@Override
-	public void execute(Page page) {
+    @SuppressWarnings("unchecked")
+    @Override
+    public void execute(Page page) {
 
-		String http_proxy_file = FileUtil.getAbsolutePath(http_proxy);
-		List<HttpProxy> proxys = (List<HttpProxy>) page.getField(FreeProxyPageParser.xicidaili);
+        String http_proxy_file = FileUtil.getSystemAbsolutePath(http_proxy);
+        List<HttpProxy> proxys = (List<HttpProxy>) page.getField(FreeProxyPageParser.xicidaili);
 
-		// 1.验证抓取的代理
-		HashSet<String> validates = new HashSet<String>();
-		HttpEngine http = Constants.HTTP_ENGINE_CACHE.get(page.getSeedName());
-		for(HttpProxy proxy : proxys){
-			boolean isReached = http.testHttpProxy(page.getUrl(), proxy);
-			if(isReached){
-				validates.add(proxy.toString());
-			} 
-		}
+        // 1.验证抓取的代理
+        HashSet<String> validates = new HashSet<>();
+        HttpEngine http = Constants.HTTP_ENGINE_CACHE.get(page.getSeedName());
+        for (HttpProxy proxy : proxys) {
+            boolean isReached = http.testHttpProxy(page.getUrl(), proxy);
+            if (isReached) {
+                validates.add(proxy.toString());
+            }
+        }
 
-		// 2.验证http_proxy文件中存在的代理
-		List<HttpProxy> existProxys = FileUtil.readHttpProxyFile(http_proxy);
-		Iterator<HttpProxy> it = existProxys.iterator();
-		while (it.hasNext()) {
-			HttpProxy proxy = it.next();
-			if(existProxys.contains(proxy)){
-				logger.error("http_proxy文件中的代理["+proxy.toString()+"]已存在，无需添加。");
-				continue;
-			}
-			boolean isReached = http.testHttpProxy(page.getUrl(), proxy);
-			if(isReached){
-				validates.add(proxy.toString());
-			} else {
-				FileUtil.removeLine(http_proxy, proxy.toString());
-				logger.error("http_proxy文件中的代理["+proxy.toString()+"]已失效。");
-			}
-		}
+        // 2.验证http_proxy文件中存在的代理
+        List<HttpProxy> existProxys = FileUtil.readHttpProxyFile(http_proxy);
+        Iterator<HttpProxy> it = existProxys.iterator();
+        while (it.hasNext()) {
+            HttpProxy proxy = it.next();
+            if (existProxys.contains(proxy)) {
+                logger.error("http_proxy文件中的代理[" + proxy.toString() + "]已存在，无需添加。");
+                continue;
+            }
+            boolean isReached = http.testHttpProxy(page.getUrl(), proxy);
+            if (isReached) {
+                validates.add(proxy.toString());
+            } else {
+                FileUtil.removeLine(http_proxy, proxy.toString());
+                logger.error("http_proxy文件中的代理[" + proxy.toString() + "]已失效。");
+            }
+        }
 
-		// 3.将可用的代理追加到文件末尾
-		int count = validates.size();
-		FileUtil.append(new File(http_proxy_file), validates);
-		if(count == 0){
-			logger.error("更新http代理失败，请隔一段时间再更新。");
-		} else {
-			logger.info("更新http代理完成，总共具有["+count+"]个成功的代理。");
-		}
-		
-	}
+        // 3.将可用的代理追加到文件末尾
+        int count = validates.size();
+        FileUtil.append(new File(http_proxy_file), validates);
+        if (count == 0) {
+            logger.error("更新http代理失败，请隔一段时间再更新。");
+        } else {
+            logger.info("更新http代理完成，总共具有[" + count + "]个成功的代理。");
+        }
+    }
 
 }

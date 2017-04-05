@@ -1,12 +1,11 @@
 package com.bytegriffin.get4j.core;
 
-public interface JobEngine
-{
+public interface JobEngine {
 
-  void pause();
+    void pause();
 
-  void continues();
+    void continues();
 
-  void destory(String jobid);
+    void destory(String jobid);
 
 }
