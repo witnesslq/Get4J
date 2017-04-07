@@ -115,13 +115,15 @@ public class Seed {
      */
     private String parseElementSelector;
     /**
-     * 保存到redis内存数据库中
-     */
-    private String storeRedis;
-    /**
-     * 连接jdbc保存到关系型数据库中
+     * 连接jdbc保存到mysql
+     * jdbc:mysql://localhost:3306/get4j?useSSL=false&amp;serverTimezone=UTC&amp;characterEncoding=UTF-8&amp;user=root&amp;password=root
      */
     private String storeJdbc;
+    /**
+     * 存储mongodb
+     * mongodb://localhost:27017 或者加密 mongodb://root:root@host1:27017 或者多个 mongodb://host1:27017,host2:27017
+     */
+    private String storeMongodb;
     /**
      * 保存结果到lucene索引中，默认值/data/index/seedName/，绝对路径不用写classpath
      */
@@ -152,7 +154,7 @@ public class Seed {
     /**
      * 设置httpproxy文件 读取httpproxy代理文件到内存中
      *
-     * @param httpProxyFile
+     * @param httpProxyFile String
      */
     public void setFetchHttpProxyFile(String httpProxyFile) {
         if (!StringUtil.isNullOrBlank(httpProxyFile)) {
@@ -163,7 +165,7 @@ public class Seed {
     /**
      * 设置抓取模式，默认是site抓取
      *
-     * @param pageMode
+     * @param pageMode String
      */
     public void setPageMode(String pageMode) {
         if (!StringUtil.isNullOrBlank(pageMode)) {
@@ -181,13 +183,10 @@ public class Seed {
      * 当用户没有设置PageMode时候
      * 也可以判断当前是否是list_detail模式
      *
-     * @return
+     * @return boolean
      */
     public boolean isListDetailMode() {
-        if (!StringUtil.isNullOrBlank(this.fetchDetailSelector)) {
-            return true;
-        }
-        return false;
+        return (!StringUtil.isNullOrBlank(this.fetchDetailSelector));
     }
 
     /**
@@ -196,7 +195,7 @@ public class Seed {
      * @param fetchResourcceSelectorsStr 多个resource selector用逗号拼接成的字符串
      */
     public void setFetchResourceSelectors(String fetchResourcceSelectorsStr) {
-        List<String> fetchOtherUrlSelectors = new ArrayList<String>();
+        List<String> fetchOtherUrlSelectors = new ArrayList<>();
         if (!StringUtil.isNullOrBlank(fetchResourcceSelectorsStr)) {
             String[] array = fetchResourcceSelectorsStr.split(Constants.FETCH_RESOURCE_SPLIT);
             for (String str : array) {
@@ -224,7 +223,7 @@ public class Seed {
     /**
      * 将毫秒改成秒
      *
-     * @param fetchSleep
+     * @param fetchSleep Long
      */
     public void setFetchSleep(Long fetchSleep) {
         this.fetchSleep = fetchSleep * 1000;
@@ -342,14 +341,6 @@ public class Seed {
         this.parseClassImpl = parseClassImpl;
     }
 
-    public String getStoreRedis() {
-        return storeRedis;
-    }
-
-    public void setStoreRedis(String storeRedis) {
-        this.storeRedis = storeRedis;
-    }
-
     public String getStoreJdbc() {
         return storeJdbc;
     }
@@ -433,6 +424,14 @@ public class Seed {
 
     public void setStoreFreeProxy(String storeFreeProxy) {
         this.storeFreeProxy = storeFreeProxy;
+    }
+
+    public String getStoreMongodb() {
+        return storeMongodb;
+    }
+
+    public void setStoreMongodb(String storeMongodb) {
+        this.storeMongodb = storeMongodb;
     }
 
 }

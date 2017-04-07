@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.bson.Document;
 
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.net.http.HttpEngine;
@@ -15,6 +16,7 @@ import com.bytegriffin.get4j.net.http.SleepRandomSelector;
 import com.bytegriffin.get4j.net.http.UserAgentSelector;
 import com.bytegriffin.get4j.parse.PageParser;
 import com.gargoylesoftware.htmlunit.WebClient;
+import com.mongodb.client.MongoCollection;
 
 /**
  * 全局变量
@@ -36,11 +38,12 @@ public final class Constants {
 
     /**
      * 获取相应种子的下载地址
+     *
      * @param seedName 种子名称
      * @return String
      */
-    public static String getDownloadDisk(String seedName){
-       return System.getProperty("user.dir") + File.separator + "download" + File.separator + seedName;
+    public static String getDownloadDisk(String seedName) {
+        return System.getProperty("user.dir") + File.separator + "download" + File.separator + seedName;
     }
 
     /**
@@ -156,6 +159,10 @@ public final class Constants {
      */
     public static HashMap<String, DataSource> DATASOURCE_CACHE = new HashMap<>();
 
+    /**
+     * key : seedName value: MongoCollection
+     */
+    public static HashMap<String, MongoCollection<Document>> MONGO_COLLECTION_CACHE = new HashMap<>();
 
     /**
      * 全局http_proxy缓存 key:seed_name value: WebClient

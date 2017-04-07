@@ -96,9 +96,10 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
 
     /**
      * 设置请求中的Http代理
-     * @param seedName seedName
+     *
+     * @param seedName  seedName
      * @param webClient webClient
-     * @param request request
+     * @param request   request
      */
     private static void setHttpProxy(String seedName, WebClient webClient, WebRequest request) {
         HttpProxySelector hpl = Constants.HTTP_PROXY_CACHE.get(seedName);
@@ -134,6 +135,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
     /**
      * 获取url的内容，与HttpClientProbe的getAndSetContent方法实现完全一致，
      * 只是调用了HtmlUnit的API而已。
+     *
      * @param page page
      * @return Page
      */

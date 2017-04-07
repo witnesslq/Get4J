@@ -19,7 +19,7 @@ public interface HttpEngine {
     /**
      * 测试HttpProxy是否可运行，都不可用程序则退出
      *
-     * @param url url
+     * @param url       url
      * @param httpProxy httpProxy
      * @return boolean
      */

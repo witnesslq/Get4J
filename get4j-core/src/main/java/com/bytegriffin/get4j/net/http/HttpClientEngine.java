@@ -236,7 +236,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
     /**
      * 初始化HttpAsyncClientBuilder
-     *
      */
     private static void initHttpClientBuilder(String seedName) {
         // Use custom message parser / writer to customize the way HTTP
@@ -420,17 +419,17 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             public void process(final HttpResponse response, final HttpContext context)
                     throws HttpException, IOException {
                 HttpEntity entity = response.getEntity();
-                if(entity == null){
-                	return;
+                if (entity == null) {
+                    return;
                 }
                 Header ceheader = entity.getContentEncoding();
                 if (ceheader == null) {
                     return;
                 }
                 HeaderElement[] codecs = ceheader.getElements();
-                for(HeaderElement he : codecs){
+                for (HeaderElement he : codecs) {
                     if (he.getName().equalsIgnoreCase("gzip")) {
-                    	GzipDecompressingEntity gentity = new GzipDecompressingEntity(response.getEntity());
+                        GzipDecompressingEntity gentity = new GzipDecompressingEntity(response.getEntity());
                         response.setEntity(gentity);
                         break;
                     }
@@ -534,15 +533,15 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             Header header = response.getLastHeader("Set-Cookie");
             if (header != null) {
                 page.setCookies(header.getValue());
-            }     
+            }
             Header ctHeader = null;
-            try{
-            	ctHeader = entity.getContentType();
+            try {
+                ctHeader = entity.getContentType();
             } catch (NullPointerException e) {
-            	UrlQueue.newFailVisitedUrl(page.getSeedName(), url);
-            	logger.error("线程[" + Thread.currentThread().getName() + "]获取种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面内容为空。", e);
-            	return page;
-            }	  
+                UrlQueue.newFailVisitedUrl(page.getSeedName(), url);
+                logger.error("线程[" + Thread.currentThread().getName() + "]获取种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面内容为空。", e);
+                return page;
+            }
             if (ctHeader != null) {
                 long contentlength = entity.getContentLength();
                 boolean isdone = downloadBigFile(page, contentlength);
@@ -556,7 +555,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 String content = new String(bytes);
 
                 if (StringUtil.isNullOrBlank(content)) {
-                	UrlQueue.newFailVisitedUrl(page.getSeedName(), url);
+                    UrlQueue.newFailVisitedUrl(page.getSeedName(), url);
                     logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容为空。");
                     return page;
                 }
@@ -584,7 +583,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 setContent(contentType, content, page);
             }
 
-                 
+
         } catch (Exception e) {
             UrlQueue.newUnVisitedLink(page.getSeedName(), url);
             logger.error("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容失败。", e);
@@ -603,7 +602,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
      * 下载大文件，默认设置超过10M大小的文件算是大文件
      * 文件太大会抛异常，所以特此添加一个下载打文件的方法
      *
-     * @param page page
+     * @param page          page
      * @param contentlength contentlength
      * @return boolean
      */
@@ -715,7 +714,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 }
                 String contentType = header.getValue();
                 String suffix = "";
-                if(StringUtil.isNullOrBlank(contentType)){
+                if (StringUtil.isNullOrBlank(contentType)) {
                     resourceName += FileUtil.generateResourceName(url, suffix);
                     FileUtil.writeFileToDisk(resourceName, content);
                     continue;
@@ -740,7 +739,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                     } else { // 此种情况为后缀名与ContentType保持一致的
                         if (contentType.contains("/")) {
                             String[] array = contentType.split("/");
-                            if(array!= null && array.length > 1 && array[1].contains(";")){
+                            if (array != null && array.length > 1 && array[1].contains(";")) {
                                 suffix = array[1].substring(0, array[1].indexOf(";"));
                             } else {
                                 suffix = array[0];
@@ -821,7 +820,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             String contentType = header.getValue();
             String suffix = "";
             String resourceName = Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
-            if(StringUtil.isNullOrBlank(contentType)){        	
+            if (StringUtil.isNullOrBlank(contentType)) {
                 resourceName += FileUtil.generateResourceName(url, suffix);
                 FileUtil.writeFileToDisk(resourceName, content);
                 return;
@@ -846,7 +845,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 } else {// 此种情况为后缀名与ContentType保持一致的
                     if (contentType.contains("/")) {
                         String[] array = contentType.split("/");
-                        if(array.length > 1 && array[1].contains(";")){
+                        if (array.length > 1 && array[1].contains(";")) {
                             suffix = array[1].substring(0, array[1].indexOf(";"));
                         } else {
                             suffix = array[0];

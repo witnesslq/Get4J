@@ -18,12 +18,12 @@ public class RssPageParser implements PageParser {
         System.err.println(title + "  " + page.getAvatar());
     }
 
-    
+
     /**
-     *
-     *  线程[pool-2-thread-3]下载大小为[22]MB的文件[E:\work\workspace\get4j\get4j-core\data\download\rssnews.baidu.com.]总共花费时间为[]。
+     * 线程[pool-2-thread-3]下载大小为[22]MB的文件[E:\work\workspace\get4j\get4j-core\data\download\rssnews.baidu.com.]总共花费时间为[]。
      * 爬取rss/atom文件
      * 文件路径有问题
+     *
      * @param args
      * @throws Exception
      */

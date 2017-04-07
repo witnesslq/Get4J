@@ -11,6 +11,7 @@ public class Context {
         this.config = config;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T load() {
         return (T) this.config.load();
     }

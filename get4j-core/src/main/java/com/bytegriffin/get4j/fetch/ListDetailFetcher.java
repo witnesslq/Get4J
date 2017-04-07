@@ -84,8 +84,8 @@ public class ListDetailFetcher implements Process {
      * 例如：http://www.aaa.com/bbb?p={1} ==>
      * http://www.aaa.com/bbb?p=1、...、http://www.aaa.com/bbb?p=10
      *
-     * @param seedName seedName
-     * @param listUrl listUrl
+     * @param seedName   seedName
+     * @param listUrl    listUrl
      * @param totalPages totalPages
      */
     private void generateListUrl(String seedName, String listUrl, int totalPages) {

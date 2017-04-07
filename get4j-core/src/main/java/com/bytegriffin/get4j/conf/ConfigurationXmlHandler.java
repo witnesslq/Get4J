@@ -21,15 +21,15 @@ public class ConfigurationXmlHandler extends AbstractConfig {
     public Configuration load() {
         logger.info("正在读取xml配置文件[" + configuration_xml_file + "]......");
         Document doc = XmlHelper.loadXML(configuration_xml_file);
-        if(doc == null){
+        if (doc == null) {
             return null;
         }
         Element sitesNode = doc.getRootElement();
         List<Element> configurationElements = sitesNode.elements(configuration_node);
         Configuration conf = new Configuration();
         for (Element property : configurationElements) {
-            if(property == null){
-               continue;
+            if (property == null) {
+                continue;
             }
             String name = property.element(name_node).getStringValue();
             String value = property.element(value_node).getStringValue();

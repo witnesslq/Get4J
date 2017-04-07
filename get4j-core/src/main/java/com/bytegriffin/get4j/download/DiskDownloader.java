@@ -42,7 +42,7 @@ public class DiskDownloader implements Process {
         } else {
             folderName = FileUtil.makeDownloadDir(diskpath);// 获取用户配置的磁盘地址
         }
-        folderName = folderName.endsWith(File.separator)? folderName : folderName + File.separator;
+        folderName = folderName.endsWith(File.separator) ? folderName : folderName + File.separator;
         Constants.DOWNLOAD_DIR_CACHE.put(seed.getSeedName(), folderName);
         logger.info("Seed[" + seed.getSeedName() + "]的组件ResourceDiskDownloader的初始化完成。");
     }

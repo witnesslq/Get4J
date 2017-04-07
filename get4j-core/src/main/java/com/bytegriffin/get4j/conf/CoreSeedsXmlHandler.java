@@ -25,10 +25,16 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
         XmlHelper.validate(core_seeds_xml_file, core_seeds_xsd_file);
         logger.info("正在读取xml配置文件[" + core_seeds_xml_file + "]......");
         Document doc = XmlHelper.loadXML(core_seeds_xml_file);
-        Element sitesNode = doc.getRootElement();
-        List<Element> siteElements = sitesNode.elements(seed_node);
-        List<Seed> seeds = new ArrayList<Seed>();
-        HashSet<String> hashset = new HashSet<String>();//过滤相同siteName
+        Element seedNode = null;
+        try{
+            seedNode = doc.getRootElement();
+        }catch(NullPointerException e){
+            logger.error("读取的xml配置文件[" + core_seeds_xml_file + "]内容为空。");
+            System.exit(1);
+        }
+        List<Element> siteElements = seedNode.elements(seed_node);
+        List<Seed> seeds = new ArrayList<>();
+        HashSet<String> hashset = new HashSet<>();//过滤相同siteName
         for (Element element : siteElements) {
             String seedName = element.element(name_node).getStringValue();
             Seed seed = new Seed(seedName);
@@ -81,10 +87,10 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
                     seed.setParseClassImpl(value);
                 } else if (name.equalsIgnoreCase(parse_element_selector)) {
                     seed.setParseElementSelector(value);
-                } else if (name.equalsIgnoreCase(store_redis)) {
-                    seed.setStoreRedis(value);
                 } else if (name.equalsIgnoreCase(store_jdbc)) {
                     seed.setStoreJdbc(value);
+                } else if (name.equalsIgnoreCase(store_mongodb)) {
+                    seed.setStoreMongodb(value);
                 } else if (name.equalsIgnoreCase(store_lucene_index)) {
                     seed.setStoreLuceneIndex(value);
                 }

@@ -356,7 +356,7 @@ public class Spider {
     }
 
     /**
-     * 将解析的结果保存到Mysql中，
+     * 将解析的结果保存到Mysql中
      * jdbc格式：jdbc:mysql://localhost:3306/spider?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root
      *
      * @param jdbc 需要把用户名与密码也写到url的参数中
@@ -364,6 +364,18 @@ public class Spider {
      */
     public Spider jdbc(String jdbc) {
         seed.setStoreJdbc(jdbc);
+        return this;
+    }
+
+    /**
+     * 将解析的结果保存到MongoDB中
+     * mongodb://localhost:27017 或者加密 mongodb://user1:pwd1@host1/?authSource=db1&ssl=true 或者多个 mongodb://host1:27017,host2:27017
+     *
+     * @param mongodburl
+     * @return
+     */
+    public Spider mongodb(String mongodburl) {
+        seed.setStoreMongodb(mongodburl);
         return this;
     }
 
@@ -577,7 +589,7 @@ public class Spider {
     public void start() {
         // 自动生成seed name
         if (StringUtil.isNullOrBlank(seed.getSeedName())) {
-            seed.setSeedName(MD5Util.generateID());
+            seed.setSeedName(MD5Util.generateSeedName());
         }
         if (isDefaultDownload) {
             seed.setDownloadDisk(Constants.getDownloadDisk(seed.getSeedName()));

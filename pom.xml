@@ -25,6 +25,8 @@
         <jsonpath.version>2.2.0</jsonpath.version>
         <!-- 注意：以下是java8的，和java6、java7不一样 -->
         <hikaricp.version>2.6.1</hikaricp.version>
+        <mysql-connector.version>6.0.5</mysql-connector.version>
+        <mongo.version>3.4.2</mongo.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
@@ -125,8 +127,14 @@
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
-                <version>6.0.5</version>
+                <version>${mysql-connector.version}</version>
             </dependency>
+            
+            <dependency>
+		    	<groupId>org.mongodb</groupId>
+		    	<artifactId>mongo-java-driver</artifactId>
+		    	<version>${mongo.version}</version>
+			</dependency>
         </dependencies>
     </dependencyManagement>
 

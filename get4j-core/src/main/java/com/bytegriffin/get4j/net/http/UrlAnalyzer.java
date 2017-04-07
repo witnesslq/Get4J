@@ -74,7 +74,7 @@ public final class UrlAnalyzer {
     /**
      * 获取html中指定的元素
      *
-     * @param page page
+     * @param page   page
      * @param select select
      * @return String
      */
@@ -89,7 +89,7 @@ public final class UrlAnalyzer {
      * [option value='http://www.aaa.com/bbb']这种情况下出现的url比较特殊，<br>
      * 一是出现url的情况不多，二是不好判断哪个属于相对路径，只能判断出绝对路径来
      *
-     * @param doc Document
+     * @param doc  Document
      * @param urls HashSet<String>
      */
     private void addOptionUrl(Document doc, HashSet<String> urls) {
@@ -392,11 +392,12 @@ public final class UrlAnalyzer {
 
     /**
      * 设置xml或json的detaillink与avatar的映射关系
+     *
      * @param detailLink List<String>
-     * @param avatars List<String>
-     * @param map Map<String, String> key：detaillink value：avatar
+     * @param avatars    List<String>
+     * @param map        Map<String, String> key：detaillink value：avatar
      */
-    private void setDetailLinkAvatarMapping(List<String> detailLink, List<String> avatars, Map<String, String> map){
+    private void setDetailLinkAvatarMapping(List<String> detailLink, List<String> avatars, Map<String, String> map) {
         if (avatars == null || avatars.size() == 0) {
             return;
         }
@@ -436,7 +437,7 @@ public final class UrlAnalyzer {
      * 此时可以根据程序逻辑再次循环到此url会调用httpclient，不过当Fetch.mode为single时，<br>
      * 就不会再次循环了，也就是说这种url就会忽略了<br>
      *
-     * @param isResource  是否是资源文件，当isResource=true时，此urls存放的是资源的url，否则为普通链接url
+     * @param isResource 是否是资源文件，当isResource=true时，此urls存放的是资源的url，否则为普通链接url
      */
     private HashSet<String> sniffUrlFromJson(boolean isResource) {
         HashSet<String> urls = new HashSet<>();
@@ -455,7 +456,7 @@ public final class UrlAnalyzer {
      * 递归遍历Json文件查找出所有以http开头的url
      *
      * @param jsonObj JSONObject
-     * @param url HashSet<String>
+     * @param url     HashSet<String>
      * @return HashSet<String>
      */
     private HashSet<String> travelJson(JSONObject jsonObj, HashSet<String> url) {
@@ -506,7 +507,7 @@ public final class UrlAnalyzer {
      * 递归遍历Xml文件查找出所有属性以及节点内容中以http开头的url
      *
      * @param nodelist List<Node>
-     * @param urls HashSet<String>
+     * @param urls     HashSet<String>
      * @return HashSet<String>
      */
     private HashSet<String> travelXml(List<Node> nodelist, HashSet<String> urls) {
@@ -532,15 +533,16 @@ public final class UrlAnalyzer {
 
     /**
      * 遍历xml中节点属性值
+     *
      * @param node Node
      * @param urls HashSet<String>
      */
-    private void travelXmlAttributes(Node node, HashSet<String> urls){
+    private void travelXmlAttributes(Node node, HashSet<String> urls) {
         Attributes atts = node.attributes();
         for (Attribute attr : atts.asList()) {
             String attrname = attr.getKey();
             String link = attr.getValue();
-            if(StringUtil.isNullOrBlank(attrname) || attrname.startsWith("xmlns")){
+            if (StringUtil.isNullOrBlank(attrname) || attrname.startsWith("xmlns")) {
                 continue;
             }
             if (!StringUtil.isNullOrBlank(link) && isStartHttpUrl(link)) {
@@ -560,6 +562,8 @@ public final class UrlAnalyzer {
      * @return HashSet<String>
      */
     public final HashSet<String> getAllUrlByElement(Elements elements) {
+        String url = page.getUrl();
+
         HashSet<String> urls = new HashSet<>();
         for (Element link : elements) {
             //链接只考虑href 与 src 两种
@@ -567,18 +571,18 @@ public final class UrlAnalyzer {
 
             // 绝对路径：之前由于Jsoup调用的是parse(content, baseUri)方法，所以这个值绝对不为空
             String absLink = link.absUrl(source);
-            String url = page.getUrl();
-            if (StringUtil.isNullOrBlank(absLink) || StringUtil.isNullOrBlank(url) || url.equals(absLink) 
-            		|| url.startsWith("#") || url.equalsIgnoreCase("null") 
-                    || url.contains("javascript:") || url.contains("mailto:") || url.contains("about:blank")) {
+
+            if (StringUtil.isNullOrBlank(absLink) || StringUtil.isNullOrBlank(url) || url.equals(absLink)
+                    || absLink.startsWith("#") || absLink.equalsIgnoreCase("null")
+                    || absLink.contains("javascript:") || absLink.contains("mailto:") || absLink.contains("about:blank")) {
                 continue;
             }
-            if(absLink.contains("|")){
-            	try {
-            		absLink = absLink.replace("|", URLEncoder.encode("|", "UTF-8"));
-				} catch (UnsupportedEncodingException e) {
-					e.printStackTrace();
-				}
+            if (absLink.contains("|")) {
+                try {
+                    absLink = absLink.replace("|", URLEncoder.encode("|", "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
             }
             urls.add(absLink);
         }

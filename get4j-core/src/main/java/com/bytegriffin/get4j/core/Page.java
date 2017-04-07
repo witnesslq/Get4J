@@ -95,6 +95,7 @@ public class Page {
 
     /**
      * 页面内容是否为Json格式
+     *
      * @return boolean
      */
     public boolean isJsonContent() {
@@ -167,7 +168,7 @@ public class Page {
     /**
      * 根据Jsoup原生支持的cssSelect或正则表达式解析Html
      *
-     * @param jsoupSelect  jsoup支持的select字符串
+     * @param jsoupSelect jsoup支持的select字符串
      * @return String
      */
     public String jsoupText(String jsoupSelect) {
@@ -199,6 +200,7 @@ public class Page {
 
     /**
      * 是否需要更新数据库中的page数据
+     * 注意：每次请求返回的Cookie都不一样，页面内容确实相同，这种情况下是不是可以不需要此方法，直接全部更新呢？
      *
      * @param dbPage 数据库中出来的page对象
      * @return boolean
@@ -211,12 +213,12 @@ public class Page {
         try {
             // title中也可能带有单引号之类的特殊字符，所以需要转义处理
             if (!(this.getTitle() == null ? dbPage.getTitle() == null
-                    : URLEncoder.encode(this.getTitle(), "UTF-8").equals(dbPage.getTitle()))) {
+                    : URLEncoder.encode(this.getTitle(), this.charset).equals(dbPage.getTitle()))) {
                 flag = true;
             }
             // html页面首先要解码，因为之前存进去的时候是编码的（为了过滤某些单引号之类的字符串）
             if (!(this.getHtmlContent() == null ? dbPage.getHtmlContent() == null
-                    : URLEncoder.encode(this.getHtmlContent(), "UTF-8").equals(dbPage.getHtmlContent()))) {
+                    : URLEncoder.encode(this.getHtmlContent(), this.charset).equals(dbPage.getHtmlContent()))) {
                 flag = true;
             }
         } catch (UnsupportedEncodingException e) {
@@ -225,6 +227,11 @@ public class Page {
 
         if (!(this.getJsonContent() == null ? dbPage.getJsonContent() == null
                 : this.getJsonContent().equals(dbPage.getJsonContent()))) {
+            flag = true;
+        }
+
+        if (!(this.getXmlContent() == null ? dbPage.getXmlContent() == null
+                : this.getXmlContent().equals(dbPage.getXmlContent()))) {
             flag = true;
         }
 
@@ -240,7 +247,51 @@ public class Page {
     }
 
     /**
+     * 之所以要另开一个方法是因为mongodb不用encode文本内容
+     *
+     * @param dbPage
+     * @return
+     */
+    public boolean isRequireUpdateNoEncoding(Page dbPage) {
+        if (null == dbPage) {
+            return false;
+        }
+        boolean flag = false;
+        // title中也可能带有单引号之类的特殊字符，所以需要转义处理
+        if (!(this.getTitle() == null ? dbPage.getTitle() == null
+                : this.getTitle().equals(dbPage.getTitle()))) {
+            flag = true;
+        }
+        // html页面首先要解码，因为之前存进去的时候是编码的（为了过滤某些单引号之类的字符串）
+        if (!(this.getHtmlContent() == null ? dbPage.getHtmlContent() == null
+                : this.getHtmlContent().equals(dbPage.getHtmlContent()))) {
+            flag = true;
+        }
+        if (!(this.getJsonContent() == null ? dbPage.getJsonContent() == null
+                : this.getJsonContent().equals(dbPage.getJsonContent()))) {
+            flag = true;
+        }
+
+        if (!(this.getXmlContent() == null ? dbPage.getXmlContent() == null
+                : this.getXmlContent().equals(dbPage.getXmlContent()))) {
+            flag = true;
+        }
+
+        if (!(this.getCookies() == null ? dbPage.getCookies() == null
+                : this.getCookies().equals(dbPage.getCookies()))) {
+            flag = true;
+        }
+
+        if (!(this.getAvatar() == null ? dbPage.getAvatar() == null
+                : this.getAvatar().equals(dbPage.getAvatar()))) {
+            flag = true;
+        }
+        return flag;
+    }
+
+    /**
      * 获取动态字段
+     *
      * @param fieldKey 字段名称
      * @return Object
      */
@@ -250,7 +301,8 @@ public class Page {
 
     /**
      * 设置动态字段
-     * @param fieldKey 字段名称
+     *
+     * @param fieldKey   字段名称
      * @param fieldValue 字段值
      */
     public void putField(String fieldKey, Object fieldValue) {

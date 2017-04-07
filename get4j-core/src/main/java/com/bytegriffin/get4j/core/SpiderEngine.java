@@ -24,6 +24,7 @@ import com.bytegriffin.get4j.parse.AutoDelegateParser;
 import com.bytegriffin.get4j.store.DBStorage;
 import com.bytegriffin.get4j.store.FailUrlStorage;
 import com.bytegriffin.get4j.store.FreeProxyStorage;
+import com.bytegriffin.get4j.store.MongodbStorage;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.bytegriffin.get4j.util.UrlQueue;
@@ -210,6 +211,11 @@ public class SpiderEngine {
                 dbstorage.init(seed);
                 chain.addProcess(dbstorage);
                 subProcess.append("-DBStorage");
+            } else if (!StringUtil.isNullOrBlank(seed.getStoreMongodb())) {
+                MongodbStorage mongodb = new MongodbStorage();
+                mongodb.init(seed);
+                chain.addProcess(mongodb);
+                subProcess.append("-MongodbStorage");
             } else if (!StringUtil.isNullOrBlank(seed.getStoreFreeProxy())) {
                 FreeProxyStorage freeProxyStorage = new FreeProxyStorage();
                 freeProxyStorage.init(seed);

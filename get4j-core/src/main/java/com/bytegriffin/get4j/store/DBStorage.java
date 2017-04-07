@@ -8,7 +8,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
 import javax.sql.DataSource;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +31,7 @@ public class DBStorage implements Process {
 
     private static final Logger logger = LogManager.getLogger(DBStorage.class);
 
-    private final static String insertsql = "insert into page (ID,SEED_NAME,FETCH_URL,HOST,TITLE,AVATAR,FETCH_CONTENT,COOKIES,RESOURCES_URL,FETCH_TIME,CREATE_TIME) values ( ";
+    private final static String insertsql = "insert into page (ID,SEED_NAME,FETCH_URL,SITE_HOST,TITLE,AVATAR,FETCH_CONTENT,COOKIES,RESOURCES_URL,FETCH_TIME,CREATE_TIME) values ( ";
 
     private final static String updatesql = "update page set ";
 
@@ -83,10 +82,10 @@ public class DBStorage implements Process {
         } else {
             sql += "'" + page.getHost() + "',";
         }
-        if (page.getTitle() == null) {// 之所以不判断空字符串''，是因为有可能页面本身就是这样
+        if (page.getTitle() == null) {// 之所以不判断空字符串''，是因为有可能页面的title本身就是控制字符串本身
             sql += "" + null + ",";
         } else {
-            try {
+            try {//title也要像content一样编码，因为title也可能存在一些字符不能直接存入数据库
                 sql += "'" + URLEncoder.encode(page.getTitle(), "UTF-8") + "',";
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -105,6 +104,8 @@ public class DBStorage implements Process {
             }
         } else if (page.isJsonContent()) {
             sql += "'" + page.getJsonContent() + "',";
+        } else if (page.isXmlContent()) {
+            sql += "'" + page.getXmlContent() + "',";
         } else {
             sql += "" + null + ",";
         }
@@ -123,7 +124,7 @@ public class DBStorage implements Process {
         } else {
             sql += "'" + page.getFetchTime() + "',";
         }
-        sql += "'" + DateUtil.dateToStr(new Date()) + "' )";
+        sql += "'" + DateUtil.getCurrentDate() + "' )";
         return sql;
     }
 
@@ -136,6 +137,12 @@ public class DBStorage implements Process {
      */
     private String buildUpdateSql(Page page, String dbId) {
         String sql = "";
+        // 注意：有时候修改了seedName，此时也会随之更新
+        if (StringUtil.isNullOrBlank(page.getSeedName())) {
+            sql += "SEED_NAME=" + null + ",";
+        } else {
+            sql += "SEED_NAME='" + page.getSeedName() + "',";
+        }
         if (StringUtil.isNullOrBlank(page.getAvatar())) {
             sql += "AVATAR=" + null + ",";
         } else {
@@ -164,6 +171,8 @@ public class DBStorage implements Process {
             }
         } else if (page.isJsonContent()) {
             content = page.getJsonContent();
+        } else if (page.isXmlContent()) {
+            content = page.getXmlContent();
         }
         if (content == null) {
             sql += "FETCH_CONTENT=" + null + ",";
@@ -180,7 +189,7 @@ public class DBStorage implements Process {
         } else {
             sql += "FETCH_TIME='" + page.getFetchTime() + "',";
         }
-        sql += "UPDATE_TIME='" + DateUtil.dateToStr(new Date()) + "' where id='" + dbId + "' ";
+        sql += "UPDATE_TIME='" + DateUtil.getCurrentDate() + "' where id='" + dbId + "' ";
         return sql;
     }
 
@@ -188,7 +197,7 @@ public class DBStorage implements Process {
      * 从数据库中读单个Page对象
      *
      * @param dataSource DataSource
-     * @param page Page
+     * @param page       Page
      * @return Page
      */
     public synchronized Page readOne(DataSource dataSource, Page page) {
@@ -218,14 +227,14 @@ public class DBStorage implements Process {
                         rowData.setSeedName(obj == null ? null : obj.toString());
                     } else if ("TITLE".equals(column)) {
                         rowData.setTitle(obj == null ? null : obj.toString());
-                    } else if ("HOST".equals(column)) {
+                    } else if ("SITE_HOST".equals(column)) {
                         rowData.setHost(obj == null ? null : obj.toString());
                     } else if ("FETCH_CONTENT".equals(column)) {
                         if (page.isHtmlContent()) {
                             rowData.setHtmlContent(obj == null ? null : obj.toString());
                         } else if (page.isJsonContent()) {
                             rowData.setJsonContent(obj == null ? null : obj.toString());
-                        } else if(page.isXmlContent()){
+                        } else if (page.isXmlContent()) {
                             rowData.setXmlContent(obj == null ? null : obj.toString());
                         }
                     } else if ("FETCH_TIME".equals(column)) {
@@ -259,7 +268,7 @@ public class DBStorage implements Process {
      * 向数据库中批量写多个数据
      *
      * @param dataSource DataSource
-     * @param sql String
+     * @param sql        String
      */
     private synchronized void write(DataSource dataSource, String sql) {
         Connection con = null;

@@ -21,7 +21,7 @@ public class BaiduNewsPageParser implements PageParser {
         Spider.cascade().fetchUrl("http://news.baidu.com/")
                 .parser(BaiduNewsPageParser.class)
                 .jdbc("jdbc:mysql://localhost:3306/get4j?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root")
-                .thread(4).start();
+                .thread(1).start();
     }
 
 }

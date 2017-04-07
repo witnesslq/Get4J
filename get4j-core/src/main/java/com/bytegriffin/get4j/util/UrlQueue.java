@@ -27,7 +27,7 @@ public final class UrlQueue {
      * 如果都不在的话则将其加进未访问的队列中<br/>
      *
      * @param seedName String
-     * @param links HashSet<String>
+     * @param links    HashSet<String>
      */
     public static void addUnVisitedLinks(String seedName, HashSet<String> links) {
         if (links == null || links.size() == 0) {
@@ -47,11 +47,11 @@ public final class UrlQueue {
      * 然后判断是否在未抓取的队列中<br/>
      * 如果都不在的话则将其加进未访问的队列中<br/>
      *
-     * @param seedName String
-     * @param resources  HashSet<String>
+     * @param seedName  String
+     * @param resources HashSet<String>
      */
     public static void addUnVisitedResources(String seedName, HashSet<String> resources) {
-    	if (resources == null || resources.size() == 0) {
+        if (resources == null || resources.size() == 0) {
             return;
         }
         for (String resource : resources) {
@@ -69,10 +69,10 @@ public final class UrlQueue {
      * 如果都不在的话则将其加进未访问的队列中<br/>
      *
      * @param seedName String
-     * @param links HashSet<String>
+     * @param links    HashSet<String>
      */
     public static void addVisitedLinks(String seedName, HashSet<String> links) {
-    	if (links == null || links.size() == 0) {
+        if (links == null || links.size() == 0) {
             return;
         }
         for (String link : links) {
@@ -89,11 +89,11 @@ public final class UrlQueue {
      * 然后判断是否在未抓取的队列中<br/>
      * 如果都不在的话则将其加进未访问的队列中<br/>
      *
-     * @param seedName String
+     * @param seedName  String
      * @param resources HashSet<String>
      */
     public static void addVisitedResources(String seedName, HashSet<String> resources) {
-    	if (resources == null || resources.size() == 0) {
+        if (resources == null || resources.size() == 0) {
             return;
         }
         for (String resource : resources) {
@@ -108,7 +108,7 @@ public final class UrlQueue {
      * 新增未访问的link到队列中
      *
      * @param seedName String
-     * @param link String
+     * @param link     String
      */
     public static void newUnVisitedLink(String seedName, String link) {
         ConcurrentQueue<String> queue = UrlQueue.UN_VISITED_LINKS.get(seedName);
@@ -122,7 +122,7 @@ public final class UrlQueue {
     /**
      * 新增未访问的resource到队列中
      *
-     * @param seedName String
+     * @param seedName     String
      * @param resourceLink String
      */
     public static void newUnVisitedResource(String seedName, String resourceLink) {
@@ -138,7 +138,7 @@ public final class UrlQueue {
      * 新增已访问的link到队列中
      *
      * @param seedName String
-     * @param link String
+     * @param link     String
      */
     public static void newVisitedLink(String seedName, String link) {
         ConcurrentQueue<String> queue = UrlQueue.VISITED_LINKS.get(seedName);
@@ -168,7 +168,7 @@ public final class UrlQueue {
      * 增加已访问失败的url（包括link、资源文件）
      *
      * @param seedName String
-     * @param failurl String
+     * @param failurl  String
      */
     public static void newFailVisitedUrl(String seedName, String failurl) {
         ConcurrentQueue<String> queue = UrlQueue.FAIL_VISITED_URLS.get(seedName);

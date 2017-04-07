@@ -46,8 +46,8 @@ public abstract class AbstractConfig {
     protected static final String download_hdfs = "download.hdfs";
     protected static final String parse_class_impl = "parse.class.impl";
     protected static final String parse_element_selector = "parse.element.selector";
-    protected static final String store_redis = "store.redis";
     protected static final String store_jdbc = "store.jdbc";
+    protected static final String store_mongodb = "store.mongodb";
     protected static final String store_lucene_index = "store.lucene.index";
     protected static final String download_file_name = "download.file.name";
 

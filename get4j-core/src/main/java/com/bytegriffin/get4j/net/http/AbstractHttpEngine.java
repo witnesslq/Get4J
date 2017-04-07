@@ -62,9 +62,9 @@ public abstract class AbstractHttpEngine {
      * 出现这种问题，爬虫会先记录下来，如果出现这类日志，爬虫使用者可以设置Http代理和UserAgent重新抓取
      *
      * @param seedName seedName
-     * @param url url
-     * @param content content
-     * @param logger logger
+     * @param url      url
+     * @param content  content
+     * @param logger   logger
      */
     void frequentAccesslog(String seedName, String url, String content, Logger logger) {
         if (isFind(content)) {
@@ -75,7 +75,7 @@ public abstract class AbstractHttpEngine {
     /**
      * 转换页面内容： 将inputstream转换成string类型
      *
-     * @param is 页面内容输入流
+     * @param is      页面内容输入流
      * @param charset 编码
      * @return String
      * @throws IOException ioException
@@ -94,7 +94,7 @@ public abstract class AbstractHttpEngine {
      * 对url进行解码，否则就是类似这种格式：http://news.baidu.com/n?cmd=6&loc=0&name=%B1%B1%BE%A9
      * 暂时没用
      *
-     * @param url url
+     * @param url     url
      * @param charset charset
      * @return String
      */
@@ -111,7 +111,7 @@ public abstract class AbstractHttpEngine {
     /**
      * 初始化Http引擎配置参数：HttpProxy、UserAgent、Sleep、SleepRange
      *
-     * @param seed seed
+     * @param seed   seed
      * @param logger logger
      */
     void initParams(Seed seed, Logger logger) {
@@ -142,7 +142,7 @@ public abstract class AbstractHttpEngine {
     /**
      * 设置Sleep Range参数
      *
-     * @param seed seed
+     * @param seed   seed
      * @param logger logger
      */
     private static void setSleepRange(Seed seed, Logger logger) {
@@ -179,7 +179,7 @@ public abstract class AbstractHttpEngine {
      * 设计Http请求间隔时间
      *
      * @param seedName 种子名称
-     * @param logger logger
+     * @param logger   logger
      */
     protected static void sleep(String seedName, Logger logger) {
         Long millis = Constants.FETCH_SLEEP_CACHE.get(seedName);
@@ -203,7 +203,7 @@ public abstract class AbstractHttpEngine {
      * @param contentType contentType
      * @return boolean
      */
-     static boolean isJsonFile(String contentType) {
+    static boolean isJsonFile(String contentType) {
         return (contentType.contains("json") || contentType.contains("JSON") || contentType.contains("Json"));
     }
 
@@ -213,7 +213,7 @@ public abstract class AbstractHttpEngine {
      * @param contentType contentType
      * @return boolean
      */
-     static boolean isPage(String contentType) {
+    static boolean isPage(String contentType) {
         return (contentType.contains("text/html") || contentType.contains("text/plain"));
     }
 
@@ -222,10 +222,10 @@ public abstract class AbstractHttpEngine {
      * 有的xml文件返回的ContentType也是text/html，但是根节点是<?xml ...>
      *
      * @param contentType contentType
-     * @param content content
+     * @param content     content
      * @return boolean
      */
-     static boolean isXmlFile(String contentType, String content) {
+    static boolean isXmlFile(String contentType, String content) {
         return (contentType.contains("xml") || content.contains("<?xml") ||
                 content.contains("<rss") || content.contains("<feed"));
     }
@@ -235,7 +235,7 @@ public abstract class AbstractHttpEngine {
      *
      * @param page page
      */
-     void setHost(Page page) {
+    void setHost(Page page) {
         String host = "";
         try {
             URI uri = new URI(page.getUrl());
@@ -259,7 +259,7 @@ public abstract class AbstractHttpEngine {
      * @param content     转码前的content，有可能是乱码
      * @return String
      */
-     String getCharset(String contentType, String content) {
+    String getCharset(String contentType, String content) {
         String charset = "";
         if (contentType.contains("charset=")) {// 如果Response的Header中有 Content-Type:text/html; charset=utf-8直接获取
             charset = contentType.split("charset=")[1];
@@ -293,9 +293,9 @@ public abstract class AbstractHttpEngine {
      *
      * @param contentType contentType
      * @param content     转码后的content
-     * @param page page
+     * @param page        page
      */
-     void setContent(String contentType, String content, Page page) {
+    void setContent(String contentType, String content, Page page) {
         if (isPage(contentType)) {
             // 注意：有两种特殊情况
             // 1.有时text/plain这种文本格式里面放的是json字符串，并且是这个json字符串里的属性值却是html
@@ -323,11 +323,11 @@ public abstract class AbstractHttpEngine {
      * 是否要继续访问 根据response返回的状态码判断是否继续访问，true：是；false：否
      *
      * @param statusCode 返回状态码
-     * @param page page对象
-     * @param logger logger日志
+     * @param page       page对象
+     * @param logger     logger日志
      * @return boolean
      */
-     static boolean isVisit(int statusCode, Page page, Logger logger) {
+    static boolean isVisit(int statusCode, Page page, Logger logger) {
         // 404/403/500/503 ：此类url不会重复请求，直接把url记录下来以便查明情况
         if (HttpStatus.SC_NOT_FOUND == statusCode || HttpStatus.SC_FORBIDDEN == statusCode
                 || HttpStatus.SC_INTERNAL_SERVER_ERROR == statusCode
