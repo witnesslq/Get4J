@@ -128,7 +128,7 @@ public class SpiderEngine {
                 }
             }
             if (newList.size() == 0) {
-                logger.error("种子[" + seed.getSeedName() + "]测试Http代理全部失效，请重新配置。");
+                logger.error("启动失败：种子[" + seed.getSeedName() + "]测试Http代理全部失效，请重新配置。");
                 System.exit(1);
             }
         }
@@ -140,14 +140,14 @@ public class SpiderEngine {
      */
     private void buildProcess() {
         if (seeds == null || seeds.size() == 0) {
-            logger.error("请先设置种子Seed参数，才能构建爬虫引擎");
+            logger.error("启动失败：请先设置种子Seed参数，才能构建爬虫引擎");
             System.exit(1);
         }
         for (Seed seed : seeds) {
             String seedName = seed.getSeedName();
             Chain chain = new Chain();
             if (StringUtil.isNullOrBlank(seed.getFetchUrl())) {
-                logger.error("种子[" + seedName + "]-[fetch.url]参数为必填项。");
+                logger.error("启动失败：种子[" + seedName + "]-[fetch.url]参数为必填项。");
                 System.exit(1);
             }
             // 1.构建http探针
@@ -247,7 +247,7 @@ public class SpiderEngine {
                 Constants.CHAIN_CACHE.put(seed.getSeedName(), chain);
                 logger.info("种子[" + seedName + "]流程[" + subProcess.toString() + "]设置完成。");
             } else {
-                logger.error("种子[" + seedName + "]流程设置失败，没有任何子流程加入，请重新配置。");
+                logger.error("启动失败：种子[" + seedName + "]流程设置失败，没有任何子流程加入，请重新配置。");
                 System.exit(1);
             }
         }

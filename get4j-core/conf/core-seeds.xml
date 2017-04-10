@@ -148,7 +148,7 @@
         </property>
         <property>
             <name>store.mongodb</name>
-            <value>mongodb://localhost:27017</value>
+            <value></value>
             <description>非必填项。保存到mongodb数据库中，多个可以写成mongodb://host1:27017,host2:27017
                 有密码可写成：mongodb://user1:pwd1@host1/?authSource=db1&amp;ssl=true
             </description>
