@@ -40,9 +40,13 @@ public class DiskDownloader implements Process {
             staticServer = diskpath.endsWith("/") ? diskpath : diskpath + "/";// 静态资源服务器地址
             folderName = FileUtil.makeDownloadDir(defaultAvatarPath);// 获取默认的服务器磁盘地址
         } else {
+        	if(Constants.default_config.equalsIgnoreCase(diskpath)){
+        		diskpath = Constants.getDownloadDisk(seed.getSeedName());
+        	} else {
+        		diskpath = diskpath + File.separator + seed.getSeedName();
+        	}
             folderName = FileUtil.makeDownloadDir(diskpath);// 获取用户配置的磁盘地址
         }
-        folderName = folderName.endsWith(File.separator) ? folderName : folderName + File.separator;
         Constants.DOWNLOAD_DIR_CACHE.put(seed.getSeedName(), folderName);
         logger.info("种子[" + seed.getSeedName() + "]的组件ResourceDiskDownloader的初始化完成。");
     }

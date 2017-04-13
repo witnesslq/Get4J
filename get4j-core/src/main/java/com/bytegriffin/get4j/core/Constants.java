@@ -24,6 +24,10 @@ import com.mongodb.client.MongoCollection;
  */
 public final class Constants {
 
+	/**
+	 * 默认配置：比如下载目录为default时指的是/data/download/${seedname}目录下
+	 */
+	public final static String default_config = "default";
     /**
      * 爬虫 user agent 配置文件
      */

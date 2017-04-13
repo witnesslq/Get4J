@@ -3,7 +3,7 @@
 <seeds>
 
     <seed>
-        <name>seed1</name>
+        <name>seed3333</name>
         <description>
             必填项。表示要抓取Seed的实例名称，如果需求是抓取多个Seed：seed1、seed2，那么seed之间的xml定义有先后关系，
             先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
@@ -110,11 +110,11 @@
         </property>
         <property>
             <name>download.disk</name>
-            <value>classpath:/data/download/seed1/</value>
+            <value>default</value>
             <description>
-                非必填项。如果业务需要下载url站点的页面及资源文件，则将此url站点保存的磁盘目录，默认值classpath:/data/download/seedName/，
-                绝对路径不用写classpath，当然也可以配置成静态服务器地址，例如：http://static.site.com，
-                如果是静态服务器地址，那么还需要配合启动rsync/ftp/scp脚本功能。注意：在List_Detail模式下特指与Detail_Link一一对应的avatar资源。
+                非必填项。如果业务需要下载url站点的页面或资源文件，那么会保存在本地的磁盘目录/data/download/${seedname}下，如果选择默认路径那就填default；如果
+                不需要那就不需要配置此项；如果想配置在本爬虫其它目录下，前缀可以用classpath；如果想配置到爬虫外的其它路径可以用操作系统的绝对路径，需要注意的是
+                当本地环境配置了资源服务器那么这个值可配置成静态服务器地址，例如：http://static.site.com，此时还需要配合启动rsync/ftp/scp同步功能，可以参考resource-sync.yaml文件
             </description>
         </property>
         <property>

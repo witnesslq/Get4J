@@ -282,8 +282,7 @@ public final class FileUtil {
 	/**
 	 * 在磁盘上创建下载文件夹
 	 *
-	 * @param diskDir
-	 *            String
+	 * @param diskDir String
 	 */
 	public static String makeDownloadDir(String diskDir) {
 		diskDir = getSystemAbsolutePath(diskDir);
@@ -291,7 +290,6 @@ public final class FileUtil {
 		if (laststr.equals(File.separator)) {
 			diskDir = diskDir.substring(0, diskDir.length() - 1);
 		}
-		// diskDir += File.separator + seed.getSeedName();
 		File homedir = new File(diskDir);
 		boolean iscreate = false;
 		if (!homedir.exists()) {

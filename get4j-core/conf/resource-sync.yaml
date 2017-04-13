@@ -1,8 +1,8 @@
 sync:
-  open : true   #是否开启资源同步功能
+  open : false   #是否开启资源同步功能
   batch.count : 10 #每批次同步的最大数量
   batch.time : 10 #每批次同步的最大时间间隔，单位为秒
-  protocal : scp  #同步协议，可以为ftp/rsync/scp
+  protocal : rsync  #同步协议，可以为ftp/rsync/scp
 
 rsync: #module模式或者dir只能二选一
   host : 192.168.1.11

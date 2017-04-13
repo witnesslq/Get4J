@@ -391,8 +391,8 @@ public class Spider {
     }
 
     /**
-     * 下载本地路径，默认地址为$path/data/download/${seedname}
-     *
+     * 下载本地根路径，默认地址为$path/data/download/
+     * 子目录是${seedName}
      * @param disk 磁盘路径
      * @return Spider
      */
@@ -421,7 +421,7 @@ public class Spider {
      * @return Spider
      */
     public Spider downloadHdfs(String hdfs) {
-        seed.setDownloadDisk(hdfs);
+        seed.setDownloadHdfs(hdfs);
         return this;
     }
 
