@@ -14,6 +14,7 @@ import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.HttpProxySelector;
 import com.bytegriffin.get4j.net.http.SleepRandomSelector;
 import com.bytegriffin.get4j.net.http.UserAgentSelector;
+import com.bytegriffin.get4j.net.sync.Syncer;
 import com.bytegriffin.get4j.parse.PageParser;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.mongodb.client.MongoCollection;
@@ -43,7 +44,7 @@ public final class Constants {
      * @return String
      */
     public static String getDownloadDisk(String seedName) {
-        return System.getProperty("user.dir") + File.separator + "download" + File.separator + seedName;
+        return System.getProperty("user.dir") + File.separator + "data" + File.separator + "download" + File.separator + seedName;
     }
 
     /**
@@ -173,4 +174,25 @@ public final class Constants {
      * 全局Http探针缓存 key:seed_name value: HttpProbe
      */
     public static final Map<String, HttpEngine> HTTP_ENGINE_CACHE = new HashMap<>();
+
+    /**
+     * 是否开启资源同步
+     */
+    public static boolean SYNC_OPEN;
+    
+    /**
+     * 全局资源同步器
+     */
+    public static Syncer RESOURCE_SYNCHRONIZER;
+    
+    /**
+     * 每次同步的最大值
+     */
+    public static int SYNC_PER_MAX_COUNT;
+    
+    /**
+     * 每次同步的最大时间间隔，单位是秒
+     */
+    public static int SYNC_PER_MAX_INTERVAL;
+
 }

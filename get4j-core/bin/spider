@@ -1,0 +1,177 @@
+#!/bin/sh
+
+# resolve links - "${BASH_SOURCE-$0}" may be a softlink
+this="${BASH_SOURCE-$0}"
+while [ -h "$this" ]; do
+  ls=`ls -ld "$this"`
+  link=`expr "$ls" : '.*-> \(.*\)$'`
+  if expr "$link" : '.*/.*' > /dev/null; then
+    this="$link"
+  else
+    this=`dirname "$this"`/"$link"
+  fi
+done
+
+# Get standard environment variables
+bin=`dirname "$this"`
+
+# Only set spider_home if not already set
+[ -z "$spider_home" ] && spider_home=`cd "$bin/.." ; pwd`
+
+BASEDIR="$spider_home"
+
+# Make sure prerequisite environment variables are set
+if [ -z "$JAVA_HOME" -a -z "$JRE_HOME" ]; then
+  JAVA_PATH=`which java 2>/dev/null`
+  if [ "x$JAVA_PATH" != "x" ]; then
+    JAVA_PATH=`dirname $JAVA_PATH 2>/dev/null`
+    JRE_HOME=`dirname $JAVA_PATH 2>/dev/null`
+  fi
+  if [ "x$JRE_HOME" = "x" ]; then
+    if [ -x /usr/bin/java ]; then
+      JRE_HOME=/usr
+    fi
+  fi
+  if [ -z "$JAVA_HOME" -a -z "$JRE_HOME" ]; then
+    echo "Neither the JAVA_HOME nor the JRE_HOME environment variable is defined"
+    echo "At least one of these environment variable is needed to run this program"
+    exit 1
+  fi
+fi
+
+if [ -z "$JRE_HOME" ]; then
+  JRE_HOME="$JAVA_HOME"
+fi
+
+if [ -z "$BASEDIR" ]; then
+  echo "The BASEDIR environment variable is not defined"
+  echo "This environment variable is needed to run this program"
+  exit 1
+fi
+
+# Set standard CLASSPATH
+if [ "$1" = "debug" -o "$1" = "javac" ] ; then
+  if [ -f "$JAVA_HOME"/lib/tools.jar ]; then
+    CLASSPATH="$JAVA_HOME"/lib/tools.jar
+  fi
+fi
+
+for lib in "$BASEDIR"/lib/*.jar
+do
+  CLASSPATH=$CLASSPATH:$lib
+done
+CLASSPATH=$CLASSPATH:"$BASEDIR"/conf
+
+# Set standard commands for invoking Java.
+RUNJAVA="$JRE_HOME"/bin/java
+
+# Now switch to home directory of echo
+cd $spider_home
+
+if [ -z "$JAVA_OPTS" ]; then
+  JAVA_OPTS="-server -Xms2560m -Xmx2560m -Xmn2g -XX:+UseParallelGC -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
+else
+  JAVA_OPTS="$JAVA_OPTS -server -Xms2560m -Xmx2560m -Xmn2g -XX:+UseParallelGC -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
+fi
+
+export spider_pid=$spider_home/get4j.pid
+export spider_prgname="spider"
+
+check_process_exists(){
+  if [ -f "$spider_pid" ]; then
+    pid=`cat $spider_pid`
+    [ -z $pid ] &&  pid="-1"
+    kill -0 $pid > /dev/null 2>&1
+    find_pids=`ps aux | grep $spider_prgname | grep -v 'grep' | awk '{print $2}'`
+    for find_pid in $find_pids
+    do  
+      if [ $find_pid = $pid ]; then
+        echo "爬虫进程已存在, 不能启动新进程。"
+        exit 0
+      fi  
+    done
+  fi
+}
+# 重新检查pid是否启动成功，是因为启动程序会检查配置文件是否合规，如果不合格仍然会启动失败
+recheck_process_exists(){
+  if [ -f "$spider_pid" ]; then
+    pid=`cat $spider_pid`
+    [ -z $pid ] &&  pid="-1"
+    kill -0 $pid > /dev/null 2>&1
+    find_pids=`ps aux | grep $spider_prgname | grep -v 'grep' | awk '{print $2}'`
+    for find_pid in $find_pids
+    do  
+      if [ $find_pid = $pid ]; then
+        exit 0
+      fi  
+    done
+  fi
+}
+
+# if no args specified, show usage
+if [ $# -lt 1 ]; then
+  more <<'EOF'
+Usage:  spider  <Commands>                        
+Commands:       start       start the spider      
+                restart     restart the spider    
+                stop        stop the spider       
+EOF
+  exit 1
+fi
+
+if [ "$1" = "start" ] ; then
+  check_process_exists
+  if [ ! -d "$spider_home"/log ]; then
+    mkdir $spider_home/log
+    chmod a+x $spider_home/log
+  fi
+  echo $$ > $spider_pid
+  $RUNJAVA -classpath $CLASSPATH $JAVA_OPTS com.bytegriffin.get4j.Spider
+  code=$?
+  if [ $code == 0 ]; then
+    echo "爬虫启动失败。"
+    exit $code
+  fi
+  recheck_process_exists
+  code=$?
+  if [ $code == 0 ]; then
+    echo "爬虫启动失败。"
+    rm -rf $spider_pid
+    exit $code
+  fi
+  echo "爬虫启动成功。"
+elif [ "$1" = "restart" ] ; then
+  if [ -f "$spider_pid" ]; then
+    kill -9 `cat $spider_pid` > /dev/null 2>&1 | xargs rm -rf $spider_pid
+    echo "Stop success."
+  else
+    ps -ef | grep $spider_prgname | awk '{print $2}' | xargs kill -9 > /dev/null 2>&1 &
+  fi
+  check_process_exists
+  if [ ! -d "$spider_home"/log ]; then
+    mkdir $spider_home/log
+  fi
+  $RUNJAVA -classpath $CLASSPATH $JAVA_OPTS com.bytegriffin.get4j.Spider
+  code=$?
+  if [ $code == 0 ]; then
+    echo "爬虫启动失败。"
+    rm -rf $spider_pid
+    exit $code
+  fi
+  echo "爬虫重新启动成功。"
+elif [ "$1" = "stop" ] ; then
+  if [ -f "$spider_pid" ]; then
+    kill -9 `cat $spider_pid` > /dev/null 2>&1 | xargs rm -rf $spider_pid
+    echo "爬虫关闭成功。"
+  else
+    ps -ef | grep $spider_prgname | awk '{print $2}' | xargs kill -9 > /dev/null 2>&1 &
+  fi
+else
+  more <<'EOF'
+Usage:  spider  <Commands>                        
+Commands:       start       start the spider      
+                restart     restart the spider    
+                stop        stop the spider    
+EOF
+  exit 1
+fi

@@ -1,7 +1,6 @@
 package com.bytegriffin.get4j.util;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -10,50 +9,43 @@ import org.apache.logging.log4j.Logger;
 
 public final class ShellUtil {
 
-    private static final String shell_path = System.getProperty("user.dir") + File.separator + "bin" + File.separator + ".sh";
-
     private static final Logger logger = LogManager.getLogger(ShellUtil.class);
 
-    public static int executeShell(String shellCommand) throws IOException {
-        int success = 0;
+    public static boolean executeShell(String shellCommand) {
         BufferedReader bufferedReader = null;
-        StringBuffer stringBuffer = new StringBuffer();
         try {
-            logger.info("准备执行Shell命令 ");
-            Process pid = null;
             String[] cmd = {"/bin/sh", "-c", shellCommand};
-            // 执行Shell命令
-            pid = Runtime.getRuntime().exec(cmd);
-            if (pid != null) {
-                logger.info("进程号：" + pid.toString());
-                // bufferedReader用于读取Shell的输出内容
-                bufferedReader = new BufferedReader(new InputStreamReader(pid.getInputStream()), 1024);
-                pid.waitFor();
-            } else {
-                logger.info("没有pid...");
+            ProcessBuilder pb = new ProcessBuilder(cmd);  
+            Process p = pb.start();
+            BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            //必须要输出
+            String s;
+            while ((s = stdInput.readLine()) != null) {
+            	logger.error(s);
             }
-            logger.info("Shell命令执行完毕，");
-            String line = null;
-            // 读取Shell的输出内容，并添加到stringBuffer中
-            while (bufferedReader != null && (line = bufferedReader.readLine()) != null) {
-                stringBuffer.append(line).append("\r\n");
+            while ((s = stdError.readLine()) != null) {
+            	logger.error(s);
             }
-            String result = stringBuffer.toString();
+            try {
+                 p.waitFor();
+            } catch (InterruptedException e) {
+            }
+            logger.info("Shell命令["+shellCommand+"]执行完毕");
+            return true;
         } catch (Exception ioe) {
-            logger.info("执行Shell命令时发生异常：", ioe);
+            logger.info("执行Shell命令["+shellCommand+"]时发生异常：", ioe);
+            return false;
         } finally {
             if (bufferedReader != null) {
-                bufferedReader.close();
+                try {
+					bufferedReader.close();
+				} catch (IOException e) {
+				}
             }
-            success = 1;
         }
-        return success;
     }
 
-    public static void main(String[] args) throws IOException {
-        int status = executeShell("E:/work/workspace/Anspider/bin/anspider-env.sh");
-        System.out.println(status);
-    }
 
 
 }

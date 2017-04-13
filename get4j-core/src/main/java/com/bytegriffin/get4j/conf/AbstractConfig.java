@@ -12,12 +12,16 @@ public abstract class AbstractConfig {
      */
     abstract Object load();
 
+    // 配置文件路径
+    private static final String conf_path = System.getProperty("user.dir") + File.separator + "conf" + File.separator;
     // xml配置文件
-    protected final static String core_seeds_xml_file = System.getProperty("user.dir") + File.separator + "conf" + File.separator + "core-seeds.xml";
+    protected final static String core_seeds_xml_file = conf_path + "core-seeds.xml";
     // xml格式检验文件
-    protected final static String core_seeds_xsd_file = System.getProperty("user.dir") + File.separator + "conf" + File.separator + "core-seeds.xsd";
+    protected final static String core_seeds_xsd_file = conf_path + "core-seeds.xsd";
     // 全局xml配置文件
-    protected final static String configuration_xml_file = System.getProperty("user.dir") + File.separator + "conf" + File.separator + "configuration.xml";
+    protected final static String configuration_xml_file = conf_path + "configuration.xml";
+    // 资源同步yaml文件
+    public final static String resource_sync_yaml_file = conf_path + "resource-sync.yaml";
 
     /******** xml node ************/
     protected static final String seed_node = "seed";
@@ -51,4 +55,19 @@ public abstract class AbstractConfig {
     protected static final String store_lucene_index = "store.lucene.index";
     protected static final String download_file_name = "download.file.name";
 
+    /******** yaml node ************/
+    public static final String ftp_node = "ftp";
+    public static final String rsync_node = "rsync";
+    public static final String scp_node = "scp";
+    public static final String protocal_node = "protocal";
+    public static final String batch_count_node = "batch.count";
+    public static final String batch_time_node = "batch.time";
+    public static final String open_node = "open";
+    public static final String host_node = "host";
+    public static final String port_node = "port";
+    public static final String username_node = "username";
+    public static final String password_node = "password";
+    public static final String dir_node = "dir";
+    public static final String module_node = "module";
+    
 }

@@ -2,10 +2,11 @@ package com.bytegriffin.get4j;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
-import com.bytegriffin.get4j.core.Constants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,11 +14,16 @@ import com.bytegriffin.get4j.annotation.Cascade;
 import com.bytegriffin.get4j.annotation.ListDetail;
 import com.bytegriffin.get4j.annotation.Single;
 import com.bytegriffin.get4j.annotation.Site;
+import com.bytegriffin.get4j.annotation.Sync;
+import com.bytegriffin.get4j.conf.AbstractConfig;
 import com.bytegriffin.get4j.conf.Configuration;
 import com.bytegriffin.get4j.conf.ConfigurationXmlHandler;
 import com.bytegriffin.get4j.conf.Context;
 import com.bytegriffin.get4j.conf.CoreSeedsXmlHandler;
+import com.bytegriffin.get4j.conf.ResourceSync;
+import com.bytegriffin.get4j.conf.ResourceSyncYamlHandler;
 import com.bytegriffin.get4j.conf.Seed;
+import com.bytegriffin.get4j.core.Constants;
 import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.core.SpiderEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
@@ -36,12 +42,94 @@ public class Spider {
     private static Spider me;
 
     private static Seed seed;
+    
+    private static ResourceSync resourceSync;
 
     private Spider() {
     }
 
     private Spider(PageMode pageMode) {
         pageMode(pageMode);
+    }
+
+    /**
+     * 设置ftp为资源同步方式
+     * @param host 服务器地址
+     * @param port 端口号，默认为21
+     * @param username 用户名（可以为空）
+     * @param password 密码（可以为空）
+     * @param dir ftp目录
+     * @return Spider
+     */
+    public Spider ftp(String host,int port, String username, String password) {
+    	Map<String,String> ftp = new HashMap<>();
+    	ftp.put(AbstractConfig.host_node, host);
+    	ftp.put(AbstractConfig.port_node, String.valueOf(port));
+    	ftp.put(AbstractConfig.username_node, username);
+    	ftp.put(AbstractConfig.password_node, password);
+    	resourceSync.setFtp(ftp);
+    	Map<String,String> sync = new HashMap<>();
+    	sync.put(AbstractConfig.open_node, "true");
+    	sync.put(AbstractConfig.batch_count_node, "10");
+    	sync.put(AbstractConfig.batch_time_node, "10");
+    	sync.put(AbstractConfig.protocal_node, AbstractConfig.ftp_node);
+    	resourceSync.setSync(sync);	
+        return this;
+    }
+    
+    /**
+     * 设置rsync为资源同步方式 <br>
+     * 注意：暂时不支持windows
+     * @param host 服务器地址
+     * @param username 用户名
+     * @param isModule 是否为module模式，是为true，不是则代表远程目录为false
+     * @param moduleOrDir module模式或者远程dir目录，如果是module模式，密码需
+     * 要在服务器端配置；如果是远程dir，需要ssh-keygen配置无密码登陆
+     * @return Spider
+     */
+    public Spider rsync(String host,String username, boolean isModule, String moduleOrDir) {
+    	Map<String,String> rsync = new HashMap<>();
+    	rsync.put(AbstractConfig.host_node, host);
+    	rsync.put(AbstractConfig.username_node, username);
+    	if(isModule){
+    		rsync.put(AbstractConfig.module_node, moduleOrDir);
+    	} else {
+    		rsync.put(AbstractConfig.dir_node, moduleOrDir);
+    	}
+    	resourceSync.setRsync(rsync);
+    	Map<String,String> sync = new HashMap<>();
+    	sync.put(AbstractConfig.open_node, "true");
+    	sync.put(AbstractConfig.batch_count_node, "10");
+    	sync.put(AbstractConfig.batch_time_node, "10");
+    	sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
+    	resourceSync.setSync(sync);	
+    	return this;
+    }
+    
+    /**
+     * 设置scp为资源同步方式 <br>
+     * 需要ssh-keygen配置无密码登陆
+     * @param host 服务器地址
+     * @param username 登陆的用户名
+     * @param dir 服务器端目录
+     * @param port scp端口号，默认为22
+     * @return Spider
+     */
+    public Spider scp(String host,String username, String dir, Integer port) {
+    	Map<String,String> scp = new HashMap<>();
+    	scp.put(AbstractConfig.host_node, host);
+    	scp.put(AbstractConfig.username_node, username);
+    	scp.put(AbstractConfig.dir_node, dir);
+    	port = port == null ? 22 : port;
+    	scp.put(AbstractConfig.port_node, String.valueOf(port));
+    	resourceSync.setScp(scp);
+    	Map<String,String> sync = new HashMap<>();
+    	sync.put(AbstractConfig.open_node, "true");
+    	sync.put(AbstractConfig.batch_count_node, "10");
+    	sync.put(AbstractConfig.batch_time_node, "10");
+    	sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
+    	resourceSync.setSync(sync);	
+    	return this;
     }
 
     /**
@@ -142,7 +230,7 @@ public class Spider {
      * @param seconds 每次请求延迟，单位秒
      * @return Spider
      */
-    public Spider sleep(Long seconds) {
+    public Spider sleep(long seconds) {
         seed.setFetchSleep(seconds);
         return this;
     }
@@ -203,8 +291,12 @@ public class Spider {
     }
 
     /**
-     * 资源选择器，支持Jsoup原生的选择器（html内容）或Jsonpath（json内容）
-     *
+     * 资源选择器，支持Jsoup原生的选择器（html内容）或Jsonpath（json内容）<br>
+     * 当此内容为JsonPath字符串的时候，如果json中提供的detail的链接是相对路径，那么此时这个值<br>
+     * 的格式为：链接前缀+jsonpath。如果需要抓取多种资源可以用逗号","隔开，默认不填是全抓取。<br>
+     * 注意：当启用list_detail模式时，资源特指的是avatar资源，即：与Detail_Link一一对应的资源，<br>
+     * 此项必须配置为包含detail_link与avatar的定位符；当启用非list_detail模式时，可抓取多种资源，每个选择器中间用逗号隔开。
+     * 
      * @param resourceSelector Jsoup选择器支持的字符串
      * @return Spider
      */
@@ -414,6 +506,7 @@ public class Spider {
         System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
         me = new Spider();
         seed = new Seed();
+        resourceSync = new ResourceSync();
         return me.getAnnotation(clazz);
     }
 
@@ -429,103 +522,119 @@ public class Spider {
             logger.error("类[" + clazz.getName() + "]没有配置任何Annotation。");
             System.exit(1);
         }
-        String type = ans[0].annotationType().getSimpleName();
-        if ("ListDetail".equalsIgnoreCase(type)) {
-            boolean anno = clazz.isAnnotationPresent(ListDetail.class);
-            if (anno) {
-                ListDetail seed = (ListDetail) clazz.getAnnotation(ListDetail.class);
-                this.pageMode(PageMode.list_detail);
-                this.fetchUrl(seed.url());
-                this.detailSelector(seed.detailSelector());
-                this.totalPages(seed.totolPages());
-                this.thread(seed.thread());
-                this.timer(seed.startTime(), seed.interval());
-                this.sleep(seed.sleep());
-                this.sleepRange(seed.sleepRange());
-                HttpProxy hp = FileUtil.formatProxy(seed.proxy());
-                if (hp != null) {
-                    this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+        for(Annotation an : ans){
+        	String type = an.annotationType().getSimpleName();
+            if ("ListDetail".equalsIgnoreCase(type)) {
+                boolean anno = clazz.isAnnotationPresent(ListDetail.class);
+                if (anno) {
+                    ListDetail seed = (ListDetail) clazz.getAnnotation(ListDetail.class);
+                    this.pageMode(PageMode.list_detail);
+                    this.fetchUrl(seed.url());
+                    this.detailSelector(seed.detailSelector());
+                    this.totalPages(seed.totolPages());
+                    this.thread(seed.thread());
+                    this.timer(seed.startTime(), seed.interval());
+                    this.sleep(seed.sleep());
+                    this.sleepRange(seed.sleepRange());
+                    HttpProxy hp = FileUtil.formatProxy(seed.proxy());
+                    if (hp != null) {
+                        this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+                    }
+                    this.userAgent(seed.userAgent());
+                    this.resourceSelector(seed.resourceSelector());
+                    this.downloadDisk(seed.downloadDisk());
+                    this.downloadHdfs(seed.downloadHdfs());
+                    this.javascriptSupport(seed.javascriptSupport());
+                    this.jdbc(seed.jdbc());
+                    this.lucene(seed.lucene());
+                    this.hbase(seed.hbase());
                 }
-                this.userAgent(seed.userAgent());
-                this.resourceSelector(seed.resourceSelector());
-                this.downloadDisk(seed.downloadDisk());
-                this.downloadHdfs(seed.downloadHdfs());
-                this.javascriptSupport(seed.javascriptSupport());
-                this.jdbc(seed.jdbc());
-                this.lucene(seed.lucene());
-                this.hbase(seed.hbase());
-            }
-        } else if ("Site".equalsIgnoreCase(type)) {
-            boolean anno = clazz.isAnnotationPresent(Site.class);
-            if (anno) {
-                Site seed = (Site) clazz.getAnnotation(Site.class);
-                this.pageMode(PageMode.site);
-                this.fetchUrl(seed.url());
-                this.thread(seed.thread());
-                this.timer(seed.startTime(), seed.interval());
-                this.sleep(seed.sleep());
-                this.sleepRange(seed.sleepRange());
-                HttpProxy hp = FileUtil.formatProxy(seed.proxy());
-                if (hp != null) {
-                    this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+            } else if ("Site".equalsIgnoreCase(type)) {
+                boolean anno = clazz.isAnnotationPresent(Site.class);
+                if (anno) {
+                    Site seed = (Site) clazz.getAnnotation(Site.class);
+                    this.pageMode(PageMode.site);
+                    this.fetchUrl(seed.url());
+                    this.thread(seed.thread());
+                    this.timer(seed.startTime(), seed.interval());
+                    this.sleep(seed.sleep());
+                    this.sleepRange(seed.sleepRange());
+                    HttpProxy hp = FileUtil.formatProxy(seed.proxy());
+                    if (hp != null) {
+                        this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+                    }
+                    this.userAgent(seed.userAgent());
+                    this.resourceSelector(seed.resourceSelector());
+                    this.downloadDisk(seed.downloadDisk());
+                    this.downloadHdfs(seed.downloadHdfs());
+                    this.javascriptSupport(seed.javascriptSupport());
+                    this.jdbc(seed.jdbc());
+                    this.lucene(seed.lucene());
+                    this.hbase(seed.hbase());
+                    this.elementSelectParser(seed.parser());
                 }
-                this.userAgent(seed.userAgent());
-                this.resourceSelector(seed.resourceSelector());
-                this.downloadDisk(seed.downloadDisk());
-                this.downloadHdfs(seed.downloadHdfs());
-                this.javascriptSupport(seed.javascriptSupport());
-                this.jdbc(seed.jdbc());
-                this.lucene(seed.lucene());
-                this.hbase(seed.hbase());
-                this.elementSelectParser(seed.parser());
-            }
-        } else if ("Single".equalsIgnoreCase(type)) {
-            boolean anno = clazz.isAnnotationPresent(Single.class);
-            if (anno) {
-                Single seed = (Single) clazz.getAnnotation(Single.class);
-                this.pageMode(PageMode.single);
-                this.fetchUrl(seed.url());
-                this.thread(seed.thread());
-                this.timer(seed.startTime(), seed.interval());
-                this.sleep(seed.sleep());
-                this.sleepRange(seed.sleepRange());
-                HttpProxy hp = FileUtil.formatProxy(seed.proxy());
-                if (hp != null) {
-                    this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+            } else if ("Single".equalsIgnoreCase(type)) {
+                boolean anno = clazz.isAnnotationPresent(Single.class);
+                if (anno) {
+                    Single seed = (Single) clazz.getAnnotation(Single.class);
+                    this.pageMode(PageMode.single);
+                    this.fetchUrl(seed.url());
+                    this.thread(seed.thread());
+                    this.timer(seed.startTime(), seed.interval());
+                    this.sleep(seed.sleep());
+                    this.sleepRange(seed.sleepRange());
+                    HttpProxy hp = FileUtil.formatProxy(seed.proxy());
+                    if (hp != null) {
+                        this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+                    }
+                    this.userAgent(seed.userAgent());
+                    this.resourceSelector(seed.resourceSelector());
+                    this.downloadDisk(seed.downloadDisk());
+                    this.downloadHdfs(seed.downloadHdfs());
+                    this.javascriptSupport(seed.javascriptSupport());
+                    this.jdbc(seed.jdbc());
+                    this.lucene(seed.lucene());
+                    this.hbase(seed.hbase());
                 }
-                this.userAgent(seed.userAgent());
-                this.resourceSelector(seed.resourceSelector());
-                this.downloadDisk(seed.downloadDisk());
-                this.downloadHdfs(seed.downloadHdfs());
-                this.javascriptSupport(seed.javascriptSupport());
-                this.jdbc(seed.jdbc());
-                this.lucene(seed.lucene());
-                this.hbase(seed.hbase());
-            }
-        } else if ("Cascade".equalsIgnoreCase(type)) {
-            boolean anno = clazz.isAnnotationPresent(Site.class);
-            if (anno) {//有两个Seed类，一个是annotation，一个是实体类
-                Cascade seed = (Cascade) clazz.getAnnotation(Site.class);
-                this.pageMode(PageMode.cascade);
-                this.fetchUrl(seed.url());
-                this.thread(seed.thread());
-                this.timer(seed.startTime(), seed.interval());
-                this.sleep(seed.sleep());
-                this.sleepRange(seed.sleepRange());
-                HttpProxy hp = FileUtil.formatProxy(seed.proxy());
-                if (hp != null) {
-                    this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+            } else if ("Cascade".equalsIgnoreCase(type)) {
+                boolean anno = clazz.isAnnotationPresent(Site.class);
+                if (anno) {//有两个Seed类，一个是annotation，一个是实体类
+                    Cascade seed = (Cascade) clazz.getAnnotation(Site.class);
+                    this.pageMode(PageMode.cascade);
+                    this.fetchUrl(seed.url());
+                    this.thread(seed.thread());
+                    this.timer(seed.startTime(), seed.interval());
+                    this.sleep(seed.sleep());
+                    this.sleepRange(seed.sleepRange());
+                    HttpProxy hp = FileUtil.formatProxy(seed.proxy());
+                    if (hp != null) {
+                        this.proxy(hp.getIp(), Integer.valueOf(hp.getPort()));
+                    }
+                    this.userAgent(seed.userAgent());
+                    this.resourceSelector(seed.resourceSelector());
+                    this.downloadDisk(seed.downloadDisk());
+                    this.downloadHdfs(seed.downloadHdfs());
+                    this.javascriptSupport(seed.javascriptSupport());
+                    this.jdbc(seed.jdbc());
+                    this.lucene(seed.lucene());
+                    this.hbase(seed.hbase());
                 }
-                this.userAgent(seed.userAgent());
-                this.resourceSelector(seed.resourceSelector());
-                this.downloadDisk(seed.downloadDisk());
-                this.downloadHdfs(seed.downloadHdfs());
-                this.javascriptSupport(seed.javascriptSupport());
-                this.jdbc(seed.jdbc());
-                this.lucene(seed.lucene());
-                this.hbase(seed.hbase());
+            }  else if ("Sync".equalsIgnoreCase(type)) {
+            	boolean anno = clazz.isAnnotationPresent(Sync.class);
+            	if(anno){
+            		Sync sync = (Sync) clazz.getAnnotation(Sync.class);
+            		if(AbstractConfig.ftp_node.equals(sync.protocal())){
+            			this.ftp(sync.host(), sync.port(), sync.username(), sync.password());
+            		} else if(AbstractConfig.rsync_node.equals(sync.protocal())){
+            			this.rsync(sync.host(), sync.username(), sync.isModule(), sync.module());
+            		} else if(AbstractConfig.scp_node.equals(sync.protocal())){
+            			this.scp(sync.host(), sync.username(), sync.dir(), sync.port());
+            		}
+            	}
+            	
             }
         }
+        
         this.parser(clazz);
         return this;
     }
@@ -539,6 +648,7 @@ public class Spider {
         // 关闭httpclient中的日志，否则信息打印太多了。
         System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
         seed = new Seed();
+        resourceSync = new ResourceSync();
         me = new Spider(PageMode.list_detail);
         return me;
     }
@@ -552,6 +662,7 @@ public class Spider {
         // 关闭httpclient中的日志，否则信息打印太多了。
         System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
         seed = new Seed();
+        resourceSync = new ResourceSync();
         me = new Spider(PageMode.single);
         return me;
     }
@@ -565,6 +676,7 @@ public class Spider {
         // 关闭httpclient中的日志，否则信息打印太多了。
         System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
         seed = new Seed();
+        resourceSync = new ResourceSync();
         me = new Spider(PageMode.cascade);
         return me;
     }
@@ -578,6 +690,7 @@ public class Spider {
         // 关闭httpclient中的日志，否则信息打印太多了。
         System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
         seed = new Seed();
+        resourceSync = new ResourceSync();
         me = new Spider(PageMode.site);
         return me;
     }
@@ -598,7 +711,7 @@ public class Spider {
             logger.error("种子[" + seed.getSeedName() + "]没有配置要抓取的url。");
             System.exit(1);
         }
-        SpiderEngine.create().setSeed(seed).build();
+        SpiderEngine.create().setSeed(seed).setResourceSync(resourceSync).build();
     }
 
     /**
@@ -632,10 +745,13 @@ public class Spider {
         Context context = new Context(new CoreSeedsXmlHandler());
         List<Seed> seeds = context.load();
 
+        context = new Context(new ResourceSyncYamlHandler());
+        ResourceSync synchronizer = context.load();
+
         context = new Context(new ConfigurationXmlHandler());
         Configuration configuration = context.load();
 
-        SpiderEngine.create().setSeeds(seeds).setConfiguration(configuration).build();
+        SpiderEngine.create().setSeeds(seeds).setResourceSync(synchronizer).setConfiguration(configuration).build();
         logger.info("爬虫启动开始...");
     }
 

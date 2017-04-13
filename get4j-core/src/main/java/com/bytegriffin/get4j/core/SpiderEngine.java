@@ -3,12 +3,15 @@ package com.bytegriffin.get4j.core;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.bytegriffin.get4j.conf.AbstractConfig;
 import com.bytegriffin.get4j.conf.Configuration;
+import com.bytegriffin.get4j.conf.ResourceSync;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.download.DiskDownloader;
 import com.bytegriffin.get4j.download.HdfsDownloader;
@@ -20,6 +23,9 @@ import com.bytegriffin.get4j.net.http.HtmlUnitEngine;
 import com.bytegriffin.get4j.net.http.HttpClientEngine;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
+import com.bytegriffin.get4j.net.sync.FtpSyncer;
+import com.bytegriffin.get4j.net.sync.RsyncSyncer;
+import com.bytegriffin.get4j.net.sync.ScpSyncer;
 import com.bytegriffin.get4j.parse.AutoDelegateParser;
 import com.bytegriffin.get4j.store.DBStorage;
 import com.bytegriffin.get4j.store.FailUrlStorage;
@@ -38,6 +44,7 @@ public class SpiderEngine {
     private static SpiderEngine me;
     private List<Seed> seeds;
     private Configuration configuration;
+    private ResourceSync resourceSync;
 
     private static final Logger logger = LogManager.getLogger(SpiderEngine.class);
 
@@ -57,6 +64,7 @@ public class SpiderEngine {
      */
     public void build() {
         buildProcess();
+        buildResourceSync();
         buildConfiguration();
         buildTimer();
     }
@@ -95,9 +103,19 @@ public class SpiderEngine {
         this.configuration = configuration;
         return this;
     }
+    
+    /**
+     * 设置资源同步器
+     * @param resourceSync ResourceSync
+     * @return
+     */
+    public SpiderEngine setResourceSync(ResourceSync resourceSync) {
+        this.resourceSync = resourceSync;
+        return this;
+    }
 
     /**
-     * 根据配置选择具体的Http探针<br>
+     * 根据配置选择具体的Http引擎<br>
      * 1.初始化Http引擎的部分参数<br>
      * 2.测试在具体Http引擎下的代理是否可用<br>
      *
@@ -254,7 +272,70 @@ public class SpiderEngine {
     }
 
     /**
-     * 第二步：创建工作环境
+     * 第二步：创建资源同步
+     */
+    private void buildResourceSync() {
+    	if(resourceSync == null || resourceSync.getSync() == null || resourceSync.getSync().isEmpty()){
+			return;
+		} 
+    	String open = resourceSync.getSync().get(AbstractConfig.open_node);
+    	if("false".equalsIgnoreCase(open)){
+    		return;
+    	}
+    	String protocal = resourceSync.getSync().get(AbstractConfig.protocal_node);
+    	if(AbstractConfig.ftp_node.equals(protocal)){
+			Map<String,String> ftp = resourceSync.getFtp();
+			if(ftp == null || ftp.isEmpty()){
+				logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的ftp属性出错，请重新检查。");
+				System.exit(1);
+			}
+			String host = ftp.get(AbstractConfig.host_node);
+			String username = ftp.get(AbstractConfig.username_node);
+			String password = ftp.get(AbstractConfig.password_node);
+			String port = StringUtil.isNullOrBlank(ftp.get(AbstractConfig.port_node))? "21" : ftp.get(AbstractConfig.port_node) ;
+			// 只检查了host属性是否为空，因为有的ftp服务没有用户名/密码等
+			if(StringUtil.isNullOrBlank(host)){
+				logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的host属性为空，请重新检查。");
+				System.exit(1);
+			}
+			Constants.RESOURCE_SYNCHRONIZER = new FtpSyncer(host, port, username, password);
+		} else if(AbstractConfig.rsync_node.equals(protocal)){
+			Map<String,String> rsync = resourceSync.getRsync();
+			if(rsync == null || rsync.isEmpty()){
+				logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的ftp属性出错，请重新检查。");
+				System.exit(1);
+			}
+			String host = rsync.get(AbstractConfig.host_node);
+			String username = rsync.get(AbstractConfig.username_node);
+			String module = rsync.get(AbstractConfig.module_node);
+			String dir = rsync.get(AbstractConfig.dir_node);
+			if(!StringUtil.isNullOrBlank(module)){
+				Constants.RESOURCE_SYNCHRONIZER = new RsyncSyncer(host, username, module, true);
+			} else if(!StringUtil.isNullOrBlank(dir)){
+				Constants.RESOURCE_SYNCHRONIZER = new RsyncSyncer(host, username, dir, false);
+			} else {
+				logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的rsync的module或dir属性必须二选一，请重新检查。");
+				System.exit(1);
+			}
+		} else if(AbstractConfig.scp_node.equals(protocal)){
+			Map<String,String> scp = resourceSync.getScp();
+			if(scp == null || scp.isEmpty()){
+				logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的scp属性出错，请重新检查。");
+				System.exit(1);
+			}
+			String host = scp.get(AbstractConfig.host_node);
+			String username = scp.get(AbstractConfig.username_node);
+			String dir = scp.get(AbstractConfig.dir_node);
+			String port = StringUtil.isNullOrBlank(scp.get(AbstractConfig.port_node))? "22" : scp.get(AbstractConfig.port_node);
+			Constants.RESOURCE_SYNCHRONIZER = new ScpSyncer(host, username, dir, port);
+		}
+    	Constants.SYNC_OPEN = Boolean.valueOf(open);
+    	Constants.SYNC_PER_MAX_COUNT = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node));
+    	Constants.SYNC_PER_MAX_INTERVAL = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node)) * 1000;
+    }
+
+    /**
+     * 第三步：创建工作环境
      */
     private void buildConfiguration() {
         if (configuration == null) {
@@ -267,7 +348,7 @@ public class SpiderEngine {
     }
 
     /**
-     * 第三步：启动定时器，按照配置的时间启动抓取任务
+     * 第四步：启动定时器，按照配置的时间启动抓取任务
      */
     private void buildTimer() {
         for (Seed seed : seeds) {

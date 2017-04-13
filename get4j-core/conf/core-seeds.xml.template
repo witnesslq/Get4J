@@ -5,8 +5,8 @@
     <seed>
         <name>seed1</name>
         <description>
-            必填项。区别于系统中不同的site，如果需求是抓取多个site：site1、site2，那么site之间的xml定义有先后关系，
-            先定义的site1会先被解析并执行，之后才是执行site2，假设site2没有定义time.start选项，那么系统会在抓取完site1后再抓取site2。
+            必填项。表示要抓取Seed的实例名称，如果需求是抓取多个Seed：seed1、seed2，那么seed之间的xml定义有先后关系，
+            先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
         </description>
         <property>
             <name>worker.thread.number</name>
@@ -148,7 +148,7 @@
         </property>
         <property>
             <name>store.mongodb</name>
-            <value>mongodb://localhost:27017</value>
+            <value></value>
             <description>非必填项。保存到mongodb数据库中，多个可以写成mongodb://host1:27017,host2:27017
                 有密码可写成：mongodb://user1:pwd1@host1/?authSource=db1&amp;ssl=true
             </description>

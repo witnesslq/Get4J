@@ -5,17 +5,17 @@
     <seed>
         <name>seed1</name>
         <description>
-            必填项。区别于系统中不同的site，如果需求是抓取多个site：site1、site2，那么site之间的xml定义有先后关系，
-            先定义的site1会先被解析并执行，之后才是执行site2，假设site2没有定义time.start选项，那么系统会在抓取完site1后再抓取site2。
+            必填项。表示要抓取Seed的实例名称，如果需求是抓取多个Seed：seed1、seed2，那么seed之间的xml定义有先后关系，
+            先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
         </description>
         <property>
             <name>worker.thread.number</name>
-            <value>3</value>
+            <value>1</value>
             <description>非必填项。爬虫工作线程数量，默认值是1。根据url数量来动态分配</description>
         </property>
         <property>
             <name>fetch.page.mode</name>
-            <value>site</value>
+            <value>list_detail</value>
             <description>
                 必填项。抓取的页面模型：list_detail（列表-详情页面）、single（单个页面)、cascade（单个页面中给出所有的url链接）、
                 site（单个站点，不包含外链）默认值是single。不同的页面模型会导致爬虫启动的抓取器不同
@@ -23,7 +23,7 @@
         </property>
         <property>
             <name>fetch.url</name>
-            <value></value>
+            <value>http://blog.chinaunix.net/site/index/page/{1}.html</value>
             <description>
                 必填项。表示要抓取的Url，如果抓取模式fetchMode为list_detail，该值为列表Url，其中可变的页数PageNum需要用大括号{}括起来，
                 下一页程序会按照自增1来处理，注意：请求参数请用&amp;取代，否则xml验证会出错。
@@ -31,7 +31,7 @@
         </property>
         <property>
             <name>fetch.detail.selector</name>
-            <value></value>
+            <value>div.two_cont2_1>a[href]</value>
             <description>
                 非必填项，详情页面链接选择器，当抓取模式fetch.mode设置为list_detail时使用，支持Jsoup原生的选择器（html内容）或jsonpath（json内容）。
                 当此内容为JsonPath字符串的时候，如果list页面的json中提供的detail的链接是相对路径，那么此时这个值的格式为：链接前缀+jsonpath，
@@ -41,7 +41,7 @@
         </property>
         <property>
             <name>fetch.total.pages</name>
-            <value>4</value>
+            <value>1</value>
             <description>
                 非必填项，总页数，当抓取模式fetch.mode设置为list_detail时使用，表示列表总页数，一般写整数，当然也可以是由Jsoup支持的选择器（html内容）
                 或jsonpath（json内容）的字符串，这样会更加动态性，默认值是1。
@@ -49,7 +49,7 @@
         </property>
         <property>
             <name>fetch.resource.selector</name>
-            <value></value>
+            <value>div.classify_con1</value>
             <description>
                 非必填项。页面资源的抓取选择器，支持Jsoup原生的css选择器和正则表达式或Jsonpath，一般用于下载资源文件，比如想抓取图片：[*.jpg]或者$.data[*].img。
                 当此内容为JsonPath字符串的时候，如果json中提供的detail的链接是相对路径，那么此时这个值的格式为：链接前缀+jsonpath，如果需要抓取多种资源可以用逗号","隔开，默认不填是全抓取。
@@ -142,8 +142,7 @@
         </property>
         <property>
             <name>store.jdbc</name>
-            <value>jdbc:mysql://localhost:3306/get4j?useSSL=false&amp;serverTimezone=UTC&amp;characterEncoding=UTF-8&amp;user=root&amp;password=root
-            </value>
+            <value></value>
             <description>非必填项。保存到Mysql关系型数据库中</description>
         </property>
         <property>

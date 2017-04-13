@@ -5,6 +5,7 @@ if "%1" == "start" goto doStart
 if "%1" == "restart" goto doRestart
 if "%1" == "stop" goto doStop
 
+
 :Usage
 echo """""""""""""""""""""""""""""""""""""""""""""""""""""
 echo "               Get4J    Console                    "
@@ -62,7 +63,7 @@ for /R %GET4J_HOME%\lib\ %%i in (*.jar) do (
 call :ADDLiB %%i
 )
 set MAINCLASS=com.bytegriffin.get4j.Spider
-set JAVA_OPTS=-server -Xms512m -Xprof -Xmx512m -XX:+UseParallelGC -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8 -Djcore.parser=SAX -Djcore.logger=org.apache.log4j
+set JAVA_OPTS=-server -Xms512m -Xmx512m -XX:+UseParallelGC -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8 -Djcore.parser=SAX -Djcore.logger=org.apache.log4j
 %RUNJAVA% -classpath "%CLASSPATH%" %JAVA_OPTS% %MAINCLASS%
 EndLocal
 goto end

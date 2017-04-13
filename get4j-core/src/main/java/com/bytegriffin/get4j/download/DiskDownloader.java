@@ -1,8 +1,6 @@
 package com.bytegriffin.get4j.download;
 
 import java.io.File;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,6 +11,8 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.net.http.HttpClientEngine;
+import com.bytegriffin.get4j.net.http.UrlAnalyzer;
+import com.bytegriffin.get4j.net.sync.BatchScheduler;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.StringUtil;
 
@@ -34,7 +34,7 @@ public class DiskDownloader implements Process {
     public void init(Seed seed) {
         String diskpath = seed.getDownloadDisk();
         String folderName;
-        if (diskpath.startsWith("http")) {
+        if (UrlAnalyzer.isStartHttpUrl(diskpath)) {
             defaultAvatarPath = System.getProperty("user.dir") + File.separator + "data" + File.separator + "download"
                     + File.separator + seed.getSeedName();
             staticServer = diskpath.endsWith("/") ? diskpath : diskpath + "/";// 静态资源服务器地址
@@ -44,7 +44,7 @@ public class DiskDownloader implements Process {
         }
         folderName = folderName.endsWith(File.separator) ? folderName : folderName + File.separator;
         Constants.DOWNLOAD_DIR_CACHE.put(seed.getSeedName(), folderName);
-        logger.info("Seed[" + seed.getSeedName() + "]的组件ResourceDiskDownloader的初始化完成。");
+        logger.info("种子[" + seed.getSeedName() + "]的组件ResourceDiskDownloader的初始化完成。");
     }
 
     @Override
@@ -59,49 +59,22 @@ public class DiskDownloader implements Process {
         HttpClientEngine.downloadResources(page);
 
         // 3.判断是否包含avatar资源，有的话就下载
-        boolean isSync = false;
         if (!StringUtil.isNullOrBlank(page.getAvatar())) {
-            isSync = true;
             HttpClientEngine.downloadAvatar(page);// 下载avatar资源
-            String avatar = page.getAvatar().replace(defaultAvatarPath, staticServer);
+            // 另开一个线程专门负责启用脚本同步avatar资源文件
+            if (Constants.SYNC_OPEN) {
+            	BatchScheduler.addResource(page.getSeedName(), page.getAvatar());
+            }
+            String avatar = page.getAvatar();
+            if(!StringUtil.isNullOrBlank(staticServer)){
+                avatar = avatar.replace(defaultAvatarPath, staticServer + page.getSeedName() +"/");
+            }
             page.setAvatar(avatar);// 将本地avatar资源文件的路径修改为静态服务器地址
         }
 
-        // 4.另开一个线程专门负责启用脚本同步avatar资源文件
-        if (isSync && !StringUtil.isNullOrBlank(defaultAvatarPath)) {
-            ExecutorService executorService = Executors.newCachedThreadPool();
-            executorService.submit(new SyncAvatar(defaultAvatarPath));
-            executorService.shutdown();
-        }
-
-        // 5.设置page的资源保存路径属性
+        // 4.设置page的资源保存路径属性
         page.setResourceSavePath(Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName()));
         logger.info("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]完成。");
-    }
-
-    /**
-     * 同步Avatar资源文件
-     */
-    static class SyncAvatar implements Runnable {
-
-        private String syncPath;
-
-        SyncAvatar(String syncPath) {
-            this.syncPath = syncPath;
-        }
-
-        @Override
-        public void run() {
-
-        }
-
-    }
-
-    public static void main(String... args) {
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        executorService.submit(new SyncAvatar(""));
-        System.err.println("==============");
-        executorService.shutdown();
     }
 
 }

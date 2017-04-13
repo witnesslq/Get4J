@@ -98,7 +98,7 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
             seeds.add(seed);
         }
         if (hashset.size() < siteElements.size()) {
-            logger.error("xml配置文件[" + core_seeds_xml_file + "]中不能设置相同的Site Name，请重新检查。");
+            logger.error("xml配置文件[" + core_seeds_xml_file + "]中不能设置相同的Seed Name，请重新检查。");
             System.exit(1);
         }
         logger.info("xml配置文件[" + core_seeds_xml_file + "]读取完成。");

@@ -620,7 +620,7 @@ public final class UrlAnalyzer {
      * @param url url
      * @return boolean
      */
-    private static boolean isStartHttpUrl(String url) {
+    public static boolean isStartHttpUrl(String url) {
         return (url.startsWith("http://") || url.startsWith("https://"));
     }
 

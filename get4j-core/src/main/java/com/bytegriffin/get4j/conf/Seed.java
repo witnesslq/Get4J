@@ -220,13 +220,8 @@ public class Seed {
         this.fetchUrl = fetchUrl;
     }
 
-    /**
-     * 将毫秒改成秒
-     *
-     * @param fetchSleep Long
-     */
     public void setFetchSleep(Long fetchSleep) {
-        this.fetchSleep = fetchSleep * 1000;
+        this.fetchSleep = fetchSleep;
     }
 
     public Long getFetchSleep() {

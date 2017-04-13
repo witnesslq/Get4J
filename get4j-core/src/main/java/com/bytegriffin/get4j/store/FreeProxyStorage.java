@@ -29,9 +29,8 @@ public class FreeProxyStorage implements Process {
     @Override
     public void init(Seed seed) {
         http_proxy = seed.getStoreFreeProxy();
-        String httpProxy = FileUtil.getSystemAbsolutePath(http_proxy);
-        String folder = httpProxy.substring(0, httpProxy.lastIndexOf(File.separator));
-        String filename = httpProxy.substring(httpProxy.lastIndexOf(File.separator) + 1, httpProxy.length());
+        String folder = http_proxy.substring(0, http_proxy.lastIndexOf(File.separator) + 1);
+        String filename = http_proxy.substring(http_proxy.lastIndexOf(File.separator) + 1, http_proxy.length());
         FileUtil.makeDumpDir(folder, filename);
     }
 
@@ -54,6 +53,9 @@ public class FreeProxyStorage implements Process {
 
         // 2.验证http_proxy文件中存在的代理
         List<HttpProxy> existProxys = FileUtil.readHttpProxyFile(http_proxy);
+        if(existProxys == null || existProxys.size() == 0){
+        	return;
+        }
         Iterator<HttpProxy> it = existProxys.iterator();
         while (it.hasNext()) {
             HttpProxy proxy = it.next();
