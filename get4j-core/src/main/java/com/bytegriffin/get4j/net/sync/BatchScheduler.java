@@ -45,16 +45,7 @@ public class BatchScheduler implements Runnable {
 			if(resources.size() >= Constants.SYNC_PER_MAX_COUNT 
 					|| (System.currentTimeMillis() - last_update_time) >= Constants.SYNC_PER_MAX_INTERVAL){
 				List<String> avatar = resources.list;				
-				if(sync instanceof FtpSyncer){					
-					FtpSyncer ftp = (FtpSyncer) sync;
-					ftp.setBatch(avatar);
-				} else if(sync instanceof RsyncSyncer){	
-					RsyncSyncer rsync = (RsyncSyncer) sync;
-					rsync.setCommand(avatar);
-				} else if(sync instanceof ScpSyncer){	
-					ScpSyncer scp = (ScpSyncer) sync;
-					scp.setResources(avatar);
-				}
+				sync.setBatch(avatar);
 				sync.sync();
 				last_update_time = System.currentTimeMillis();
 				count.incrementAndGet();

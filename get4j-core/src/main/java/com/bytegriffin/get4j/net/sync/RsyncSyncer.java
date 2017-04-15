@@ -30,7 +30,7 @@ public class RsyncSyncer implements Syncer {
         this.isModule = isModule;
     }
 
-	public void setCommand(List<String> avatars) {
+	public void setBatch(List<String> avatars) {
 		// 判断是否为Module，
 		String suffix = isModule ? ":" + dirOrModule : dirOrModule;		
     	for(String resource : avatars){

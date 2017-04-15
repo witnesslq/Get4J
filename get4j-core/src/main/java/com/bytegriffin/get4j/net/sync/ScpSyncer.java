@@ -35,7 +35,7 @@ public class ScpSyncer implements Syncer{
      * 设置不同seedName的资源列表
      * @param avatars
      */
-	public void setResources(List<String> avatars) {
+	public void setBatch(List<String> avatars) {
 		int i=0;
 		List<String> list;
 		for(String resource : avatars){
