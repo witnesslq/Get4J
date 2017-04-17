@@ -3,6 +3,8 @@ package com.bytegriffin.get4j.util;
 import java.security.MessageDigest;
 import java.util.UUID;
 
+import com.bytegriffin.get4j.core.Constants;
+
 /**
  * MD5生成器
  */
@@ -32,11 +34,15 @@ public class MD5Util {
 
     /**
      * 8位短uuid
-     *
-     * @param salt String
+     * 只要salt一样，那么每次生成的值也一样
+     * @param salt  一般值为fetchUrl
      * @return String
      */
-    public synchronized static String generateID(String salt) {
+    public synchronized static String generateSeedName(String salt) {
+    	// 为了保证list-detail模式下输入不同页数也生成同一个seedName，所以需要对url进行截断
+    	if(salt.contains(Constants.FETCH_LIST_URL_VAR_LEFT) && salt.contains(Constants.FETCH_LIST_URL_VAR_RIGHT)){
+    		salt = salt.substring(0, salt.lastIndexOf(Constants.FETCH_LIST_URL_VAR_LEFT));
+    	}
         java.security.MessageDigest md;
         String pwd = null;
         try {
@@ -45,8 +51,6 @@ public class MD5Util {
             byte[] hash = md.digest(b);
             pwd = byteArrayToHexString(hash);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         }
 
         return pwd;
@@ -54,7 +58,7 @@ public class MD5Util {
 
     /**
      * 8位短uuid
-     *
+     * 每次生成的值不一样
      * @return String
      */
     public synchronized static String generateSeedName() {

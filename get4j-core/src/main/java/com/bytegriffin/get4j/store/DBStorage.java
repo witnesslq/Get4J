@@ -51,11 +51,9 @@ public class DBStorage implements Process {
         logger.info("种子[" + seed.getSeedName() + "]的组件DBStorage的初始化完成。");
     }
 
-
     @Override
     public void execute(Page page) {
         DataSource dataSource = Constants.DATASOURCE_CACHE.get(page.getSeedName());
-
         // 更新page数据
         Page dbpage = readOne(dataSource, page);
         if (dbpage == null) {
@@ -65,8 +63,7 @@ public class DBStorage implements Process {
             String updateSql = updatesql + buildUpdateSql(page, dbpage.getId());
             write(dataSource, updateSql);
         }
-        logger.info("线程[" + Thread.currentThread().getName() + "]保存种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]完成。");
-
+        logger.info("线程[" + Thread.currentThread().getName() + "]保存种子[" + page.getSeedName() + "]url为[" + page.getUrl() + "]到关系型数据库中。");
     }
 
     /**

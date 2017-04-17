@@ -280,11 +280,11 @@ public final class FileUtil {
 	}
 
 	/**
-	 * 在磁盘上创建下载文件夹
+	 * 在磁盘上创建下载、索引文件夹
 	 *
 	 * @param diskDir String
 	 */
-	public static String makeDownloadDir(String diskDir) {
+	public static String makeDiskDir(String diskDir) {
 		diskDir = getSystemAbsolutePath(diskDir);
 		String laststr = diskDir.substring(diskDir.length() - 1, diskDir.length());
 		if (laststr.equals(File.separator)) {

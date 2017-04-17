@@ -32,8 +32,8 @@ import com.bytegriffin.get4j.util.MD5Util;
 import com.bytegriffin.get4j.util.StringUtil;
 
 /**
- * 爬虫入口类兼Api<br>
- * 主要负责对内xml加载运行 和 对外的API调用
+ * 爬虫入口类兼API<br>
+ * 主要负责对内配置文件加载运行 和 对外的API调用
  */
 public class Spider {
 
@@ -50,86 +50,6 @@ public class Spider {
 
     private Spider(PageMode pageMode) {
         pageMode(pageMode);
-    }
-
-    /**
-     * 设置ftp为资源同步方式
-     * @param host 服务器地址
-     * @param port 端口号，默认为21
-     * @param username 用户名（可以为空）
-     * @param password 密码（可以为空）
-     * @param dir ftp目录
-     * @return Spider
-     */
-    public Spider ftp(String host,int port, String username, String password) {
-    	Map<String,String> ftp = new HashMap<>();
-    	ftp.put(AbstractConfig.host_node, host);
-    	ftp.put(AbstractConfig.port_node, String.valueOf(port));
-    	ftp.put(AbstractConfig.username_node, username);
-    	ftp.put(AbstractConfig.password_node, password);
-    	resourceSync.setFtp(ftp);
-    	Map<String,String> sync = new HashMap<>();
-    	sync.put(AbstractConfig.open_node, "true");
-    	sync.put(AbstractConfig.batch_count_node, "10");
-    	sync.put(AbstractConfig.batch_time_node, "10");
-    	sync.put(AbstractConfig.protocal_node, AbstractConfig.ftp_node);
-    	resourceSync.setSync(sync);	
-        return this;
-    }
-    
-    /**
-     * 设置rsync为资源同步方式 <br>
-     * 注意：暂时不支持windows
-     * @param host 服务器地址
-     * @param username 用户名
-     * @param isModule 是否为module模式，是为true，不是则代表远程目录为false
-     * @param moduleOrDir module模式或者远程dir目录，如果是module模式，密码需
-     * 要在服务器端配置；如果是远程dir，需要ssh-keygen配置无密码登陆
-     * @return Spider
-     */
-    public Spider rsync(String host,String username, boolean isModule, String moduleOrDir) {
-    	Map<String,String> rsync = new HashMap<>();
-    	rsync.put(AbstractConfig.host_node, host);
-    	rsync.put(AbstractConfig.username_node, username);
-    	if(isModule){
-    		rsync.put(AbstractConfig.module_node, moduleOrDir);
-    	} else {
-    		rsync.put(AbstractConfig.dir_node, moduleOrDir);
-    	}
-    	resourceSync.setRsync(rsync);
-    	Map<String,String> sync = new HashMap<>();
-    	sync.put(AbstractConfig.open_node, "true");
-    	sync.put(AbstractConfig.batch_count_node, "10");
-    	sync.put(AbstractConfig.batch_time_node, "10");
-    	sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
-    	resourceSync.setSync(sync);	
-    	return this;
-    }
-    
-    /**
-     * 设置scp为资源同步方式 <br>
-     * 需要ssh-keygen配置无密码登陆
-     * @param host 服务器地址
-     * @param username 登陆的用户名
-     * @param dir 服务器端目录
-     * @param port scp端口号，默认为22
-     * @return Spider
-     */
-    public Spider scp(String host,String username, String dir, Integer port) {
-    	Map<String,String> scp = new HashMap<>();
-    	scp.put(AbstractConfig.host_node, host);
-    	scp.put(AbstractConfig.username_node, username);
-    	scp.put(AbstractConfig.dir_node, dir);
-    	port = port == null ? 22 : port;
-    	scp.put(AbstractConfig.port_node, String.valueOf(port));
-    	resourceSync.setScp(scp);
-    	Map<String,String> sync = new HashMap<>();
-    	sync.put(AbstractConfig.open_node, "true");
-    	sync.put(AbstractConfig.batch_count_node, "10");
-    	sync.put(AbstractConfig.batch_time_node, "10");
-    	sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
-    	resourceSync.setSync(sync);	
-    	return this;
     }
 
     /**
@@ -392,7 +312,7 @@ public class Spider {
 
     /**
      * 下载本地根路径，默认地址为$path/data/download/
-     * 子目录是${seedName}
+     * 子目录是${seedName}，用来表示每个seed对应不同的下载子目录
      * @param disk 磁盘路径
      * @return Spider
      */
@@ -401,8 +321,6 @@ public class Spider {
         return this;
     }
 
-    private boolean isDefaultDownload = false;
-
     /**
      * 默认的下载本地路径
      * 默认地址：$path/data/download/${seedname}
@@ -410,7 +328,7 @@ public class Spider {
      * @return Spider
      */
     public Spider defaultDownloadDisk() {
-        isDefaultDownload = true;
+        seed.setDownloadDisk(Constants.default_config);
         return this;
     }
 
@@ -472,13 +390,23 @@ public class Spider {
     }
 
     /**
-     * 将解析结果保存到Lucene索引
-     *
-     * @param indexPath Lucene索引存储的磁盘路径
+     * 将解析结果进行Lucene索引并且保存
+     *子目录是${seedName}，用来表示每个seed对应不同的下载子目录
+     * @param indexPath Lucene索引存储的磁盘根路径
      * @return Spider
      */
     public Spider lucene(String indexPath) {
         seed.setStoreLuceneIndex(indexPath);
+        return this;
+    }
+
+    /**
+     * 将解析结果索引保存到本系统/data/index目录下
+     * 
+     * @return Spider
+     */
+    public Spider defaultLucene() {
+        seed.setStoreLuceneIndex(Constants.default_config);
         return this;
     }
 
@@ -492,6 +420,88 @@ public class Spider {
         seed.setStoreLuceneIndex(address);
         return this;
     }
+    
+
+    /**
+     * 设置ftp为资源同步方式
+     * @param host 服务器地址
+     * @param port 端口号，默认为21
+     * @param username 用户名（可以为空）
+     * @param password 密码（可以为空）
+     * @param dir ftp目录
+     * @return Spider
+     */
+    public Spider ftp(String host,int port, String username, String password) {
+    	Map<String,String> ftp = new HashMap<>();
+    	ftp.put(AbstractConfig.host_node, host);
+    	ftp.put(AbstractConfig.port_node, String.valueOf(port));
+    	ftp.put(AbstractConfig.username_node, username);
+    	ftp.put(AbstractConfig.password_node, password);
+    	resourceSync.setFtp(ftp);
+    	Map<String,String> sync = new HashMap<>();
+    	sync.put(AbstractConfig.open_node, "true");
+    	sync.put(AbstractConfig.batch_count_node, "10");
+    	sync.put(AbstractConfig.batch_time_node, "10");
+    	sync.put(AbstractConfig.protocal_node, AbstractConfig.ftp_node);
+    	resourceSync.setSync(sync);	
+        return this;
+    }
+    
+    /**
+     * 设置rsync为资源同步方式 <br>
+     * 注意：暂时不支持windows
+     * @param host 服务器地址
+     * @param username 用户名
+     * @param isModule 是否为module模式，是为true，不是则代表远程目录为false
+     * @param moduleOrDir module模式或者远程dir目录，如果是module模式，密码需
+     * 要在服务器端配置；如果是远程dir，需要ssh-keygen配置无密码登陆
+     * @return Spider
+     */
+    public Spider rsync(String host,String username, boolean isModule, String moduleOrDir) {
+    	Map<String,String> rsync = new HashMap<>();
+    	rsync.put(AbstractConfig.host_node, host);
+    	rsync.put(AbstractConfig.username_node, username);
+    	if(isModule){
+    		rsync.put(AbstractConfig.module_node, moduleOrDir);
+    	} else {
+    		rsync.put(AbstractConfig.dir_node, moduleOrDir);
+    	}
+    	resourceSync.setRsync(rsync);
+    	Map<String,String> sync = new HashMap<>();
+    	sync.put(AbstractConfig.open_node, "true");
+    	sync.put(AbstractConfig.batch_count_node, "10");
+    	sync.put(AbstractConfig.batch_time_node, "10");
+    	sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
+    	resourceSync.setSync(sync);	
+    	return this;
+    }
+    
+    /**
+     * 设置scp为资源同步方式 <br>
+     * 需要ssh-keygen配置无密码登陆
+     * @param host 服务器地址
+     * @param username 登陆的用户名
+     * @param dir 服务器端目录
+     * @param port scp端口号，默认为22
+     * @return Spider
+     */
+    public Spider scp(String host,String username, String dir, Integer port) {
+    	Map<String,String> scp = new HashMap<>();
+    	scp.put(AbstractConfig.host_node, host);
+    	scp.put(AbstractConfig.username_node, username);
+    	scp.put(AbstractConfig.dir_node, dir);
+    	port = port == null ? 22 : port;
+    	scp.put(AbstractConfig.port_node, String.valueOf(port));
+    	resourceSync.setScp(scp);
+    	Map<String,String> sync = new HashMap<>();
+    	sync.put(AbstractConfig.open_node, "true");
+    	sync.put(AbstractConfig.batch_count_node, "10");
+    	sync.put(AbstractConfig.batch_time_node, "10");
+    	sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
+    	resourceSync.setSync(sync);	
+    	return this;
+    }
+
 
     /**
      * annotation入口，如果不想一项一项设置Api，也可以写一个annotation
@@ -700,16 +710,13 @@ public class Spider {
      * 检查Api设置是否设置正确，否则启动失败
      */
     public void start() {
-        // 自动生成seed name
-        if (StringUtil.isNullOrBlank(seed.getSeedName())) {
-            seed.setSeedName(MD5Util.generateSeedName());
-        }
-        if (isDefaultDownload) {
-            seed.setDownloadDisk(Constants.getDownloadDisk(seed.getSeedName()));
-        }
         if (StringUtil.isNullOrBlank(seed.getFetchUrl())) {
             logger.error("种子[" + seed.getSeedName() + "]没有配置要抓取的url。");
             System.exit(1);
+        }
+        // 自动生成seed name
+        if (StringUtil.isNullOrBlank(seed.getSeedName())) {
+            seed.setSeedName(MD5Util.generateSeedName(seed.getFetchUrl()));
         }
         SpiderEngine.create().setSeed(seed).setResourceSync(resourceSync).build();
     }

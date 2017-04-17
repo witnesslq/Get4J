@@ -156,7 +156,9 @@
         <property>
             <name>store.lucene.index</name>
             <value></value>
-            <description>非必填项。保存结果到lucene索引中，默认值/data/index/seedName/，绝对路径不用写classpath
+            <description>
+            	非必填项。保存结果到lucene索引中，如果选择默认路径那就填default；如果不需要保存索引那就不需要配置此项；
+            	如果想配置在本爬虫其它目录下，前缀可以用classpath；如果想配置到爬虫外的其它路径可以用操作系统的绝对路径
             </description>
         </property>
     </seed>

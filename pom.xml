@@ -6,7 +6,22 @@
 	<version>0.0.1</version>
 	<packaging>pom</packaging>
 	<name>get4j-parent</name>
-	<url>https://github.com/bytegriffin/get4j</url>
+	<url>https://github.com/bytegriffin/Get4J</url>
+
+	<developers>
+		<developer>
+			<id>bytegriffin</id>
+			<name>Qiang Gan</name>
+			<email>bytegriffin@126.com</email>
+		</developer>
+	</developers>
+
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+		</license>
+	</licenses>
 
 	<modules>
 		<module>get4j-core</module>
@@ -29,24 +44,12 @@
 		<mongo.version>3.4.2</mongo.version>
 		<commons-net.version>3.6</commons-net.version>
 		<snakeyaml.version>1.18</snakeyaml.version>
+		<!-- 注意：lucene版本需要java8 -->
+		<lucene.version>6.5.0</lucene.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
 	</properties>
-
-	<developers>
-		<developer>
-			<id>bytegriffin</id>
-			<name>Qiang Gan</name>
-			<email>bytegriffin@126.com</email>
-		</developer>
-	</developers>
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
-		</license>
-	</licenses>
 
 	<dependencyManagement>
 		<dependencies>
@@ -55,6 +58,7 @@
 				<artifactId>log4j-api</artifactId>
 				<version>${log4j.version}</version>
 			</dependency>
+
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>
 				<artifactId>log4j-core</artifactId>
@@ -150,9 +154,32 @@
 				<version>${snakeyaml.version}</version>
 			</dependency>
 
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-core</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-queryparser</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-analyzers-common</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			
+			<dependency>
+			    <groupId>org.apache.lucene</groupId>
+			    <artifactId>lucene-analyzers-smartcn</artifactId>
+			    <version>${lucene.version}</version>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
-
 
 	<build>
 		<plugins>
@@ -168,6 +195,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
 
 </project>

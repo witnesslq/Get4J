@@ -29,7 +29,7 @@ public @interface Cascade {
 
     String resourceSelector() default "";
 
-    String downloadDisk() default "";
+    String downloadDisk() default "default";
 
     String downloadHdfs() default "";
 
@@ -39,7 +39,7 @@ public @interface Cascade {
 
     String jdbc() default "";
 
-    String lucene() default "";
+    String lucene() default "default";
 
     String hbase() default "";
 }

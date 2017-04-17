@@ -79,7 +79,7 @@ public class MongodbStorage implements Process {
                 collection.updateOne(Filters.eq("FETCH_URL", page.getUrl()), new Document("$set", updateObject));
             }
         }
-        logger.info("线程[" + Thread.currentThread().getName() + "]保存种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]完成。");
+        logger.info("线程[" + Thread.currentThread().getName() + "]保存种子[" + page.getSeedName() + "]url为[" + page.getUrl() + "]到MongoDB数据库中。");
     }
 
     /**

@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.lucene.index.IndexWriter;
 import org.bson.Document;
 
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
@@ -50,6 +51,15 @@ public final class Constants {
     public static String getDownloadDisk(String seedName) {
         return System.getProperty("user.dir") + File.separator + "data" + File.separator + "download" + File.separator + seedName;
     }
+    
+    /**
+     * 获取相应种子的lucene index地址
+     * @param seedName
+     * @return
+     */
+    public static String getLuceneIndexPath(String seedName) {
+        return System.getProperty("user.dir") + File.separator + "data" + File.separator + "index" + File.separator + seedName;
+    }
 
     /**
      * 全局chain工作流缓存 key:seed_name value: site
@@ -86,6 +96,11 @@ public final class Constants {
      */
     public static final Map<String, String> DOWNLOAD_DIR_CACHE = new HashMap<>();
 
+    /**
+     * 全局lucene index dir缓存 key:seed_name value: lucene index dir
+     */
+    public static final Map<String, String> LUCENE_INDEX_DIR_CACHE = new HashMap<>();
+    
     /**
      * 全局PageMode缓存 key:seed_name value: PageMode
      */
@@ -168,6 +183,11 @@ public final class Constants {
      * key : seedName value: MongoCollection
      */
     public static HashMap<String, MongoCollection<Document>> MONGO_COLLECTION_CACHE = new HashMap<>();
+    
+    /**
+     * key : seedName value: IndexWriter
+     */
+    public static Map<String, IndexWriter> INDEX_WRITER_CACHE = new HashMap<>();
 
     /**
      * 全局http_proxy缓存 key:seed_name value: WebClient

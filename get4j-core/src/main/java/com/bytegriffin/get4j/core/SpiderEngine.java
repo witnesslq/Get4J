@@ -30,6 +30,7 @@ import com.bytegriffin.get4j.parse.AutoDelegateParser;
 import com.bytegriffin.get4j.store.DBStorage;
 import com.bytegriffin.get4j.store.FailUrlStorage;
 import com.bytegriffin.get4j.store.FreeProxyStorage;
+import com.bytegriffin.get4j.store.LuceneIndexStorage;
 import com.bytegriffin.get4j.store.MongodbStorage;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.StringUtil;
@@ -224,17 +225,26 @@ public class SpiderEngine {
                 subProcess.append("-ElementSelectPageParser");
             }
 
+            // 不配置成else if是想系统支持多个数据源
             if (!StringUtil.isNullOrBlank(seed.getStoreJdbc())) {
                 DBStorage dbstorage = new DBStorage();
                 dbstorage.init(seed);
                 chain.addProcess(dbstorage);
                 subProcess.append("-DBStorage");
-            } else if (!StringUtil.isNullOrBlank(seed.getStoreMongodb())) {
+            } 
+            if (!StringUtil.isNullOrBlank(seed.getStoreMongodb())) {
                 MongodbStorage mongodb = new MongodbStorage();
                 mongodb.init(seed);
                 chain.addProcess(mongodb);
                 subProcess.append("-MongodbStorage");
-            } else if (!StringUtil.isNullOrBlank(seed.getStoreFreeProxy())) {
+            }            
+            if (!StringUtil.isNullOrBlank(seed.getStoreLuceneIndex())) {
+            	LuceneIndexStorage index = new LuceneIndexStorage();
+            	index.init(seed);
+            	chain.addProcess(index);
+            	subProcess.append("-LuceneIndexStorage");
+            }
+            if (!StringUtil.isNullOrBlank(seed.getStoreFreeProxy())) {
                 FreeProxyStorage freeProxyStorage = new FreeProxyStorage();
                 freeProxyStorage.init(seed);
                 chain.addProcess(freeProxyStorage);
@@ -243,11 +253,6 @@ public class SpiderEngine {
             // else if (!StringUtil.isNullOrBlank(seed.getStoreRedis())) {
             // chain.addProcess(new RedisStorage());
             // subProcess.append("-RedisStorage");
-            // } else if (!StringUtil.isNullOrBlank(seed.getStoreLuceneIndex()))
-            // {
-            // chain.addProcess(new LuceneIndexStorage());
-            // subProcess.append("-LuceneIndexStorage");
-            // }
 
             // 添加坏链接存储功能
             FailUrlStorage.init(seed);

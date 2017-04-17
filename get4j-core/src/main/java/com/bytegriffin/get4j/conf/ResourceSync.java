@@ -2,6 +2,9 @@ package com.bytegriffin.get4j.conf;
 
 import java.util.Map;
 
+/**
+ * resource-sync.yaml资源同步配置文件
+ */
 public class ResourceSync {
 
 	private Map<String, String> sync;

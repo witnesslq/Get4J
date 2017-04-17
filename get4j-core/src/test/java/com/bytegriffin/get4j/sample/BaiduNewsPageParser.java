@@ -20,8 +20,8 @@ public class BaiduNewsPageParser implements PageParser {
     public static void main(String[] args) throws Exception {
         Spider.cascade().fetchUrl("http://news.baidu.com/")
                 .parser(BaiduNewsPageParser.class)
-                .jdbc("jdbc:mysql://localhost:3306/get4j?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root")
-                .thread(1).start();
+                //.jdbc("jdbc:mysql://localhost:3306/get4j?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root")
+                .defaultLucene().thread(1).start();
     }
 
 }
