@@ -1,10 +1,12 @@
 package com.bytegriffin.get4j.net.sync;
 
+import com.bytegriffin.get4j.util.ShellUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.File;
 import java.util.HashSet;
 import java.util.List;
-
-import com.bytegriffin.get4j.util.ShellUtil;
 
 /**
  * Rsync同步器：用于将下载的资源文件资源文件，比如：avatar文件同步到图片服务器
@@ -15,6 +17,7 @@ import com.bytegriffin.get4j.util.ShellUtil;
  */
 public class RsyncSyncer implements Syncer {
 
+	private static final Logger logger = LogManager.getLogger(RsyncSyncer.class);
 	private String host;
 	private String username;
 	// module或者dir模式，如果是module模式，需要服务器端配置module模块，它是同步根目录，
@@ -48,8 +51,7 @@ public class RsyncSyncer implements Syncer {
 			try {//如果不同的seed太多，可以减慢同步速度
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+                logger.error("Rsync同步资源时出错。", e);
 			}
 		}
 		

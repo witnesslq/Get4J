@@ -428,7 +428,6 @@ public class Spider {
      * @param port 端口号，默认为21
      * @param username 用户名（可以为空）
      * @param password 密码（可以为空）
-     * @param dir ftp目录
      * @return Spider
      */
     public Spider ftp(String host,int port, String username, String password) {

@@ -54,8 +54,8 @@ public final class Constants {
     
     /**
      * 获取相应种子的lucene index地址
-     * @param seedName
-     * @return
+     * @param seedName  String
+     * @return String
      */
     public static String getLuceneIndexPath(String seedName) {
         return System.getProperty("user.dir") + File.separator + "data" + File.separator + "index" + File.separator + seedName;
@@ -137,7 +137,7 @@ public final class Constants {
      * false：表示自动补全文件名称<br>
      * true：表示用url补全文件名称<br>
      */
-    public static boolean IS_KEEP_FILE_URL;
+    public static boolean IS_KEEP_FILE_URL = false;
 
     /**
      * 默认home page名称
@@ -207,13 +207,13 @@ public final class Constants {
     /**
      * 全局资源同步器
      */
-    public static Syncer RESOURCE_SYNCHRONIZER;
+    static Syncer RESOURCE_SYNCHRONIZER;
     
     /**
      * 每次同步的最大值
      */
     public static int SYNC_PER_MAX_COUNT;
-    
+
     /**
      * 每次同步的最大时间间隔，单位是秒
      */

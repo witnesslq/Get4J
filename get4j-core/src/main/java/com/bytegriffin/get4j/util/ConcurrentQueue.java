@@ -1,7 +1,6 @@
 package com.bytegriffin.get4j.util;
 
 import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -26,26 +25,6 @@ public class ConcurrentQueue<E> {
         }
     }
 
-    public void addFirst(E e) {
-        writeLock.lock();
-        try {
-            if (!list.contains(e)) {
-                list.addFirst(e);
-            }
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-    public Object getLast() {
-        readLock.lock();
-        try {
-            return list.getLast();
-        } finally {
-            readLock.unlock();
-        }
-    }
-
     public Object get(int index) {
         readLock.lock();
         try {
@@ -59,15 +38,6 @@ public class ConcurrentQueue<E> {
         readLock.lock();
         try {
             return list.size();
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    public void remove(E e) {
-        readLock.lock();
-        try {
-            list.remove(e);
         } finally {
             readLock.unlock();
         }
@@ -107,13 +77,5 @@ public class ConcurrentQueue<E> {
         return list.contains(e);
     }
 
-    public ConcurrentQueue<E> subQueue(int start, int end) {
-        ConcurrentQueue<E> subQueue = new ConcurrentQueue<>();
-        List<E> sublist = list.subList(start, end);
-        for (E e : sublist) {
-            subQueue.add(e);
-        }
-        return subQueue;
-    }
 
 }

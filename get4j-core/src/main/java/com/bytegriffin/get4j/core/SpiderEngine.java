@@ -108,7 +108,7 @@ public class SpiderEngine {
     /**
      * 设置资源同步器
      * @param resourceSync ResourceSync
-     * @return
+     * @return SpiderEngine
      */
     public SpiderEngine setResourceSync(ResourceSync resourceSync) {
         this.resourceSync = resourceSync;
@@ -255,7 +255,7 @@ public class SpiderEngine {
             // subProcess.append("-RedisStorage");
 
             // 添加坏链接存储功能
-            FailUrlStorage.init(seed);
+            FailUrlStorage.init();
 
             // list_detail 已经在init方法中保存了未访问链接了，因为分页的问题要特殊处理
             if (!PageMode.list_detail.equals(seed.getPageMode())) {
@@ -343,13 +343,8 @@ public class SpiderEngine {
      * 第三步：创建工作环境
      */
     private void buildConfiguration() {
-        if (configuration == null) {
-            Constants.IS_KEEP_FILE_URL = false;
-        } else if (Configuration.default_download_file_name_rule.equals(configuration.getDownloadFileNameRule())) {
-            Constants.IS_KEEP_FILE_URL = false;
-        } else {
-            Constants.IS_KEEP_FILE_URL = true;
-        }
+        Constants.IS_KEEP_FILE_URL = (configuration != null && 
+        		!Configuration.default_download_file_name_rule.equals(configuration.getDownloadFileNameRule()));
     }
 
     /**

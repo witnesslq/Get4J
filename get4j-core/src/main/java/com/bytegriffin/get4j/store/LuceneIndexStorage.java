@@ -60,7 +60,7 @@ public class LuceneIndexStorage implements Process {
 	 * 初始化Lucene参数<br>
 	 * 1.优化IndexWriterConifg参数<br>
 	 * 2.保证每个Seed实例对应一个IndexWriter，即每个Seed对应一个Directory，从而达到节省资源开销与线程安全
-	 * @param seedName
+	 * @param seedName String
 	 */
 	private void initParams(String seedName) {
 		IndexWriterConfig config = new IndexWriterConfig(analyzer);
@@ -84,6 +84,7 @@ public class LuceneIndexStorage implements Process {
 			IndexWriter indexWriter = new IndexWriter(dir, config);
 			Constants.INDEX_WRITER_CACHE.put(seedName, indexWriter);
 		} catch (Exception e) {
+			logger.error("系统初始化种子[" + seedName + "]的Lucene索引时出错。");
 		}
 	}
 
@@ -103,7 +104,7 @@ public class LuceneIndexStorage implements Process {
 		
 		// TextField 索引并分词
 		doc.add(new TextField("title", page.getTitle(), Field.Store.YES));
-		String content = null;
+		String content = "";
 		if (page.isHtmlContent()) {
 			content = page.getHtmlContent();
 		} else if (page.isJsonContent()) {

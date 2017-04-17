@@ -19,7 +19,7 @@ public class BatchScheduler implements Runnable {
 	public static final String split ="|";
 	public static ConcurrentQueue<String> resources = new ConcurrentQueue<>();
 
-	public static volatile boolean flag = true;
+	private static volatile boolean flag = true;
 
 	public static void addResource(String seedName, String path) {
 		if(!UrlAnalyzer.isStartHttpUrl(path)){

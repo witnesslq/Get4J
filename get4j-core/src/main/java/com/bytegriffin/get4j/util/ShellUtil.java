@@ -11,14 +11,15 @@ public final class ShellUtil {
 
     private static final Logger logger = LogManager.getLogger(ShellUtil.class);
 
-    public static boolean executeShell(String shellCommand) {
-        BufferedReader bufferedReader = null;
+    public static void executeShell(String shellCommand) {
+        BufferedReader stdInput = null;
+        BufferedReader stdError = null;
         try {
             String[] cmd = {"/bin/sh", "-c", shellCommand};
             ProcessBuilder pb = new ProcessBuilder(cmd);  
             Process p = pb.start();
-            BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
             //必须要输出
             String s;
             while ((s = stdInput.readLine()) != null) {
@@ -30,18 +31,21 @@ public final class ShellUtil {
             try {
                  p.waitFor();
             } catch (InterruptedException e) {
+                logger.info("执行Shell命令["+shellCommand+"]时发生异常：", e);
             }
             logger.info("Shell命令["+shellCommand+"]执行完毕");
-            return true;
         } catch (Exception ioe) {
             logger.info("执行Shell命令["+shellCommand+"]时发生异常：", ioe);
-            return false;
         } finally {
-            if (bufferedReader != null) {
-                try {
-					bufferedReader.close();
-				} catch (IOException e) {
-				}
+            try {
+                if (stdInput != null) {
+                    stdInput.close();
+                }
+                if (stdError != null) {
+                    stdError.close();
+                }
+            } catch (IOException e) {
+                logger.info("执行Shell命令["+shellCommand+"]时发生异常：", e);
             }
         }
     }

@@ -60,6 +60,7 @@ public class FtpSyncer implements Syncer{
 					ftpClient.storeFile(fileName, inputStream);
 					ftpClient.changeToParentDirectory();
 				} catch (FileNotFoundException e) {
+					logger.error("Ftp同步资源时出错。",e);
 				} finally{
 					if(inputStream != null){
 						inputStream.close();
@@ -67,7 +68,7 @@ public class FtpSyncer implements Syncer{
 				}
 			}
 		} catch (Exception e) {
-			logger.error("ftp同步资源文件时出错。", e);
+			logger.error("Ftp同步资源文件时出错。", e);
 		} finally {
 			try {
 				
