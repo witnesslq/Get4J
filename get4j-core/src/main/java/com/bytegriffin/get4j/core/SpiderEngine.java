@@ -17,12 +17,14 @@ import com.bytegriffin.get4j.download.DiskDownloader;
 import com.bytegriffin.get4j.download.HdfsDownloader;
 import com.bytegriffin.get4j.fetch.CascadeFetcher;
 import com.bytegriffin.get4j.fetch.ListDetailFetcher;
+import com.bytegriffin.get4j.probe.PageChangeProber;
 import com.bytegriffin.get4j.fetch.SingleFetcher;
 import com.bytegriffin.get4j.fetch.SiteFetcher;
 import com.bytegriffin.get4j.net.http.HtmlUnitEngine;
 import com.bytegriffin.get4j.net.http.HttpClientEngine;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
+import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.net.sync.FtpSyncer;
 import com.bytegriffin.get4j.net.sync.RsyncSyncer;
 import com.bytegriffin.get4j.net.sync.ScpSyncer;
@@ -34,10 +36,9 @@ import com.bytegriffin.get4j.store.LuceneIndexStorage;
 import com.bytegriffin.get4j.store.MongodbStorage;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.StringUtil;
-import com.bytegriffin.get4j.util.UrlQueue;
 
 /**
- * 爬虫配置创建器 <br/>
+ * 爬虫配置引擎 <br/>
  * 执行前的准备工作：组建工作流程
  */
 public class SpiderEngine {
@@ -104,9 +105,10 @@ public class SpiderEngine {
         this.configuration = configuration;
         return this;
     }
-    
+
     /**
      * 设置资源同步器
+     *
      * @param resourceSync ResourceSync
      * @return SpiderEngine
      */
@@ -138,11 +140,10 @@ public class SpiderEngine {
         if (hplist != null && hplist.size() > 0) {
             LinkedList<HttpProxy> newList = new LinkedList<>();
             for (HttpProxy httpProxy : hplist) {
-                String furl = seed.getFetchUrl().replace(Constants.FETCH_LIST_URL_VAR_LEFT, "")
-                        .replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "");
+                String furl = UrlAnalyzer.formatListDetailUrl(seed.getFetchUrl());
                 boolean isReached = http.testHttpProxy(furl, httpProxy);
                 if (!isReached) {
-                    logger.warn("Http代理[" + httpProxy.toString() + "]测试失效，请重新配置。");
+                    logger.warn("Http代理[" + httpProxy.toString() + "]测试失效。");
                     newList.add(httpProxy);
                 }
             }
@@ -169,11 +170,18 @@ public class SpiderEngine {
                 logger.error("启动失败：种子[" + seedName + "]-[fetch.url]参数为必填项。");
                 System.exit(1);
             }
-            // 1.构建http探针
+            // 1.构建http引擎
             buildHttpEngine(seed);
 
             // 2.设置流程
             StringBuilder subProcess = new StringBuilder();
+
+            if (!StringUtil.isNullOrBlank(seed.getFetchProbeSelector())) {
+                PageChangeProber p = new PageChangeProber(seed);
+                Constants.FETCH_PROBE_CACHE.put(seed.getSeedName(), p);
+                subProcess.append("PageChangeProber-");
+            }
+
             if (PageMode.single.equals(seed.getPageMode())) {
                 SingleFetcher fe = new SingleFetcher();
                 fe.init(seed);
@@ -231,18 +239,18 @@ public class SpiderEngine {
                 dbstorage.init(seed);
                 chain.addProcess(dbstorage);
                 subProcess.append("-DBStorage");
-            } 
+            }
             if (!StringUtil.isNullOrBlank(seed.getStoreMongodb())) {
                 MongodbStorage mongodb = new MongodbStorage();
                 mongodb.init(seed);
                 chain.addProcess(mongodb);
                 subProcess.append("-MongodbStorage");
-            }            
+            }
             if (!StringUtil.isNullOrBlank(seed.getStoreLuceneIndex())) {
-            	LuceneIndexStorage index = new LuceneIndexStorage();
-            	index.init(seed);
-            	chain.addProcess(index);
-            	subProcess.append("-LuceneIndexStorage");
+                LuceneIndexStorage index = new LuceneIndexStorage();
+                index.init(seed);
+                chain.addProcess(index);
+                subProcess.append("-LuceneIndexStorage");
             }
             if (!StringUtil.isNullOrBlank(seed.getStoreFreeProxy())) {
                 FreeProxyStorage freeProxyStorage = new FreeProxyStorage();
@@ -256,12 +264,6 @@ public class SpiderEngine {
 
             // 添加坏链接存储功能
             FailUrlStorage.init();
-
-            // list_detail 已经在init方法中保存了未访问链接了，因为分页的问题要特殊处理
-            if (!PageMode.list_detail.equals(seed.getPageMode())) {
-                // 添加每个seed对应的未访问url
-                UrlQueue.newUnVisitedLink(seedName, seed.getFetchUrl());
-            }
 
             Constants.FETCH_PAGE_MODE_CACHE.put(seedName, seed.getPageMode());
 
@@ -280,71 +282,71 @@ public class SpiderEngine {
      * 第二步：创建资源同步
      */
     private void buildResourceSync() {
-    	if(resourceSync == null || resourceSync.getSync() == null || resourceSync.getSync().isEmpty()){
-			return;
-		} 
-    	String open = resourceSync.getSync().get(AbstractConfig.open_node);
-    	if("false".equalsIgnoreCase(open)){
-    		return;
-    	}
-    	String protocal = resourceSync.getSync().get(AbstractConfig.protocal_node);
-    	if(AbstractConfig.ftp_node.equals(protocal)){
-			Map<String,String> ftp = resourceSync.getFtp();
-			if(ftp == null || ftp.isEmpty()){
-				logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的ftp属性出错，请重新检查。");
-				System.exit(1);
-			}
-			String host = ftp.get(AbstractConfig.host_node);
-			String username = ftp.get(AbstractConfig.username_node);
-			String password = ftp.get(AbstractConfig.password_node);
-			String port = StringUtil.isNullOrBlank(ftp.get(AbstractConfig.port_node))? "21" : ftp.get(AbstractConfig.port_node) ;
-			// 只检查了host属性是否为空，因为有的ftp服务没有用户名/密码等
-			if(StringUtil.isNullOrBlank(host)){
-				logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的host属性为空，请重新检查。");
-				System.exit(1);
-			}
-			Constants.RESOURCE_SYNCHRONIZER = new FtpSyncer(host, port, username, password);
-		} else if(AbstractConfig.rsync_node.equals(protocal)){
-			Map<String,String> rsync = resourceSync.getRsync();
-			if(rsync == null || rsync.isEmpty()){
-				logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的ftp属性出错，请重新检查。");
-				System.exit(1);
-			}
-			String host = rsync.get(AbstractConfig.host_node);
-			String username = rsync.get(AbstractConfig.username_node);
-			String module = rsync.get(AbstractConfig.module_node);
-			String dir = rsync.get(AbstractConfig.dir_node);
-			if(!StringUtil.isNullOrBlank(module)){
-				Constants.RESOURCE_SYNCHRONIZER = new RsyncSyncer(host, username, module, true);
-			} else if(!StringUtil.isNullOrBlank(dir)){
-				Constants.RESOURCE_SYNCHRONIZER = new RsyncSyncer(host, username, dir, false);
-			} else {
-				logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的rsync的module或dir属性必须二选一，请重新检查。");
-				System.exit(1);
-			}
-		} else if(AbstractConfig.scp_node.equals(protocal)){
-			Map<String,String> scp = resourceSync.getScp();
-			if(scp == null || scp.isEmpty()){
-				logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的scp属性出错，请重新检查。");
-				System.exit(1);
-			}
-			String host = scp.get(AbstractConfig.host_node);
-			String username = scp.get(AbstractConfig.username_node);
-			String dir = scp.get(AbstractConfig.dir_node);
-			String port = StringUtil.isNullOrBlank(scp.get(AbstractConfig.port_node))? "22" : scp.get(AbstractConfig.port_node);
-			Constants.RESOURCE_SYNCHRONIZER = new ScpSyncer(host, username, dir, port);
-		}
-    	Constants.SYNC_OPEN = Boolean.valueOf(open);
-    	Constants.SYNC_PER_MAX_COUNT = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node));
-    	Constants.SYNC_PER_MAX_INTERVAL = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node)) * 1000;
+        if (resourceSync == null || resourceSync.getSync() == null || resourceSync.getSync().isEmpty()) {
+            return;
+        }
+        String open = resourceSync.getSync().get(AbstractConfig.open_node);
+        if ("false".equalsIgnoreCase(open)) {
+            return;
+        }
+        String protocal = resourceSync.getSync().get(AbstractConfig.protocal_node);
+        if (AbstractConfig.ftp_node.equals(protocal)) {
+            Map<String, String> ftp = resourceSync.getFtp();
+            if (ftp == null || ftp.isEmpty()) {
+                logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的ftp属性出错，请重新检查。");
+                System.exit(1);
+            }
+            String host = ftp.get(AbstractConfig.host_node);
+            String username = ftp.get(AbstractConfig.username_node);
+            String password = ftp.get(AbstractConfig.password_node);
+            String port = StringUtil.isNullOrBlank(ftp.get(AbstractConfig.port_node)) ? "21" : ftp.get(AbstractConfig.port_node);
+            // 只检查了host属性是否为空，因为有的ftp服务没有用户名/密码等
+            if (StringUtil.isNullOrBlank(host)) {
+                logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的host属性为空，请重新检查。");
+                System.exit(1);
+            }
+            Constants.RESOURCE_SYNCHRONIZER = new FtpSyncer(host, port, username, password);
+        } else if (AbstractConfig.rsync_node.equals(protocal)) {
+            Map<String, String> rsync = resourceSync.getRsync();
+            if (rsync == null || rsync.isEmpty()) {
+                logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的ftp属性出错，请重新检查。");
+                System.exit(1);
+            }
+            String host = rsync.get(AbstractConfig.host_node);
+            String username = rsync.get(AbstractConfig.username_node);
+            String module = rsync.get(AbstractConfig.module_node);
+            String dir = rsync.get(AbstractConfig.dir_node);
+            if (!StringUtil.isNullOrBlank(module)) {
+                Constants.RESOURCE_SYNCHRONIZER = new RsyncSyncer(host, username, module, true);
+            } else if (!StringUtil.isNullOrBlank(dir)) {
+                Constants.RESOURCE_SYNCHRONIZER = new RsyncSyncer(host, username, dir, false);
+            } else {
+                logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的rsync的module或dir属性必须二选一，请重新检查。");
+                System.exit(1);
+            }
+        } else if (AbstractConfig.scp_node.equals(protocal)) {
+            Map<String, String> scp = resourceSync.getScp();
+            if (scp == null || scp.isEmpty()) {
+                logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的scp属性出错，请重新检查。");
+                System.exit(1);
+            }
+            String host = scp.get(AbstractConfig.host_node);
+            String username = scp.get(AbstractConfig.username_node);
+            String dir = scp.get(AbstractConfig.dir_node);
+            String port = StringUtil.isNullOrBlank(scp.get(AbstractConfig.port_node)) ? "22" : scp.get(AbstractConfig.port_node);
+            Constants.RESOURCE_SYNCHRONIZER = new ScpSyncer(host, username, dir, port);
+        }
+        Constants.SYNC_OPEN = Boolean.valueOf(open);
+        Constants.SYNC_BATCH_COUNT = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node));
+        Constants.SYNC_BATCH_TIME = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node)) * 1000;
     }
 
     /**
      * 第三步：创建工作环境
      */
     private void buildConfiguration() {
-        Constants.IS_KEEP_FILE_URL = (configuration != null && 
-        		!Configuration.default_download_file_name_rule.equals(configuration.getDownloadFileNameRule()));
+        Constants.IS_KEEP_FILE_URL = (configuration != null &&
+                !Configuration.default_download_file_name_rule.equals(configuration.getDownloadFileNameRule()));
     }
 
     /**
@@ -354,7 +356,7 @@ public class SpiderEngine {
         for (Seed seed : seeds) {
             String interval = seed.getFetchInterval();
             String starttime = seed.getFetchStart();
-            JobController job = new JobController(seed.getSeedName(), seed.getThreadNumber());
+            Launcher job = new Launcher(seed);
             Timer timer = new Timer();
             if (StringUtil.isNullOrBlank(starttime)) {
                 logger.info("爬虫开始抓取[" + seed.getSeedName() + "]。。。");
@@ -368,5 +370,6 @@ public class SpiderEngine {
             }
         }
     }
+
 
 }

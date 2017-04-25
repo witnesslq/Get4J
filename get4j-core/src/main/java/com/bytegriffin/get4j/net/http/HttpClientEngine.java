@@ -448,7 +448,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         Constants.HTTP_CLIENT_BUILDER_CACHE.put(seedName, httpClientBuilder);
     }
 
-
     /**
      * 格式化Url: www.website.com ===> http://www.website.com
      * Site设置的Url必须带schema，否则报错
@@ -561,7 +560,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 }
 
                 // 如果是资源文件的话
-                if (!isJsonFile(contentType) && !isPage(contentType) && !isXmlFile(contentType, content)) {
+                if (!isJsonPage(contentType) && !isHtmlPage(contentType) && !isXmlPage(contentType, content)) {
                     HashSet<String> resources = page.getResources();
                     resources.add(page.getUrl());
                     return page;
@@ -582,7 +581,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 // 设置page内容
                 setContent(contentType, content, page);
             }
-
 
         } catch (Exception e) {
             UrlQueue.newUnVisitedLink(page.getSeedName(), url);
@@ -719,7 +717,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                     FileUtil.writeFileToDisk(resourceName, content);
                     continue;
                 } else {
-                    if (isJsonFile(contentType) || isPage(contentType) || isXmlFile(contentType, new String(content))) {
+                    if (isJsonPage(contentType) || isHtmlPage(contentType) || isXmlPage(contentType, new String(content))) {
                         continue;// 如果是页面就直接过滤掉
                     }
                     if (contentType.contains("svg")) {
@@ -825,7 +823,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 FileUtil.writeFileToDisk(resourceName, content);
                 return;
             } else {
-                if (isJsonFile(contentType) || isPage(contentType) || isXmlFile(contentType, new String(content))) {
+                if (isJsonPage(contentType) || isHtmlPage(contentType) || isXmlPage(contentType, new String(content))) {
                     return;// 如果是页面就直接过滤掉
                 }
                 if (contentType.contains("svg")) {
@@ -869,7 +867,74 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 request.releaseConnection();
             }
         }
+    }
 
+    @Override
+    public String probePageContent(Page page) {
+        CloseableHttpClient httpClient;
+        HttpGet request = null;
+        try {
+            setHttpProxy(page.getSeedName());
+            setUserAgent(page.getSeedName());
+            httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
+            request = new HttpGet(page.getUrl());
+            request.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+            HttpResponse response = httpClient.execute(request);
+            int statusCode = response.getStatusLine().getStatusCode();
+            boolean isvisit = isVisit(statusCode, page, logger);
+            if (!isvisit) {
+                return null;
+            }
+            HttpEntity entity = response.getEntity();
+            if (entity == null) {
+                logger.warn("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容为空。");
+            }
+            Header ctHeader = null;
+            try {
+                ctHeader = entity.getContentType();
+            } catch (NullPointerException e) {
+                logger.error("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面内容为空。", e);
+                return null;
+            }
+            if (ctHeader != null) {
+                long contentlength = entity.getContentLength();
+                if (contentlength >= big_file_max_size) {
+                    logger.warn("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面内容太大。");
+                }
+                String contentType = ctHeader.getValue();
+
+                // 转换内容字节
+                byte[] bytes = EntityUtils.toByteArray(entity);
+                String content = new String(bytes);
+
+                if (StringUtil.isNullOrBlank(content)) {
+                    logger.warn("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容为空。");
+                    return null;
+                }
+
+                // 重新设置content编码
+                content = new String(bytes, getCharset(contentType, content));
+
+                // 设置page内容
+                setContent(contentType, content, page);
+
+                // 设置page内容
+                return content;
+            }
+
+        } catch (Exception e) {
+
+            logger.error("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容失败。", e);
+            if (request != null) {
+                request.abort();
+            }
+        } finally {
+            if (request != null) {
+                request.releaseConnection();
+            }
+        }
+
+        return null;
     }
 
 }

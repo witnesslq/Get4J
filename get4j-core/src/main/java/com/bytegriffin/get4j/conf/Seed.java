@@ -39,6 +39,16 @@ public class Seed {
      */
     private String fetchUrl;
     /**
+     * 页面变化探测器， 非必填项。用于探测抓取页面的变化，如果有变化就立刻抓取，没有变化则继续探测。默认不填或没配置此项就是不启动探测，
+     * 而默认值default表示探测整个页面变化，而填写内容格式支持Jsoup（针对html或xml）或者Jsonpath（针对json）文件。
+     */
+    private String fetchProbeSelector;
+    /**
+     * 非必填项。当配置了fetch.probe.selector此项属性才可用，用于监控页面变化探测频率，如果页面有变化就立刻抓取，没有变化则继续探测。
+     * 每两次http请求之间的间隔时间(单位：秒)
+     */
+    private String fetchProbeSleep;
+    /**
      * 当抓取模式fetch.mode为list_detail时为必填项，表示详情页面的url，其中可变的字符串要用大括号括起来。
      */
     private String fetchDetailSelector;
@@ -214,10 +224,26 @@ public class Seed {
      */
     public void setFetchUrl(String fetchUrl) {
         fetchUrl = HttpClientEngine.addUrlSchema(fetchUrl);
-        if (!PageMode.list_detail.equals(this.pageMode)) {
-            fetchUrl = fetchUrl.replace(Constants.FETCH_LIST_URL_VAR_LEFT, "").replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "");
-        }
+//        if (!PageMode.list_detail.equals(this.pageMode)) {
+//            fetchUrl = fetchUrl.replace(Constants.FETCH_LIST_URL_VAR_LEFT, "").replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "");
+//        }
         this.fetchUrl = fetchUrl;
+    }
+
+    public String getFetchProbeSleep() {
+        return fetchProbeSleep;
+    }
+
+    public void setFetchProbeSleep(String fetchProbeSleep) {
+        this.fetchProbeSleep = fetchProbeSleep;
+    }
+
+    public String getFetchProbeSelector() {
+        return fetchProbeSelector;
+    }
+
+    public void setFetchProbeSelector(String fetchProbeSelector) {
+        this.fetchProbeSelector = fetchProbeSelector;
     }
 
     public void setFetchSleep(Long fetchSleep) {

@@ -10,11 +10,20 @@ import com.bytegriffin.get4j.core.Page;
 public interface HttpEngine {
 
     /**
-     * 初始化探测器配置
+     * 初始化Http引擎配置
      *
      * @param seed seed
      */
     void init(Seed seed);
+
+    /**
+     * 探测最新的页面内容
+     *
+     * @param seedName String
+     * @param url      String
+     * @return ProbePage
+     */
+    String probePageContent(Page page);
 
     /**
      * 测试HttpProxy是否可运行，都不可用程序则退出

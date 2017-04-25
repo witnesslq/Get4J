@@ -1,4 +1,4 @@
-package com.bytegriffin.get4j;
+package com.bytegriffin.get4j.system;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -7,10 +7,8 @@ import org.bson.Document;
 
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.store.DBStorage;
-import com.bytegriffin.get4j.util.StringUtil;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -43,6 +41,7 @@ public class TestStore {
 
     public static void testMongoDB() {
         MongoClientURI mc = new MongoClientURI("mongodb://localhost:27017");
+        @SuppressWarnings("resource")
         MongoClient mongoClient = new MongoClient(mc);
         MongoDatabase database = mongoClient.getDatabase(database_name);
         MongoCursor<String> it = database.listCollectionNames().iterator();
@@ -67,12 +66,11 @@ public class TestStore {
         searchQuery.append("fetch_url", "ddddd");
 
         Document findOne = collection.find(searchQuery).first();
-//		if(findOne.isEmpty()){
-//			collection.insertOne(new Document().append("fetch_url", "newnewnew"));
-//		} else {
-//			
-//			
-//		}
+        if (findOne.isEmpty()) {
+            collection.insertOne(new Document().append("fetch_url", "newnewnew"));
+        } else {
+
+        }
 
         collection.updateOne(searchQuery, new Document().append("fetch_url", "aaaa"));
         System.out.println(collection.count());

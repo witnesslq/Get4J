@@ -1,17 +1,12 @@
 package com.bytegriffin.get4j.fetch;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Constants;
@@ -22,7 +17,6 @@ import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.bytegriffin.get4j.util.UrlQueue;
-import com.jayway.jsonpath.JsonPath;
 
 /**
  * List-Detail格式的页面抓取器<br>
@@ -31,10 +25,7 @@ public class ListDetailFetcher implements Process {
 
     private static final Logger logger = LogManager.getLogger(ListDetailFetcher.class);
     private HttpEngine http = null;
-    /**
-     * 存放list列表url key：seed_name value：该seed下所有的列表url
-     */
-    private Map<String, List<String>> listLink = new HashMap<>();
+
     /**
      * 存放详情页面链接与avatar资源的映射关系 key：detail_link value：avatar_link
      */
@@ -45,7 +36,7 @@ public class ListDetailFetcher implements Process {
         // 1.获取相应的http引擎
         http = Constants.HTTP_ENGINE_CACHE.get(seed.getSeedName());
 
-        // 2.初始化detail页面
+        // 2.初始化detail页面选择器
         String detailSelect = seed.getFetchDetailSelector();
         if (!StringUtil.isNullOrBlank(detailSelect)) {
             Constants.FETCH_DETAIL_SELECT_CACHE.put(seed.getSeedName(), detailSelect.replace(" ", ""));
@@ -53,64 +44,13 @@ public class ListDetailFetcher implements Process {
 
         // 3.初始化资源选择器缓存
         FetchResourceSelector.init(seed);
-
-        // 4.根据总页数来初始化列表url集合
-        String fetchUrl = seed.getFetchUrl();
-        String totalPages = seed.getFetchTotalPages();
-        if (!StringUtil.isNullOrBlank(totalPages) && !StringUtil.isNumeric(totalPages)) {
-            Page page = Constants.HTTP_ENGINE_CACHE.get(seed.getSeedName()).getPageContent(
-                    new Page(seed.getSeedName(), fetchUrl.replace(Constants.FETCH_LIST_URL_VAR_LEFT, "")
-                            .replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "")));
-            if (totalPages.contains(Constants.JSON_PATH_PREFIX)) {// json格式
-                int totalPage = JsonPath.read(page.getJsonContent(), totalPages);// Json会自动转换类型
-                totalPages = String.valueOf(totalPage);// 所以需要再次转换
-            } else {// html格式
-                Document doc = Jsoup.parse(page.getHtmlContent());
-                totalPages = doc.select(totalPages.trim()).text().trim();
-                if (StringUtil.isNullOrBlank(totalPages)) {
-                    totalPages = "1";
-                }
-            }
-        }
-
-        // 5.根据输入的列表Url生成当前页面的Url
-        generateListUrl(seed.getSeedName(), fetchUrl, Integer.valueOf(totalPages));
         logger.info("种子[" + seed.getSeedName() + "]的组件ListDetailFetcher的初始化完成。");
-    }
-
-    /**
-     * 根据输入的列表Url生成当前页面的Url<br>
-     * 生成规则就是将大括号中的值自增1，即表示下一个列表页<br>
-     * 例如：http://www.aaa.com/bbb?p={1} ==>
-     * http://www.aaa.com/bbb?p=1、...、http://www.aaa.com/bbb?p=10
-     *
-     * @param seedName   seedName
-     * @param listUrl    listUrl
-     * @param totalPages totalPages
-     */
-    private void generateListUrl(String seedName, String listUrl, int totalPages) {
-        Pattern p = Pattern
-                .compile("\\" + Constants.FETCH_LIST_URL_VAR_LEFT + "(.*)" + Constants.FETCH_LIST_URL_VAR_RIGHT);
-        Matcher m = p.matcher(listUrl);
-        if (m.find()) {
-            int pagenum = Integer.valueOf(m.group(1));
-            String prefix = listUrl.substring(0, listUrl.indexOf(Constants.FETCH_LIST_URL_VAR_LEFT));
-            String suffix = listUrl.substring(listUrl.indexOf(Constants.FETCH_LIST_URL_VAR_RIGHT) + 1);
-            List<String> list = new ArrayList<>();
-            for (int i = 0; i < totalPages; i++) {
-                int pn = pagenum + i;
-                UrlQueue.newUnVisitedLink(seedName, prefix + pn + suffix);
-                list.add(prefix + pn + suffix);
-                listLink.put(seedName, list);
-            }
-        }
-        logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + seedName + "]列表Url总数是[" + listLink.size() + "]个。");
     }
 
     @Override
     public void execute(Page page) {
 
-        List<String> listurls = listLink.get(page.getSeedName());
+        List<String> listurls = Constants.LIST_URLS_CACHE.get(page.getSeedName());
         if (listurls.contains(page.getUrl())) {// 访问的是list url
             // 1.获取并设置列表页Page的HtmlContent或JsonContent属性
             page = http.getPageContent(page);
@@ -152,7 +92,6 @@ public class ListDetailFetcher implements Process {
                 // 3.获取并设置详情页DetailPage的Resource属性
                 UrlAnalyzer.custom(detailPage).sniffAndSetResources();
             }
-
 
             // 4.设置详情页DetailPage其它属性
             detailPage.setFetchTime(DateUtil.getCurrentDate());

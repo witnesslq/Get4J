@@ -1,4 +1,4 @@
-package com.bytegriffin.get4j;
+package com.bytegriffin.get4j.system;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

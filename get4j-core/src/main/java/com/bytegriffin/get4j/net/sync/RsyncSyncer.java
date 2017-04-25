@@ -17,14 +17,14 @@ import java.util.List;
  */
 public class RsyncSyncer implements Syncer {
 
-	private static final Logger logger = LogManager.getLogger(RsyncSyncer.class);
-	private String host;
-	private String username;
-	// module或者dir模式，如果是module模式，需要服务器端配置module模块，它是同步根目录，
-	// 子目录名是seedname，密码需要在服务器端配置，如果是dir模式需要配置ssh-keygen无密码
-	private String dirOrModule;
-	private boolean isModule;
-	private HashSet<String> commands = new HashSet<>();
+    private static final Logger logger = LogManager.getLogger(RsyncSyncer.class);
+    private String host;
+    private String username;
+    // module或者dir模式，如果是module模式，需要服务器端配置module模块，它是同步根目录，
+    // 子目录名是seedname，密码需要在服务器端配置，如果是dir模式需要配置ssh-keygen无密码
+    private String dirOrModule;
+    private boolean isModule;
+    private HashSet<String> commands = new HashSet<>();
 
     public RsyncSyncer(String host, String username, String dirOrModule, boolean isModule) {
         this.host = host;
@@ -33,29 +33,29 @@ public class RsyncSyncer implements Syncer {
         this.isModule = isModule;
     }
 
-	public void setBatch(List<String> avatars) {
-		// 判断是否为Module，
-		String suffix = isModule ? ":" + dirOrModule : dirOrModule;		
-    	for(String resource : avatars){
-    		String localdir = resource.substring(resource.indexOf(BatchScheduler.split) + 1, resource.lastIndexOf(File.separator));
-    		String command = "rsync -az "+localdir+" "+username+"@"+host+":"+suffix;
-    		commands.add(command);
-    	}
+    public void setBatch(List<String> avatars) {
+        // 判断是否为Module，
+        String suffix = isModule ? ":" + dirOrModule : dirOrModule;
+        for (String resource : avatars) {
+            String localdir = resource.substring(resource.indexOf(BatchScheduler.split) + 1, resource.lastIndexOf(File.separator));
+            String command = "rsync -az " + localdir + " " + username + "@" + host + ":" + suffix;
+            commands.add(command);
+        }
 
-	}
+    }
 
-	@Override
-	public void sync() {
-		for(String command : commands){
-			ShellUtil.executeShell(command);
-			try {//如果不同的seed太多，可以减慢同步速度
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
+    @Override
+    public void sync() {
+        for (String command : commands) {
+            ShellUtil.executeShell(command);
+            try {//如果不同的seed太多，可以减慢同步速度
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
                 logger.error("Rsync同步资源时出错。", e);
-			}
-		}
-		
-	}
+            }
+        }
+
+    }
 
 
 }

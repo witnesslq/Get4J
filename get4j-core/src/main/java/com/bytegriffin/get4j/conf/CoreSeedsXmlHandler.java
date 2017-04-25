@@ -26,9 +26,9 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
         logger.info("正在读取xml配置文件[" + core_seeds_xml_file + "]......");
         Document doc = XmlHelper.loadXML(core_seeds_xml_file);
         Element seedNode = null;
-        try{
+        try {
             seedNode = doc.getRootElement();
-        }catch(NullPointerException e){
+        } catch (NullPointerException e) {
             logger.error("读取的xml配置文件[" + core_seeds_xml_file + "]内容为空。");
             System.exit(1);
         }
@@ -49,6 +49,10 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
                     }
                 } else if (name.equalsIgnoreCase(fetch_url)) {
                     seed.setFetchUrl(value);
+                } else if (name.equalsIgnoreCase(fetch_probe_selector)) {
+                    seed.setFetchProbeSelector(value);
+                } else if (name.equalsIgnoreCase(fetch_probe_sleep)) {
+                    seed.setFetchProbeSleep(value);
                 } else if (name.equalsIgnoreCase(fetch_detail_selector)) {
                     seed.setFetchDetailSelector(value);
                 } else if (name.equalsIgnoreCase(fetch_total_pages)) {

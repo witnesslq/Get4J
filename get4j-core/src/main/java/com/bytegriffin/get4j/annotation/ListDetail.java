@@ -16,6 +16,10 @@ public @interface ListDetail {
 
     String url();//没有default值必须要设置
 
+    String probeSelector() default "";
+
+    int probeSleep() default 60;
+
     String detailSelector() default "";
 
     String totolPages() default "1";

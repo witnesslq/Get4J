@@ -7,23 +7,24 @@ public class LockFreeQueue<V> {
 
 
     //the queue node  
+    @SuppressWarnings("hiding")
     private class Node<V> {
         public V value = null;
         public AtomicReference<Node<V>> next = null;
 
+        @SuppressWarnings({"rawtypes", "unchecked"})
         public Node(V value, Node next) {
             this.value = value;
             this.next = new AtomicReference<Node<V>>(next);
         }
     }
 
-    private AtomicReference<Node<V>> head = null;                                //queue head  
-    private AtomicReference<Node<V>> tail = null;                                //queue tail  
-    private AtomicInteger queueSize = new AtomicInteger(0);                      //size of the queue  
+    private AtomicReference<Node<V>> head = null;
+    private AtomicReference<Node<V>> tail = null;
+    private AtomicInteger queueSize = new AtomicInteger(0);
 
     public LockFreeQueue() {
-        Node<V> dummy = new Node<V>(null, null);                                  //init an dummy node
-
+        Node<V> dummy = new Node<V>(null, null); //init an dummy node
         //init head and tail,reference to  the same dummy node  
         head = new AtomicReference<Node<V>>(dummy);
         tail = new AtomicReference<Node<V>>(dummy);

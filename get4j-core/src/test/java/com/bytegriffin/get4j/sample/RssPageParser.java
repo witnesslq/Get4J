@@ -1,14 +1,8 @@
 package com.bytegriffin.get4j.sample;
 
-import java.net.URI;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-
 import com.bytegriffin.get4j.Spider;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;
-import com.bytegriffin.get4j.util.UrlQueue;
 
 public class RssPageParser implements PageParser {
 

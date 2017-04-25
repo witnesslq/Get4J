@@ -42,7 +42,7 @@ public class Spider {
     private static Spider me;
 
     private static Seed seed;
-    
+
     private static ResourceSync resourceSync;
 
     private Spider() {
@@ -63,7 +63,6 @@ public class Spider {
         seed.setSeedName(seedName);
         return this;
     }
-
 
     /**
      * 抓取的页面模型<br>
@@ -88,6 +87,32 @@ public class Spider {
      */
     public Spider fetchUrl(String fetchUrl) {
         seed.setFetchUrl(fetchUrl);
+        return this;
+    }
+
+    /**
+     * 设置页面变化探测器，用于探测抓取页面的变化，如果有变化就立刻抓取，没有变化则继续探测。
+     * 默认是探测整个页面是否发生改变。
+     *
+     * @return Spider
+     */
+    public Spider defaultProbe() {
+        seed.setFetchProbeSelector(Constants.default_config);
+        seed.setFetchProbeSleep(Constants.default_config);
+        return this;
+    }
+
+    /**
+     * 设置页面变化探测器，用于探测抓取页面的变化，如果有变化就立刻抓取，没有变化则继续探测。
+     * 此项值的格式支持Jsoup（针对html或xml）或者Jsonpath（针对json）文件
+     *
+     * @param selector     页面selector选择器
+     * @param sleepSeconds 监控频率，单位：秒
+     * @return Spider
+     */
+    public Spider probe(String selector, int sleepSeconds) {
+        seed.setFetchProbeSelector(selector);
+        seed.setFetchProbeSleep(sleepSeconds + "");
         return this;
     }
 
@@ -216,7 +241,7 @@ public class Spider {
      * 的格式为：链接前缀+jsonpath。如果需要抓取多种资源可以用逗号","隔开，默认不填是全抓取。<br>
      * 注意：当启用list_detail模式时，资源特指的是avatar资源，即：与Detail_Link一一对应的资源，<br>
      * 此项必须配置为包含detail_link与avatar的定位符；当启用非list_detail模式时，可抓取多种资源，每个选择器中间用逗号隔开。
-     * 
+     *
      * @param resourceSelector Jsoup选择器支持的字符串
      * @return Spider
      */
@@ -313,6 +338,7 @@ public class Spider {
     /**
      * 下载本地根路径，默认地址为$path/data/download/
      * 子目录是${seedName}，用来表示每个seed对应不同的下载子目录
+     *
      * @param disk 磁盘路径
      * @return Spider
      */
@@ -391,7 +417,8 @@ public class Spider {
 
     /**
      * 将解析结果进行Lucene索引并且保存
-     *子目录是${seedName}，用来表示每个seed对应不同的下载子目录
+     * 子目录是${seedName}，用来表示每个seed对应不同的下载子目录
+     *
      * @param indexPath Lucene索引存储的磁盘根路径
      * @return Spider
      */
@@ -402,7 +429,7 @@ public class Spider {
 
     /**
      * 将解析结果索引保存到本系统/data/index目录下
-     * 
+     *
      * @return Spider
      */
     public Spider defaultLucene() {
@@ -420,85 +447,88 @@ public class Spider {
         seed.setStoreLuceneIndex(address);
         return this;
     }
-    
+
 
     /**
      * 设置ftp为资源同步方式
-     * @param host 服务器地址
-     * @param port 端口号，默认为21
+     *
+     * @param host     服务器地址
+     * @param port     端口号，默认为21
      * @param username 用户名（可以为空）
      * @param password 密码（可以为空）
      * @return Spider
      */
-    public Spider ftp(String host,int port, String username, String password) {
-    	Map<String,String> ftp = new HashMap<>();
-    	ftp.put(AbstractConfig.host_node, host);
-    	ftp.put(AbstractConfig.port_node, String.valueOf(port));
-    	ftp.put(AbstractConfig.username_node, username);
-    	ftp.put(AbstractConfig.password_node, password);
-    	resourceSync.setFtp(ftp);
-    	Map<String,String> sync = new HashMap<>();
-    	sync.put(AbstractConfig.open_node, "true");
-    	sync.put(AbstractConfig.batch_count_node, "10");
-    	sync.put(AbstractConfig.batch_time_node, "10");
-    	sync.put(AbstractConfig.protocal_node, AbstractConfig.ftp_node);
-    	resourceSync.setSync(sync);	
+    public Spider ftp(String host, int port, String username, String password) {
+        Map<String, String> ftp = new HashMap<>();
+        ftp.put(AbstractConfig.host_node, host);
+        ftp.put(AbstractConfig.port_node, String.valueOf(port));
+        ftp.put(AbstractConfig.username_node, username);
+        ftp.put(AbstractConfig.password_node, password);
+        resourceSync.setFtp(ftp);
+        Map<String, String> sync = new HashMap<>();
+        sync.put(AbstractConfig.open_node, "true");
+        sync.put(AbstractConfig.batch_count_node, Constants.SYNC_BATCH_COUNT + "");
+        sync.put(AbstractConfig.batch_time_node, Constants.SYNC_BATCH_TIME + "");
+        sync.put(AbstractConfig.protocal_node, AbstractConfig.ftp_node);
+        resourceSync.setSync(sync);
         return this;
     }
-    
+
     /**
      * 设置rsync为资源同步方式 <br>
      * 注意：暂时不支持windows
-     * @param host 服务器地址
-     * @param username 用户名
-     * @param isModule 是否为module模式，是为true，不是则代表远程目录为false
+     *
+     * @param host        服务器地址
+     * @param username    用户名
+     * @param isModule    是否为module模式，是为true，不是则代表远程目录为false
      * @param moduleOrDir module模式或者远程dir目录，如果是module模式，密码需
-     * 要在服务器端配置；如果是远程dir，需要ssh-keygen配置无密码登陆
+     *                    要在服务器端配置；如果是远程dir，需要ssh-keygen配置无密码登陆
      * @return Spider
      */
-    public Spider rsync(String host,String username, boolean isModule, String moduleOrDir) {
-    	Map<String,String> rsync = new HashMap<>();
-    	rsync.put(AbstractConfig.host_node, host);
-    	rsync.put(AbstractConfig.username_node, username);
-    	if(isModule){
-    		rsync.put(AbstractConfig.module_node, moduleOrDir);
-    	} else {
-    		rsync.put(AbstractConfig.dir_node, moduleOrDir);
-    	}
-    	resourceSync.setRsync(rsync);
-    	Map<String,String> sync = new HashMap<>();
-    	sync.put(AbstractConfig.open_node, "true");
-    	sync.put(AbstractConfig.batch_count_node, "10");
-    	sync.put(AbstractConfig.batch_time_node, "10");
-    	sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
-    	resourceSync.setSync(sync);	
-    	return this;
+    public Spider rsync(String host, String username, boolean isModule, String moduleOrDir) {
+        Map<String, String> rsync = new HashMap<>();
+        rsync.put(AbstractConfig.host_node, host);
+        rsync.put(AbstractConfig.username_node, username);
+        if (isModule) {
+            rsync.put(AbstractConfig.module_node, moduleOrDir);
+        } else {
+            rsync.put(AbstractConfig.dir_node, moduleOrDir);
+        }
+        resourceSync.setRsync(rsync);
+        Map<String, String> sync = new HashMap<>();
+        sync.put(AbstractConfig.open_node, "true");
+        sync.put(AbstractConfig.batch_count_node, Constants.SYNC_BATCH_COUNT + "");
+        sync.put(AbstractConfig.batch_time_node, Constants.SYNC_BATCH_TIME + "");
+        sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
+        resourceSync.setSync(sync);
+        return this;
     }
-    
+
     /**
      * 设置scp为资源同步方式 <br>
      * 需要ssh-keygen配置无密码登陆
-     * @param host 服务器地址
+     *
+     * @param host     服务器地址
      * @param username 登陆的用户名
-     * @param dir 服务器端目录
-     * @param port scp端口号，默认为22
+     * @param dir      服务器端目录
+     * @param port     scp端口号，默认为22
      * @return Spider
      */
-    public Spider scp(String host,String username, String dir, Integer port) {
-    	Map<String,String> scp = new HashMap<>();
-    	scp.put(AbstractConfig.host_node, host);
-    	scp.put(AbstractConfig.username_node, username);
-    	scp.put(AbstractConfig.dir_node, dir);
-    	port = port == null ? 22 : port;
-    	scp.put(AbstractConfig.port_node, String.valueOf(port));
-    	resourceSync.setScp(scp);
-    	Map<String,String> sync = new HashMap<>();
-    	sync.put(AbstractConfig.open_node, "true");
-    	sync.put(AbstractConfig.batch_count_node, "10");
-    	sync.put(AbstractConfig.batch_time_node, "10");
-    	sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
-    	resourceSync.setSync(sync);	
-    	return this;
+    public Spider scp(String host, String username, String dir, Integer port) {
+        Map<String, String> scp = new HashMap<>();
+        scp.put(AbstractConfig.host_node, host);
+        scp.put(AbstractConfig.username_node, username);
+        scp.put(AbstractConfig.dir_node, dir);
+        port = port == null ? 22 : port;
+        scp.put(AbstractConfig.port_node, String.valueOf(port));
+        resourceSync.setScp(scp);
+        Map<String, String> sync = new HashMap<>();
+        sync.put(AbstractConfig.open_node, "true");
+        sync.put(AbstractConfig.batch_count_node, Constants.SYNC_BATCH_COUNT + "");
+        sync.put(AbstractConfig.batch_time_node, Constants.SYNC_BATCH_TIME + "");
+        sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
+        resourceSync.setSync(sync);
+        return this;
     }
 
 
@@ -531,14 +561,15 @@ public class Spider {
             logger.error("类[" + clazz.getName() + "]没有配置任何Annotation。");
             System.exit(1);
         }
-        for(Annotation an : ans){
-        	String type = an.annotationType().getSimpleName();
+        for (Annotation an : ans) {
+            String type = an.annotationType().getSimpleName();
             if ("ListDetail".equalsIgnoreCase(type)) {
                 boolean anno = clazz.isAnnotationPresent(ListDetail.class);
                 if (anno) {
                     ListDetail seed = (ListDetail) clazz.getAnnotation(ListDetail.class);
                     this.pageMode(PageMode.list_detail);
                     this.fetchUrl(seed.url());
+                    this.probe(seed.probeSelector(), seed.probeSleep());
                     this.detailSelector(seed.detailSelector());
                     this.totalPages(seed.totolPages());
                     this.thread(seed.thread());
@@ -564,6 +595,7 @@ public class Spider {
                     Site seed = (Site) clazz.getAnnotation(Site.class);
                     this.pageMode(PageMode.site);
                     this.fetchUrl(seed.url());
+                    this.probe(seed.probeSelector(), seed.probeSleep());
                     this.thread(seed.thread());
                     this.timer(seed.startTime(), seed.interval());
                     this.sleep(seed.sleep());
@@ -588,6 +620,7 @@ public class Spider {
                     Single seed = (Single) clazz.getAnnotation(Single.class);
                     this.pageMode(PageMode.single);
                     this.fetchUrl(seed.url());
+                    this.probe(seed.probeSelector(), seed.probeSleep());
                     this.thread(seed.thread());
                     this.timer(seed.startTime(), seed.interval());
                     this.sleep(seed.sleep());
@@ -606,11 +639,12 @@ public class Spider {
                     this.hbase(seed.hbase());
                 }
             } else if ("Cascade".equalsIgnoreCase(type)) {
-                boolean anno = clazz.isAnnotationPresent(Site.class);
+                boolean anno = clazz.isAnnotationPresent(Cascade.class);
                 if (anno) {//有两个Seed类，一个是annotation，一个是实体类
-                    Cascade seed = (Cascade) clazz.getAnnotation(Site.class);
+                    Cascade seed = (Cascade) clazz.getAnnotation(Cascade.class);
                     this.pageMode(PageMode.cascade);
                     this.fetchUrl(seed.url());
+                    this.probe(seed.probeSelector(), seed.probeSleep());
                     this.thread(seed.thread());
                     this.timer(seed.startTime(), seed.interval());
                     this.sleep(seed.sleep());
@@ -628,22 +662,22 @@ public class Spider {
                     this.lucene(seed.lucene());
                     this.hbase(seed.hbase());
                 }
-            }  else if ("Sync".equalsIgnoreCase(type)) {
-            	boolean anno = clazz.isAnnotationPresent(Sync.class);
-            	if(anno){
-            		Sync sync = (Sync) clazz.getAnnotation(Sync.class);
-            		if(AbstractConfig.ftp_node.equals(sync.protocal())){
-            			this.ftp(sync.host(), sync.port(), sync.username(), sync.password());
-            		} else if(AbstractConfig.rsync_node.equals(sync.protocal())){
-            			this.rsync(sync.host(), sync.username(), sync.isModule(), sync.module());
-            		} else if(AbstractConfig.scp_node.equals(sync.protocal())){
-            			this.scp(sync.host(), sync.username(), sync.dir(), sync.port());
-            		}
-            	}
-            	
+            } else if ("Sync".equalsIgnoreCase(type)) {
+                boolean anno = clazz.isAnnotationPresent(Sync.class);
+                if (anno) {
+                    Sync sync = (Sync) clazz.getAnnotation(Sync.class);
+                    if (AbstractConfig.ftp_node.equals(sync.protocal())) {
+                        this.ftp(sync.host(), sync.port(), sync.username(), sync.password());
+                    } else if (AbstractConfig.rsync_node.equals(sync.protocal())) {
+                        this.rsync(sync.host(), sync.username(), sync.isModule(), sync.module());
+                    } else if (AbstractConfig.scp_node.equals(sync.protocal())) {
+                        this.scp(sync.host(), sync.username(), sync.dir(), sync.port());
+                    }
+                }
+
             }
         }
-        
+
         this.parser(clazz);
         return this;
     }

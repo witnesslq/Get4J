@@ -24,7 +24,7 @@ public class MD5Util {
         return chars[d1] + chars[d2];
     }
 
-    private static String byteArrayToHexString(byte[] bytes) {
+    private static String byteArrayToSubHexString(byte[] bytes) {
         StringBuilder resultSb = new StringBuilder();
         for (byte b : bytes) {
             resultSb.append(byteToHexString(b));
@@ -35,21 +35,22 @@ public class MD5Util {
     /**
      * 8位短uuid
      * 只要salt一样，那么每次生成的值也一样
-     * @param salt  一般值为fetchUrl
+     *
+     * @param salt 一般值为fetchUrl
      * @return String
      */
     public synchronized static String generateSeedName(String salt) {
-    	// 为了保证list-detail模式下输入不同页数也生成同一个seedName，所以需要对url进行截断
-    	if(salt.contains(Constants.FETCH_LIST_URL_VAR_LEFT) && salt.contains(Constants.FETCH_LIST_URL_VAR_RIGHT)){
-    		salt = salt.substring(0, salt.lastIndexOf(Constants.FETCH_LIST_URL_VAR_LEFT));
-    	}
+        // 为了保证list-detail模式下输入不同页数也生成同一个seedName，所以需要对url进行截断
+        if (salt.contains(Constants.FETCH_LIST_URL_VAR_LEFT) && salt.contains(Constants.FETCH_LIST_URL_VAR_RIGHT)) {
+            salt = salt.substring(0, salt.lastIndexOf(Constants.FETCH_LIST_URL_VAR_LEFT));
+        }
         java.security.MessageDigest md;
         String pwd = null;
         try {
             md = MessageDigest.getInstance("MD5");
             byte[] b = salt.getBytes("UTF-8");
             byte[] hash = md.digest(b);
-            pwd = byteArrayToHexString(hash);
+            pwd = byteArrayToSubHexString(hash);
         } catch (Exception e) {
         }
 
@@ -59,6 +60,7 @@ public class MD5Util {
     /**
      * 8位短uuid
      * 每次生成的值不一样
+     *
      * @return String
      */
     public synchronized static String generateSeedName() {
@@ -72,10 +74,44 @@ public class MD5Util {
         return sb.toString();
     }
 
-
+    /**
+     * 用于生成数据库主键
+     *
+     * @return String
+     */
     public synchronized static String uuid() {
         return UUID.randomUUID().toString();
     }
 
+    private static String byteArrayToHexString(byte[] bytes) {
+        StringBuilder resultSb = new StringBuilder();
+        for (byte b : bytes) {
+            resultSb.append(byteToHexString(b));
+        }
+        return resultSb.toString();
+    }
+
+    /**
+     * 将普通页面内容转换成MD5，以便持久化
+     *
+     * @param salt String
+     * @return
+     */
+    public synchronized static String convert(String salt) {
+        if (StringUtil.isNullOrBlank(salt)) {
+            return null;
+        }
+        java.security.MessageDigest md;
+        String pwd = null;
+        try {
+            md = MessageDigest.getInstance("MD5");
+            byte[] b = salt.getBytes("UTF-8");
+            byte[] hash = md.digest(b);
+            pwd = byteArrayToHexString(hash);
+        } catch (Exception e) {
+        }
+
+        return pwd;
+    }
 
 }

@@ -43,16 +43,16 @@ public class DiskDownloader implements Process {
             staticServer = diskpath.endsWith("/") ? diskpath : diskpath + "/";// 静态资源服务器地址
             folderName = FileUtil.makeDiskDir(defaultAvatarPath);// 获取默认的服务器磁盘地址
         } else {
-        	if(Constants.default_config.equalsIgnoreCase(diskpath)){
-        		diskpath = Constants.getDownloadDisk(seed.getSeedName());
-        	} else if(diskpath.contains(File.separator) || diskpath.contains(":")){
-        		if(!diskpath.contains(seed.getSeedName())){
-        			diskpath = diskpath + File.separator + seed.getSeedName();
-        		}
-        	} else {
-        		logger.error("下载文件夹["+diskpath+"]配置出错，请重新检查。");
-        		System.exit(1);
-        	}
+            if (Constants.default_config.equalsIgnoreCase(diskpath)) {
+                diskpath = Constants.getDownloadDisk(seed.getSeedName());
+            } else if (diskpath.contains(File.separator) || diskpath.contains(":")) {
+                if (!diskpath.contains(seed.getSeedName())) {
+                    diskpath = diskpath + File.separator + seed.getSeedName();
+                }
+            } else {
+                logger.error("下载文件夹[" + diskpath + "]配置出错，请重新检查。");
+                System.exit(1);
+            }
             folderName = FileUtil.makeDiskDir(diskpath);// 获取用户配置的磁盘地址
         }
         Constants.DOWNLOAD_DIR_CACHE.put(seed.getSeedName(), folderName);
@@ -75,11 +75,11 @@ public class DiskDownloader implements Process {
             HttpClientEngine.downloadAvatar(page);// 下载avatar资源
             // 另开一个线程专门负责启用脚本同步avatar资源文件
             if (Constants.SYNC_OPEN) {
-            	BatchScheduler.addResource(page.getSeedName(), page.getAvatar());
+                BatchScheduler.addResource(page.getSeedName(), page.getAvatar());
             }
             String avatar = page.getAvatar();
-            if(!StringUtil.isNullOrBlank(staticServer)){
-                avatar = avatar.replace(defaultAvatarPath, staticServer + page.getSeedName() +"/");
+            if (!StringUtil.isNullOrBlank(staticServer)) {
+                avatar = avatar.replace(defaultAvatarPath, staticServer + page.getSeedName() + "/");
             }
             page.setAvatar(avatar);// 将本地avatar资源文件的路径修改为静态服务器地址
         }

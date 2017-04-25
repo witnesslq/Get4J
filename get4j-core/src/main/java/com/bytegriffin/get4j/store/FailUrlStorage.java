@@ -21,7 +21,7 @@ public final class FailUrlStorage {
     private static File failUrlFile = null;
 
     public static void init() {
-        failUrlFile = FileUtil.makeDumpDir(Constants.dump_folder, filename);
+        failUrlFile = FileUtil.makeFile(Constants.dump_folder, filename);
         logger.info("爬虫系统的坏链文件的初始化完成。");
     }
 

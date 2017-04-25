@@ -106,8 +106,8 @@ public class MongodbStorage implements Process {
     /**
      * 获取数据库中的page对象，需要去和新抓取的page对象对比
      *
-     * @param page    Page
-     * @param doc Document
+     * @param page Page
+     * @param doc  Document
      * @return Page
      */
     private Page getDatabasePage(Page page, Document doc) {

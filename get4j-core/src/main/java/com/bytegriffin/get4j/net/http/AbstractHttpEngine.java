@@ -203,7 +203,7 @@ public abstract class AbstractHttpEngine {
      * @param contentType contentType
      * @return boolean
      */
-    static boolean isJsonFile(String contentType) {
+    static boolean isJsonPage(String contentType) {
         return (contentType.contains("json") || contentType.contains("JSON") || contentType.contains("Json"));
     }
 
@@ -213,7 +213,7 @@ public abstract class AbstractHttpEngine {
      * @param contentType contentType
      * @return boolean
      */
-    static boolean isPage(String contentType) {
+    static boolean isHtmlPage(String contentType) {
         return (contentType.contains("text/html") || contentType.contains("text/plain"));
     }
 
@@ -225,7 +225,7 @@ public abstract class AbstractHttpEngine {
      * @param content     content
      * @return boolean
      */
-    static boolean isXmlFile(String contentType, String content) {
+    static boolean isXmlPage(String contentType, String content) {
         return (contentType.contains("xml") || content.contains("<?xml") ||
                 content.contains("<rss") || content.contains("<feed"));
     }
@@ -264,12 +264,12 @@ public abstract class AbstractHttpEngine {
         if (contentType.contains("charset=")) {// 如果Response的Header中有 Content-Type:text/html; charset=utf-8直接获取
             charset = contentType.split("charset=")[1];
         } else {// 但是有时Response的Header中只有 Content-Type:text/html;没有charset
-            if (isXmlFile(contentType, content)) { // 首先判断是不是xml文件
+            if (isXmlPage(contentType, content)) { // 首先判断是不是xml文件
                 Document doc = Jsoup.parse(content, "", Parser.xmlParser());
                 Node root = doc.root();
                 Node node = root.childNode(0);
                 charset = node.attr("encoding");
-            } else if (isPage(contentType)) {// 如果是html，可以用jsoup解析html页面上的meta元素
+            } else if (isHtmlPage(contentType)) {// 如果是html，可以用jsoup解析html页面上的meta元素
                 Document doc = Jsoup.parse(content);
                 Elements eles1 = doc.select("meta[http-equiv=Content-Type]");
                 Elements eles2 = doc.select("meta[charset]");
@@ -281,7 +281,7 @@ public abstract class AbstractHttpEngine {
                 } else {// 如果html页面内也没有含Content-Type的meta标签，那就默认为utf-8
                     charset = Charset.defaultCharset().name();
                 }
-            } else if (isJsonFile(contentType)) { // 如果是json，那么给他设置默认编码
+            } else if (isJsonPage(contentType)) { // 如果是json，那么给他设置默认编码
                 charset = Charset.defaultCharset().name();
             }
         }
@@ -296,20 +296,20 @@ public abstract class AbstractHttpEngine {
      * @param page        page
      */
     void setContent(String contentType, String content, Page page) {
-        if (isPage(contentType)) {
+        if (isHtmlPage(contentType)) {
             // 注意：有两种特殊情况
             // 1.有时text/plain这种文本格式里面放的是json字符串，并且是这个json字符串里的属性值却是html
             // 2.有时text/html反应出来的是rss的xml格式
-            if (isXmlFile(contentType, content)) {
+            if (isXmlPage(contentType, content)) {
                 page.setXmlContent(content);
             } else {
                 page.setHtmlContent(content);
             }
             // json文件中一般不好嗅探titile属性
             page.setTitle(UrlAnalyzer.getTitle(content));
-        } else if (isJsonFile(contentType)) {
+        } else if (isJsonPage(contentType)) {
             page.setJsonContent(content);
-        } else if (isXmlFile(contentType, content)) {
+        } else if (isXmlPage(contentType, content)) {
             page.setXmlContent(content);
             // json文件中一般不好嗅探titile属性
             page.setTitle(UrlAnalyzer.getTitle(content));

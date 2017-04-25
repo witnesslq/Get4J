@@ -2,6 +2,7 @@ package com.bytegriffin.get4j.core;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -11,6 +12,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.bson.Document;
 
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
+import com.bytegriffin.get4j.probe.PageChangeProber;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.HttpProxySelector;
 import com.bytegriffin.get4j.net.http.SleepRandomSelector;
@@ -25,10 +27,10 @@ import com.mongodb.client.MongoCollection;
  */
 public final class Constants {
 
-	/**
-	 * 默认配置：比如下载目录为default时指的是/data/download/${seedname}目录下
-	 */
-	public final static String default_config = "default";
+    /**
+     * 默认配置：比如下载目录为default时指的是/data/download/${seedname}目录下
+     */
+    public final static String default_config = "default";
     /**
      * 爬虫 user agent 配置文件
      */
@@ -41,6 +43,14 @@ public final class Constants {
      * 爬虫dump文件存储位置
      */
     public static final String dump_folder = System.getProperty("user.dir") + File.separator + "data" + File.separator + "dump" + File.separator;
+    /**
+     * 爬虫页面变化探测器文件夹位置
+     */
+    public static final String probe_folder = System.getProperty("user.dir") + File.separator + "data" + File.separator + "probe" + File.separator;
+    /**
+     * 监控页面变化频率
+     */
+    public static final int default_probe_sleep = 30;
 
     /**
      * 获取相应种子的下载地址
@@ -51,15 +61,21 @@ public final class Constants {
     public static String getDownloadDisk(String seedName) {
         return System.getProperty("user.dir") + File.separator + "data" + File.separator + "download" + File.separator + seedName;
     }
-    
+
     /**
      * 获取相应种子的lucene index地址
-     * @param seedName  String
+     *
+     * @param seedName String
      * @return String
      */
     public static String getLuceneIndexPath(String seedName) {
         return System.getProperty("user.dir") + File.separator + "data" + File.separator + "index" + File.separator + seedName;
     }
+
+    /**
+     * 当PageMode存放list列表url key：seed_name value：该seed下所有的列表url
+     */
+    public static Map<String, List<String>> LIST_URLS_CACHE = new HashMap<>();
 
     /**
      * 全局chain工作流缓存 key:seed_name value: site
@@ -82,6 +98,11 @@ public final class Constants {
     public static final Map<String, Long> FETCH_SLEEP_CACHE = new HashMap<>();
 
     /**
+     * 抓取页面变化探测器缓存 key:seed_name value: PageChangeProber
+     */
+    public static final Map<String, PageChangeProber> FETCH_PROBE_CACHE = new HashMap<>();
+
+    /**
      * 全局sleep_selector缓存 key:seed_name value: SleepRangeSelector
      */
     public static final Map<String, SleepRandomSelector> FETCH_SLEEP_RANGE_CACHE = new HashMap<>();
@@ -100,7 +121,7 @@ public final class Constants {
      * 全局lucene index dir缓存 key:seed_name value: lucene index dir
      */
     public static final Map<String, String> LUCENE_INDEX_DIR_CACHE = new HashMap<>();
-    
+
     /**
      * 全局PageMode缓存 key:seed_name value: PageMode
      */
@@ -183,7 +204,7 @@ public final class Constants {
      * key : seedName value: MongoCollection
      */
     public static HashMap<String, MongoCollection<Document>> MONGO_COLLECTION_CACHE = new HashMap<>();
-    
+
     /**
      * key : seedName value: IndexWriter
      */
@@ -195,7 +216,7 @@ public final class Constants {
     public static final Map<String, WebClient> WEBCLIENT_CACHE = new HashMap<>();
 
     /**
-     * 全局Http探针缓存 key:seed_name value: HttpProbe
+     * 全局Http探针缓存 key:seed_name value: HttpEngine
      */
     public static final Map<String, HttpEngine> HTTP_ENGINE_CACHE = new HashMap<>();
 
@@ -203,20 +224,20 @@ public final class Constants {
      * 是否开启资源同步
      */
     public static boolean SYNC_OPEN;
-    
+
     /**
      * 全局资源同步器
      */
     static Syncer RESOURCE_SYNCHRONIZER;
-    
+
     /**
      * 每次同步的最大值
      */
-    public static int SYNC_PER_MAX_COUNT;
+    public static int SYNC_BATCH_COUNT = 10;
 
     /**
      * 每次同步的最大时间间隔，单位是秒
      */
-    public static int SYNC_PER_MAX_INTERVAL;
+    public static int SYNC_BATCH_TIME = 10;
 
 }

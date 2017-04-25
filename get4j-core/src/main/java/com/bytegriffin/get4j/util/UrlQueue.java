@@ -42,27 +42,6 @@ public final class UrlQueue {
     }
 
     /**
-     * 追加未访问的resources队列<br/>
-     * 首先判断新抓取的resource是否在已访问的队列中，<br/>
-     * 然后判断是否在未抓取的队列中<br/>
-     * 如果都不在的话则将其加进未访问的队列中<br/>
-     *
-     * @param seedName  String
-     * @param resources HashSet<String>
-     */
-    public static void addUnVisitedResources(String seedName, HashSet<String> resources) {
-        if (resources == null || resources.size() == 0) {
-            return;
-        }
-        for (String resource : resources) {
-            ConcurrentQueue<String> constr = getVisitedResource(seedName);
-            if (constr == null || !constr.contains(resource)) {
-                newUnVisitedResource(seedName, resource);
-            }
-        }
-    }
-
-    /**
      * 追加已访问的links队列<br/>
      * 首先判断新抓取的link是否在已访问的队列中，<br/>
      * 然后判断是否在未抓取的队列中<br/>
@@ -79,27 +58,6 @@ public final class UrlQueue {
             ConcurrentQueue<String> constr = getVisitedLink(seedName);
             if (constr == null || !constr.contains(link)) {
                 newVisitedLink(seedName, link);
-            }
-        }
-    }
-
-    /**
-     * 追加已访问的resources队列<br/>
-     * 首先判断新抓取的resource是否在已访问的队列中，<br/>
-     * 然后判断是否在未抓取的队列中<br/>
-     * 如果都不在的话则将其加进未访问的队列中<br/>
-     *
-     * @param seedName  String
-     * @param resources HashSet<String>
-     */
-    public static void addVisitedResources(String seedName, HashSet<String> resources) {
-        if (resources == null || resources.size() == 0) {
-            return;
-        }
-        for (String resource : resources) {
-            ConcurrentQueue<String> constr = getVisitedResource(seedName);
-            if (constr == null || !constr.contains(resource)) {
-                newVisitedResource(seedName, resource);
             }
         }
     }

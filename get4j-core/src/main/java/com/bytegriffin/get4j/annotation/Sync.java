@@ -11,23 +11,23 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Sync {
 
-	String protocal() default "rsync";
-	
-	int perMaxCount() default 10;
-	
-	int perMaxInterval() default 10;
+    String protocal() default "rsync";
 
-	String host();//没有default值必须要设置
-	
-	int port() default 21;
-	
-	String username() default "";
-	
-	String password() default "";
-	
-	String dir() default "";
-	
-	String module() default "";
-	
-	boolean isModule() default true;
+    int batchCount() default 10;
+
+    int batchTime() default 10;
+
+    String host();//没有default值必须要设置
+
+    int port() default 21;
+
+    String username() default "";
+
+    String password() default "";
+
+    String dir() default "";
+
+    String module() default "";
+
+    boolean isModule() default true;
 }

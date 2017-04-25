@@ -1,4 +1,6 @@
-package com.bytegriffin.get4j;
+package com.bytegriffin.get4j.system;
+
+import com.bytegriffin.get4j.Spider;
 
 public class TestBigFileDownload {
 

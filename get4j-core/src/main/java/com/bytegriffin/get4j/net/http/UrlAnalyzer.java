@@ -32,6 +32,8 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.bytegriffin.get4j.util.UrlQueue;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 
 /**
  * Url分析器：负责解析页面所有的url
@@ -72,16 +74,46 @@ public final class UrlAnalyzer {
     }
 
     /**
+     * 格式化list_detail模式下的url
+     * 将http://www.aa.com/list?page={1} ==> http://www.aa.com/list?page=1
+     *
+     * @param fetchUrl
+     * @return
+     */
+    public static String formatListDetailUrl(String fetchUrl) {
+        return fetchUrl.replace(Constants.FETCH_LIST_URL_VAR_LEFT, "")
+                .replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "").trim();
+    }
+
+    /**
      * 获取html中指定的元素
      *
      * @param page   page
      * @param select select
      * @return String
      */
-    public static String select(Page page, String select) {
-        Document document = Jsoup.parse(page.getHtmlContent(), page.getUrl());
-        Elements eles = document.select(select);
-        return eles.text();
+    public static String selectContent(Page page, String select) {
+        String content = null;
+        if (page.isHtmlContent()) {
+            Document document = Jsoup.parse(page.getHtmlContent(), page.getUrl());
+            Elements eles = document.select(select);
+            content = eles.toString();
+            page.setHtmlContent(eles.text());
+        } else if (page.isJsonContent()) {
+            try {
+                String text = JsonPath.read(page.getJsonContent(), select);
+                page.setJsonContent(text);
+                content = text;
+            } catch (PathNotFoundException p) {
+                logger.error("种子[" + page.getSeedName() + "]在使用Jsonpath[" + select + "]定位解析Json字符串时出错，", p);
+            }
+        } else if (page.isXmlContent()) {
+            Document document = Jsoup.parse(page.getXmlContent(), "", Parser.xmlParser());
+            Elements eles = document.select(select);
+            content = eles.toString();
+            page.setXmlContent(eles.text());
+        }
+        return content;
     }
 
     /**

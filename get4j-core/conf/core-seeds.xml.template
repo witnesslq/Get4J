@@ -3,10 +3,10 @@
 <seeds>
 
     <seed>
-        <name>seed1</name>
+        <name>seed123</name>
         <description>
-            必填项。表示要抓取Seed的实例名称，如果需求是抓取多个Seed：seed1、seed2，那么seed之间的xml定义有先后关系，
-            先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
+             必填项。表示要抓取Seed的实例名称，如果需求是抓取多个Seed：seed1、seed2，那么seed之间的xml定义有先后关系，
+             先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
         </description>
         <property>
             <name>worker.thread.number</name>
@@ -15,7 +15,7 @@
         </property>
         <property>
             <name>fetch.page.mode</name>
-            <value>site</value>
+            <value>list_detail</value>
             <description>
                 必填项。抓取的页面模型：list_detail（列表-详情页面）、single（单个页面)、cascade（单个页面中给出所有的url链接）、
                 site（单个站点，不包含外链）默认值是single。不同的页面模型会导致爬虫启动的抓取器不同
@@ -30,10 +30,27 @@
             </description>
         </property>
         <property>
+            <name>fetch.probe.selector</name>
+            <value></value>
+            <description>
+                   非必填项。页面变化探测器，用于探测抓取页面的变化，如果有变化就立刻抓取，没有变化则继续探测。此项值的格式支持Jsoup（针对html或xml）
+                   或者Jsonpath（针对json）。默认不填或没配置此项就表示不启动探测功能，而默认值default表示探测整个页面变化，一般不推荐使用default，因为
+                   有的动态页面每次刷新页面中都可能包含一个不同的随机字符串，计算没有更新内容，但是比对也会出现不同的结果。
+            </description>
+        </property>
+        <property>
+            <name>fetch.probe.sleep</name>
+            <value>default</value>
+            <description>
+                 非必填项。当配置了fetch.probe.selector此项属性才可用，用于监控页面变化探测频率，如果页面有变化就立刻抓取，没有变化则继续探测。
+                 每两次http请求之间的间隔时间(单位：秒)，默认值default表示每隔30秒去探测一次页面
+            </description>
+        </property>
+        <property>
             <name>fetch.detail.selector</name>
             <value></value>
             <description>
-                非必填项，详情页面链接选择器，当抓取模式fetch.mode设置为list_detail时使用，支持Jsoup原生的选择器（html内容）或jsonpath（json内容）。
+                非必填项，详情页面链接选择器，当抓取模式fetch.mode设置为list_detail时使用，支持Jsoup原生的选择器（html或xml内容）或jsonpath（json内容）。
                 当此内容为JsonPath字符串的时候，如果list页面的json中提供的detail的链接是相对路径，那么此时这个值的格式为：链接前缀+jsonpath，
                 例如：http://www.aaa.com/bbb$.data.url；当此属性为空时，说明抓取的页面只包含列表页面，不存在详情页面。注意：如果Json属性中包含的是Html，
                 并且Html里包含着DetailLink的时候，这时候需要先写Jsonpath再写Jsoup选择器字符串，中间用竖杠隔开，例如： $.data.*|a.class[href]
@@ -41,9 +58,9 @@
         </property>
         <property>
             <name>fetch.total.pages</name>
-            <value>4</value>
+            <value>1</value>
             <description>
-                非必填项，总页数，当抓取模式fetch.mode设置为list_detail时使用，表示列表总页数，一般写整数，当然也可以是由Jsoup支持的选择器（html内容）
+                非必填项，总页数，当抓取模式fetch.mode设置为list_detail时使用，表示列表总页数，一般写整数，当然也可以是由Jsoup支持的选择器（html或xml内容）
                 或jsonpath（json内容）的字符串，这样会更加动态性，默认值是1。
             </description>
         </property>
@@ -52,25 +69,10 @@
             <value></value>
             <description>
                 非必填项。页面资源的抓取选择器，支持Jsoup原生的css选择器和正则表达式或Jsonpath，一般用于下载资源文件，比如想抓取图片：[*.jpg]或者$.data[*].img。
-                当此内容为JsonPath字符串的时候，如果json中提供的detail的链接是相对路径，那么此时这个值的格式为：链接前缀+jsonpath，如果需要抓取多种资源可以用逗号","隔开，默认不填是全抓取。
-                注意：当启用list_detail模式时，资源特指的是avatar资源，即：与Detail_Link一一对应的资源，此项必须配置为包含detail_link与avatar的定位符；
-                当启用非list_detail模式时，可抓取多种资源，每个选择器中间用逗号隔开。
+                当此内容为JsonPath字符串的时候，如果json中提供的detail的链接是相对路径，那么此时这个值的格式为：链接前缀+jsonpath，如果需要抓取多种资源可以用逗号","隔开，
+                默认不填或者不配置此项就是全抓取。注意：当启用list_detail模式时，资源特指的是avatar资源，即：与Detail_Link一一对应的资源，此项必须配置为包含detail_link
+                与avatar的定位符；当启用非list_detail模式时，可抓取多种资源，每个选择器中间用逗号隔开。
             </description>
-        </property>
-        <property>
-            <name>fetch.login.username</name>
-            <value></value>
-            <description>非必填项。url对应的登录名</description>
-        </property>
-        <property>
-            <name>fetch.login.password</name>
-            <value></value>
-            <description>非必填项。url对应的登录密码</description>
-        </property>
-        <property>
-            <name>fetch.timer.interval</name>
-            <value></value>
-            <description>非必填项。每次抓取的时间间隔(单位：秒)</description>
         </property>
         <property>
             <name>fetch.timer.start</name>
@@ -78,17 +80,24 @@
             <description>非必填项。开始抓取时间(yyyy-MM-dd HH:mm:ss)</description>
         </property>
         <property>
+            <name>fetch.timer.interval</name>
+            <value></value>
+            <description>非必填项。每次抓取的时间间隔(单位：秒)。注意：如果配置了fetch.probe的话，此项将会失去作用。</description>
+        </property>
+        <property>
             <name>fetch.sleep</name>
             <value></value>
-            <description>非必填项。延迟策略，每两次http请求之间的间隔时间(单位：秒)，以防止频繁访问站点抓取不到内容，默认值为0，注意每两次请求还跟当时网速等有关，并非真正起到完全固定的时间
+            <description>
+                非必填项。延迟策略，每两次http请求之间的间隔时间(单位：秒)，以防止频繁访问站点抓取不到内容，
+                默认值为0，注意每两次请求还跟当时网速等有关，并非真正起到完全固定的时间
             </description>
         </property>
         <property>
             <name>fetch.sleep.range</name>
             <value></value>
             <description>
-                非必填项。（在一定范围内）随机延迟策略，每两次http请求之间的间隔时间(单位：秒)范围，每次请求时间间隔都是这个范围内的随机值，格式：2-7 表示2秒到7秒直接随机延迟
-                范围中间用横杠连接时间的上下限，主要用于某些网站防爬策略检测出固定时间间隔访问网站的请求，默认值为0
+                非必填项。（在一定范围内）随机延迟策略，每两次http请求之间的间隔时间(单位：秒)范围，每次请求时间间隔都是这个范围内的随机值，
+                格式：2-7 表示2秒到7秒直接随机延迟，范围中间用横杠连接时间的上下限，主要用于某些网站防爬策略检测出固定时间间隔访问网站的请求，默认值为0
             </description>
         </property>
         <property>
@@ -104,13 +113,13 @@
         </property>
         <property>
             <name>fetch.http.user_agent</name>
-            <value>classpath:conf/user_agent</value>
+            <value></value>
             <description>非必填项。抓取网站所需的UserAgent，可配合一定的时间延迟fetch.delay、不同cookie、http代理模拟人为操作
             </description>
         </property>
         <property>
             <name>download.disk</name>
-            <value>classpath:/data/download/seed1/</value>
+            <value>default</value>
             <description>
                 非必填项。如果业务需要下载url站点的页面或资源文件，那么会保存在本地的磁盘目录/data/download/${seedname}下，如果选择默认路径那就填default；如果
                 不需要那就不需要配置此项；如果想配置在本爬虫其它目录下，前缀可以用classpath；如果想配置到爬虫外的其它路径可以用操作系统的绝对路径，需要注意的是
@@ -129,28 +138,28 @@
         </property>
         <property>
             <name>parse.class.impl</name>
-            <value>com.bytegriffin.get4j.parse.CustomPageParser</value>
-            <description>当parse.element.select没填时为必填项。自定义解析实现类。需要写具体package路径，例如：com.anspider.parse.CustomPageParser
+            <value></value>
+            <description>当属性parse.element.select没填时为必填项。自定义解析实现类。需要写具体package路径，例如：com.anspider.parse.CustomPageParser
             </description>
         </property>
         <property>
             <name>parse.element.selector</name>
             <value></value>
             <description>
-                当parse.class.impl没填时为必填项。内置解析实现类，目前只有这么一种单元素内置解析类，支持：jsoup的css选择器、正则表达式（html内容）或jsonpath（json内容）
+                   当属性parse.class.impl没填时为必填项。内置解析实现类，目前只有这么一种单元素内置解析类，支持：jsoup的css选择器、正则表达式（html或xml内容）或jsonpath（json内容）
             </description>
         </property>
         <property>
             <name>store.jdbc</name>
-            <value>jdbc:mysql://localhost:3306/get4j?useSSL=false&amp;serverTimezone=UTC&amp;characterEncoding=UTF-8&amp;user=root&amp;password=root
-            </value>
+            <value></value>
             <description>非必填项。保存到Mysql关系型数据库中</description>
         </property>
         <property>
             <name>store.mongodb</name>
             <value></value>
-            <description>非必填项。保存到mongodb数据库中，多个可以写成mongodb://host1:27017,host2:27017
-                有密码可写成：mongodb://user1:pwd1@host1/?authSource=db1&amp;ssl=true
+            <description>
+                    非必填项。保存到mongodb数据库中，多个可以写成mongodb://host1:27017,host2:27017
+                	有密码可写成：mongodb://user1:pwd1@host1/?authSource=db1&amp;ssl=true
             </description>
         </property>
         <property>

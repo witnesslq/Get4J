@@ -15,6 +15,10 @@ public @interface Site {
 
     String url();//没有default值必须要设置
 
+    String probeSelector() default "";
+
+    int probeSleep() default 60;
+
     String startTime() default "";
 
     long interval() default 0;

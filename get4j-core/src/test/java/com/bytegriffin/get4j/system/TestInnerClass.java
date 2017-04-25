@@ -1,5 +1,6 @@
-package com.bytegriffin.get4j;
+package com.bytegriffin.get4j.system;
 
+import com.bytegriffin.get4j.Spider;
 import com.bytegriffin.get4j.annotation.Site;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;

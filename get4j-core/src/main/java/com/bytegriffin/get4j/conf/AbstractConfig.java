@@ -34,6 +34,8 @@ public abstract class AbstractConfig {
     protected static final String woker_thread_number = "worker.thread.number";
     protected static final String fetch_page_mode = "fetch.page.mode";
     protected static final String fetch_url = "fetch.url";
+    protected static final String fetch_probe_selector = "fetch.probe.selector";
+    protected static final String fetch_probe_sleep = "fetch.probe.sleep";
     protected static final String fetch_detail_selector = "fetch.detail.selector";
     protected static final String fetch_total_pages = "fetch.total.pages";
     protected static final String fetch_login_username = "fetch.login.username";
@@ -69,5 +71,5 @@ public abstract class AbstractConfig {
     public static final String password_node = "password";
     public static final String dir_node = "dir";
     public static final String module_node = "module";
-    
+
 }

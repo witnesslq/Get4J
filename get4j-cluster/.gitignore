@@ -4,6 +4,7 @@
 .metadata  
 .project
 .myeclipse
+.pydevproject
 *.iml
 /out/
 .idea

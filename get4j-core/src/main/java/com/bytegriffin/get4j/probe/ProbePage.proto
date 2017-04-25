@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+option java_package = "com.bytegriffin.get4j.probe";
+option java_outer_classname = "ProbePageSerial";
+
+message ProbePage {
+  string url = 1;
+  string content=2;
+  string probe_time=3;
+}

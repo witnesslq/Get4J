@@ -62,7 +62,11 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
         logger.info("Seed[" + seed.getSeedName() + "]的Http引擎HttpUnitEngine的初始化完成。");
     }
 
-
+    /**
+     * 检查Http Proxy代理是否可运行
+     *
+     * @return boolean
+     */
     @Override
     public boolean testHttpProxy(String url, HttpProxy httpProxy) {
         WebClient webClient = new WebClient(BrowserVersion.CHROME);
@@ -182,7 +186,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
             }
 
             // 如果是资源文件的话
-            if (!isJsonFile(contentType) && !isPage(contentType) && !isXmlFile(contentType, content)) {
+            if (!isJsonPage(contentType) && !isHtmlPage(contentType) && !isXmlPage(contentType, content)) {
                 HashSet<String> resources = page.getResources();
                 resources.add(page.getUrl());
                 HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManagerShared(true);
@@ -214,6 +218,44 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
         }
 
         return page;
+    }
+
+    @Override
+    public String probePageContent(Page page) {
+        WebClient webClient = Constants.WEBCLIENT_CACHE.get(page.getSeedName());
+        try {
+            WebRequest request = new WebRequest(new URL(page.getUrl()));
+            setHttpProxy(page.getSeedName(), webClient, request);
+            setUserAgent(page.getSeedName(), request);
+            request.setAdditionalHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+
+            com.gargoylesoftware.htmlunit.Page htmlpage = webClient.getPage(request);
+            WebResponse response = htmlpage.getWebResponse();
+
+            int statusCode = response.getStatusCode();
+            boolean isvisit = isVisit(statusCode, page, logger);
+            if (!isvisit) {
+                return null;
+            }
+
+            long contentlength = response.getContentLength();
+            if (contentlength > big_file_max_size) {//大于10m
+                logger.warn("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面内容太大。");
+            }
+
+            String content = response.getContentAsString();
+            String contentType = response.getContentType();
+            if (StringUtil.isNullOrBlank(content)) {
+                logger.warn("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面内容为空。");
+            }
+
+            // 重新设置content编码
+            content = getContentAsString(response.getContentAsStream(), getCharset(contentType, content));
+            return content;
+        } catch (Exception e) {
+            logger.error("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]内容失败。", e);
+        }
+        return null;
     }
 
 }

@@ -1,4 +1,4 @@
-package com.bytegriffin.get4j;
+package com.bytegriffin.get4j.system;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
