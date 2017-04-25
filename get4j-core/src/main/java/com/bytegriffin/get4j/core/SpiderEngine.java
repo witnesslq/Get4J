@@ -11,13 +11,13 @@ import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.AbstractConfig;
 import com.bytegriffin.get4j.conf.Configuration;
+import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.conf.ResourceSync;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.download.DiskDownloader;
 import com.bytegriffin.get4j.download.HdfsDownloader;
 import com.bytegriffin.get4j.fetch.CascadeFetcher;
 import com.bytegriffin.get4j.fetch.ListDetailFetcher;
-import com.bytegriffin.get4j.probe.PageChangeProber;
 import com.bytegriffin.get4j.fetch.SingleFetcher;
 import com.bytegriffin.get4j.fetch.SiteFetcher;
 import com.bytegriffin.get4j.net.http.HtmlUnitEngine;
@@ -29,6 +29,7 @@ import com.bytegriffin.get4j.net.sync.FtpSyncer;
 import com.bytegriffin.get4j.net.sync.RsyncSyncer;
 import com.bytegriffin.get4j.net.sync.ScpSyncer;
 import com.bytegriffin.get4j.parse.AutoDelegateParser;
+import com.bytegriffin.get4j.probe.PageChangeProber;
 import com.bytegriffin.get4j.store.DBStorage;
 import com.bytegriffin.get4j.store.FailUrlStorage;
 import com.bytegriffin.get4j.store.FreeProxyStorage;
@@ -152,7 +153,7 @@ public class SpiderEngine {
                 System.exit(1);
             }
         }
-        Constants.HTTP_ENGINE_CACHE.put(seed.getSeedName(), http);
+        Globals.HTTP_ENGINE_CACHE.put(seed.getSeedName(), http);
     }
 
     /**
@@ -178,7 +179,7 @@ public class SpiderEngine {
 
             if (!StringUtil.isNullOrBlank(seed.getFetchProbeSelector())) {
                 PageChangeProber p = new PageChangeProber(seed);
-                Constants.FETCH_PROBE_CACHE.put(seed.getSeedName(), p);
+                Globals.FETCH_PROBE_CACHE.put(seed.getSeedName(), p);
                 subProcess.append("PageChangeProber-");
             }
 
@@ -265,11 +266,11 @@ public class SpiderEngine {
             // 添加坏链接存储功能
             FailUrlStorage.init();
 
-            Constants.FETCH_PAGE_MODE_CACHE.put(seedName, seed.getPageMode());
+            Globals.FETCH_PAGE_MODE_CACHE.put(seedName, seed.getPageMode());
 
             if (chain.list.size() > 0) {
                 // 缓存每个site的工作流程
-                Constants.CHAIN_CACHE.put(seed.getSeedName(), chain);
+                Globals.CHAIN_CACHE.put(seed.getSeedName(), chain);
                 logger.info("种子[" + seedName + "]流程[" + subProcess.toString() + "]设置完成。");
             } else {
                 logger.error("启动失败：种子[" + seedName + "]流程设置失败，没有任何子流程加入，请重新配置。");
@@ -305,7 +306,7 @@ public class SpiderEngine {
                 logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的host属性为空，请重新检查。");
                 System.exit(1);
             }
-            Constants.RESOURCE_SYNCHRONIZER = new FtpSyncer(host, port, username, password);
+            DefaultConfig.resource_synchronizer = new FtpSyncer(host, port, username, password);
         } else if (AbstractConfig.rsync_node.equals(protocal)) {
             Map<String, String> rsync = resourceSync.getRsync();
             if (rsync == null || rsync.isEmpty()) {
@@ -317,9 +318,9 @@ public class SpiderEngine {
             String module = rsync.get(AbstractConfig.module_node);
             String dir = rsync.get(AbstractConfig.dir_node);
             if (!StringUtil.isNullOrBlank(module)) {
-                Constants.RESOURCE_SYNCHRONIZER = new RsyncSyncer(host, username, module, true);
+            	DefaultConfig.resource_synchronizer = new RsyncSyncer(host, username, module, true);
             } else if (!StringUtil.isNullOrBlank(dir)) {
-                Constants.RESOURCE_SYNCHRONIZER = new RsyncSyncer(host, username, dir, false);
+            	DefaultConfig.resource_synchronizer = new RsyncSyncer(host, username, dir, false);
             } else {
                 logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的rsync的module或dir属性必须二选一，请重新检查。");
                 System.exit(1);
@@ -334,19 +335,20 @@ public class SpiderEngine {
             String username = scp.get(AbstractConfig.username_node);
             String dir = scp.get(AbstractConfig.dir_node);
             String port = StringUtil.isNullOrBlank(scp.get(AbstractConfig.port_node)) ? "22" : scp.get(AbstractConfig.port_node);
-            Constants.RESOURCE_SYNCHRONIZER = new ScpSyncer(host, username, dir, port);
+            DefaultConfig.resource_synchronizer = new ScpSyncer(host, username, dir, port);
         }
-        Constants.SYNC_OPEN = Boolean.valueOf(open);
-        Constants.SYNC_BATCH_COUNT = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node));
-        Constants.SYNC_BATCH_TIME = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node)) * 1000;
+        DefaultConfig.sync_open = Boolean.valueOf(open);
+        DefaultConfig.sync_batch_count = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node));
+        DefaultConfig.sync_batch_time = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node)) * 1000;
     }
 
     /**
      * 第三步：创建工作环境
      */
     private void buildConfiguration() {
-        Constants.IS_KEEP_FILE_URL = (configuration != null &&
-                !Configuration.default_download_file_name_rule.equals(configuration.getDownloadFileNameRule()));
+    	configuration.setDownloadFileNameRule(DefaultConfig.default_value);
+    	DefaultConfig.download_file_url_naming = (configuration != null &&
+                !DefaultConfig.default_value.equals(configuration.getDownloadFileNameRule()));
     }
 
     /**
@@ -358,16 +360,24 @@ public class SpiderEngine {
             String starttime = seed.getFetchStart();
             Launcher job = new Launcher(seed);
             Timer timer = new Timer();
-            if (StringUtil.isNullOrBlank(starttime)) {
-                logger.info("爬虫开始抓取[" + seed.getSeedName() + "]。。。");
-                timer.schedule(job, 0L);
-            } else if (StringUtil.isNullOrBlank(interval) || interval.equals("0")) {
-                logger.info("爬虫开始抓取[" + seed.getSeedName() + "]。。。");
-                timer.schedule(job, DateUtil.strToDate(starttime));
+            logger.info("爬虫开始抓取[" + seed.getSeedName() + "]。。。");
+            // 注意：如果配置了probe属性，那么程序不再支持interval功能，而是由probe来
+            if (!StringUtil.isNullOrBlank(seed.getFetchProbeSelector())) {
+            	if (!StringUtil.isNullOrBlank(starttime)) {
+            		timer.schedule(job, DateUtil.strToDate(starttime));
+                } else {
+                	timer.schedule(job, 0L);
+                }
             } else {
-                logger.info("爬虫开始抓取[" + seed.getSeedName() + "]。。。");
-                timer.schedule(job, DateUtil.strToDate(starttime), Long.valueOf(interval) * 1000);
+                if (StringUtil.isNullOrBlank(starttime)) {
+                    timer.schedule(job, 0L);
+                } else if (StringUtil.isNullOrBlank(interval) || interval.equals("0")) {
+                    timer.schedule(job, DateUtil.strToDate(starttime));
+                } else {
+                    timer.schedule(job, DateUtil.strToDate(starttime), Long.valueOf(interval) * 1000);
+                }
             }
+            
         }
     }
 

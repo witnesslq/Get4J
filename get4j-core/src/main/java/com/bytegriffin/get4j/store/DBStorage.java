@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.util.DateUtil;
@@ -47,13 +47,13 @@ public class DBStorage implements Process {
             logger.error("种子[" + seed.getSeedName() + "]的组件DBStorage没有连接成功。");
             System.exit(1);
         }
-        Constants.DATASOURCE_CACHE.put(seed.getSeedName(), datasource);
+        Globals.DATASOURCE_CACHE.put(seed.getSeedName(), datasource);
         logger.info("种子[" + seed.getSeedName() + "]的组件DBStorage的初始化完成。");
     }
 
     @Override
     public void execute(Page page) {
-        DataSource dataSource = Constants.DATASOURCE_CACHE.get(page.getSeedName());
+        DataSource dataSource = Globals.DATASOURCE_CACHE.get(page.getSeedName());
         // 更新page数据
         Page dbpage = readOne(dataSource, page);
         if (dbpage == null) {

@@ -3,7 +3,7 @@ package com.bytegriffin.get4j.net.sync;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.util.ConcurrentQueue;
 
@@ -42,8 +42,8 @@ public class BatchScheduler implements Runnable {
     @Override
     public synchronized void run() {
         while (flag) {
-            if (resources.size() >= Constants.SYNC_BATCH_COUNT
-                    || (System.currentTimeMillis() - last_update_time) >= Constants.SYNC_BATCH_TIME) {
+            if (resources.size() >= DefaultConfig.sync_batch_count
+                    || (System.currentTimeMillis() - last_update_time) >= DefaultConfig.sync_batch_time) {
                 List<String> avatar = resources.list;
                 sync.setBatch(avatar);
                 sync.sync();

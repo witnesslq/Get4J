@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.bytegriffin.get4j.util.UrlQueue;
@@ -54,7 +54,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
         webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
         webClient.setAjaxController(new NicelyResynchronizingAjaxController());
 //		webClient.getOptions().setPopupBlockerEnabled(true);
-        Constants.WEBCLIENT_CACHE.put(seed.getSeedName(), webClient);
+        Globals.WEBCLIENT_CACHE.put(seed.getSeedName(), webClient);
 
         // 2.初始化参数
         initParams(seed, logger);
@@ -106,7 +106,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
      * @param request   request
      */
     private static void setHttpProxy(String seedName, WebClient webClient, WebRequest request) {
-        HttpProxySelector hpl = Constants.HTTP_PROXY_CACHE.get(seedName);
+        HttpProxySelector hpl = Globals.HTTP_PROXY_CACHE.get(seedName);
         if (hpl == null) {
             return;
         }
@@ -126,7 +126,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
      * 设置User_Agent
      */
     private static void setUserAgent(String seedName, WebRequest request) {
-        UserAgentSelector ual = Constants.USER_AGENT_CACHE.get(seedName);
+        UserAgentSelector ual = Globals.USER_AGENT_CACHE.get(seedName);
         if (ual == null) {
             return;
         }
@@ -144,7 +144,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
      * @return Page
      */
     public Page getPageContent(Page page) {
-        WebClient webClient = Constants.WEBCLIENT_CACHE.get(page.getSeedName());
+        WebClient webClient = Globals.WEBCLIENT_CACHE.get(page.getSeedName());
         String url = page.getUrl();
         sleep(page.getSeedName(), logger);
         try {
@@ -163,14 +163,14 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
             boolean isvisit = isVisit(statusCode, page, logger);
             if (!isvisit) {
                 HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManagerShared(true);
-                Constants.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
+                Globals.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
                 return page;
             }
 
             long contentlength = response.getContentLength();
             if (contentlength > big_file_max_size) {//大于10m
                 HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManagerShared(true);
-                Constants.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
+                Globals.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
                 boolean isdone = HttpClientEngine.downloadBigFile(page, contentlength);
                 if (isdone) {
                     return page;
@@ -190,7 +190,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
                 HashSet<String> resources = page.getResources();
                 resources.add(page.getUrl());
                 HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManagerShared(true);
-                Constants.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
+                Globals.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
                 return page;
             }
 
@@ -222,7 +222,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
 
     @Override
     public String probePageContent(Page page) {
-        WebClient webClient = Constants.WEBCLIENT_CACHE.get(page.getSeedName());
+        WebClient webClient = Globals.WEBCLIENT_CACHE.get(page.getSeedName());
         try {
             WebRequest request = new WebRequest(new URL(page.getUrl()));
             setHttpProxy(page.getSeedName(), webClient, request);

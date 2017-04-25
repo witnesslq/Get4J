@@ -9,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.net.http.HttpEngine;
@@ -34,12 +34,12 @@ public class ListDetailFetcher implements Process {
     @Override
     public void init(Seed seed) {
         // 1.获取相应的http引擎
-        http = Constants.HTTP_ENGINE_CACHE.get(seed.getSeedName());
+        http = Globals.HTTP_ENGINE_CACHE.get(seed.getSeedName());
 
         // 2.初始化detail页面选择器
         String detailSelect = seed.getFetchDetailSelector();
         if (!StringUtil.isNullOrBlank(detailSelect)) {
-            Constants.FETCH_DETAIL_SELECT_CACHE.put(seed.getSeedName(), detailSelect.replace(" ", ""));
+            Globals.FETCH_DETAIL_SELECT_CACHE.put(seed.getSeedName(), detailSelect.replace(" ", ""));
         }
 
         // 3.初始化资源选择器缓存
@@ -50,7 +50,7 @@ public class ListDetailFetcher implements Process {
     @Override
     public void execute(Page page) {
 
-        List<String> listurls = Constants.LIST_URLS_CACHE.get(page.getSeedName());
+        List<String> listurls = Globals.LIST_URLS_CACHE.get(page.getSeedName());
         if (listurls.contains(page.getUrl())) {// 访问的是list url
             // 1.获取并设置列表页Page的HtmlContent或JsonContent属性
             page = http.getPageContent(page);
@@ -59,8 +59,8 @@ public class ListDetailFetcher implements Process {
             page.setFetchTime(DateUtil.getCurrentDate());
 
             // 3.获取并设置Page的Resource属性
-            FetchResourceSelector resourceselector = Constants.FETCH_RESOURCE_SELECTOR_CACHE.get(page.getSeedName());
-            String detailSelect = Constants.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
+            FetchResourceSelector resourceselector = Globals.FETCH_RESOURCE_SELECTOR_CACHE.get(page.getSeedName());
+            String detailSelect = Globals.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
             // 如果fetch.resource.selector配置了all或者none，或者没有配置fetch.detail.selecotr只配置了fetch.resource.selector，那说明没有detaillink与avatar对应，也就是说只能抓取所有resource
             if (resourceselector == null || resourceselector.isConfigAll() || resourceselector.isConfigNone()
                     || StringUtil.isNullOrBlank(detailSelect)) {

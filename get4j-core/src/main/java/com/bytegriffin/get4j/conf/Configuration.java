@@ -5,8 +5,6 @@ package com.bytegriffin.get4j.conf;
  */
 public class Configuration {
 
-    public static final String default_download_file_name_rule = "auto"; //或者url
-
     /**
      * 非必填项。下载的文件名前缀，有两种模式：url/auto，url表示某文件
      * 的具体网络地址，default表示无前缀，默认值是auto，如果选择url的话，
@@ -14,7 +12,7 @@ public class Configuration {
      * auto模式下如果抓取的是动态网站，HttpClient无法获取到首页名称的话，
      * 那么它会按照index.html自动补全
      */
-    private String downloadFileNameRule = default_download_file_name_rule;
+    private String downloadFileNameRule;
 
     public String getDownloadFileNameRule() {
         return downloadFileNameRule;

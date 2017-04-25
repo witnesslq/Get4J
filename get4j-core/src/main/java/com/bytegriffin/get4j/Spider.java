@@ -20,10 +20,10 @@ import com.bytegriffin.get4j.conf.Configuration;
 import com.bytegriffin.get4j.conf.ConfigurationXmlHandler;
 import com.bytegriffin.get4j.conf.Context;
 import com.bytegriffin.get4j.conf.CoreSeedsXmlHandler;
+import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.conf.ResourceSync;
 import com.bytegriffin.get4j.conf.ResourceSyncYamlHandler;
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
 import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.core.SpiderEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
@@ -97,8 +97,8 @@ public class Spider {
      * @return Spider
      */
     public Spider defaultProbe() {
-        seed.setFetchProbeSelector(Constants.default_config);
-        seed.setFetchProbeSleep(Constants.default_config);
+        seed.setFetchProbeSelector(DefaultConfig.default_value);
+        seed.setFetchProbeSleep(DefaultConfig.default_value);
         return this;
     }
 
@@ -175,7 +175,7 @@ public class Spider {
      * @param seconds 每次请求延迟，单位秒
      * @return Spider
      */
-    public Spider sleep(long seconds) {
+    public Spider sleep(int seconds) {
         seed.setFetchSleep(seconds);
         return this;
     }
@@ -224,14 +224,12 @@ public class Spider {
      * interval表示爬虫重复抓取的时间间隔，单位是秒
      *
      * @param firstTime 第一次的抓取时间
-     * @param interval  下次抓取的时间间隔
+     * @param interval  下次抓取的时间间隔，单位是秒
      * @return Spider
      */
-    public Spider timer(String firstTime, Long interval) {
+    public Spider timer(String firstTime, int interval) {
         seed.setFetchStart(firstTime);
-        if (interval != null) {
-            seed.setFetchInterval(String.valueOf(interval));
-        }
+        seed.setFetchInterval(String.valueOf(interval));
         return this;
     }
 
@@ -297,7 +295,7 @@ public class Spider {
      * @return Spider
      */
     public Spider defaultProxy() {
-        seed.setFetchHttpProxyFile(Constants.http_proxy_file);
+        seed.setFetchHttpProxyFile(DefaultConfig.http_proxy);
         return this;
     }
 
@@ -331,7 +329,7 @@ public class Spider {
      * @return Spider
      */
     public Spider defaultUserAgent() {
-        seed.setFetchUserAgentFile(Constants.user_agent_file);
+        seed.setFetchUserAgentFile(DefaultConfig.user_agent);
         return this;
     }
 
@@ -354,7 +352,7 @@ public class Spider {
      * @return Spider
      */
     public Spider defaultDownloadDisk() {
-        seed.setDownloadDisk(Constants.default_config);
+        seed.setDownloadDisk(DefaultConfig.default_value);
         return this;
     }
 
@@ -433,7 +431,7 @@ public class Spider {
      * @return Spider
      */
     public Spider defaultLucene() {
-        seed.setStoreLuceneIndex(Constants.default_config);
+        seed.setStoreLuceneIndex(DefaultConfig.default_value);
         return this;
     }
 
@@ -467,8 +465,8 @@ public class Spider {
         resourceSync.setFtp(ftp);
         Map<String, String> sync = new HashMap<>();
         sync.put(AbstractConfig.open_node, "true");
-        sync.put(AbstractConfig.batch_count_node, Constants.SYNC_BATCH_COUNT + "");
-        sync.put(AbstractConfig.batch_time_node, Constants.SYNC_BATCH_TIME + "");
+        sync.put(AbstractConfig.batch_count_node, DefaultConfig.sync_batch_count + "");
+        sync.put(AbstractConfig.batch_time_node, DefaultConfig.sync_batch_time + "");
         sync.put(AbstractConfig.protocal_node, AbstractConfig.ftp_node);
         resourceSync.setSync(sync);
         return this;
@@ -497,8 +495,8 @@ public class Spider {
         resourceSync.setRsync(rsync);
         Map<String, String> sync = new HashMap<>();
         sync.put(AbstractConfig.open_node, "true");
-        sync.put(AbstractConfig.batch_count_node, Constants.SYNC_BATCH_COUNT + "");
-        sync.put(AbstractConfig.batch_time_node, Constants.SYNC_BATCH_TIME + "");
+        sync.put(AbstractConfig.batch_count_node, DefaultConfig.sync_batch_count + "");
+        sync.put(AbstractConfig.batch_time_node, DefaultConfig.sync_batch_time + "");
         sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
         resourceSync.setSync(sync);
         return this;
@@ -524,8 +522,8 @@ public class Spider {
         resourceSync.setScp(scp);
         Map<String, String> sync = new HashMap<>();
         sync.put(AbstractConfig.open_node, "true");
-        sync.put(AbstractConfig.batch_count_node, Constants.SYNC_BATCH_COUNT + "");
-        sync.put(AbstractConfig.batch_time_node, Constants.SYNC_BATCH_TIME + "");
+        sync.put(AbstractConfig.batch_count_node, DefaultConfig.sync_batch_count + "");
+        sync.put(AbstractConfig.batch_time_node, DefaultConfig.sync_batch_time + "");
         sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
         resourceSync.setSync(sync);
         return this;
@@ -769,8 +767,8 @@ public class Spider {
         xicidaili.setThreadNumber(1);
         xicidaili.setFetchTotalPages("5");
         xicidaili.setParseClassImpl("com.bytegriffin.get4j.parse.FreeProxyPageParser");
-        xicidaili.setStoreFreeProxy(Constants.http_proxy_file);
-        xicidaili.setFetchUserAgentFile(Constants.user_agent_file);
+        xicidaili.setStoreFreeProxy(DefaultConfig.http_proxy);
+        xicidaili.setFetchUserAgentFile(DefaultConfig.user_agent);
         seeds.add(xicidaili);
         SpiderEngine.create().setSeeds(seeds).build();
     }

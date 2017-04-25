@@ -19,8 +19,9 @@ import org.apache.lucene.index.LogDocMergePolicy;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.FSDirectory;
 
+import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.download.DiskDownloader;
@@ -40,8 +41,8 @@ public class LuceneIndexStorage implements Process {
     public void init(Seed seed) {
         String indexpath = seed.getStoreLuceneIndex();
         String folderName;
-        if (Constants.default_config.equalsIgnoreCase(indexpath)) {
-            indexpath = Constants.getLuceneIndexPath(seed.getSeedName());
+        if (DefaultConfig.default_value.equalsIgnoreCase(indexpath)) {
+            indexpath = DefaultConfig.getLuceneIndexPath(seed.getSeedName());
         } else if (indexpath.contains(File.separator) || indexpath.contains(":")) {// eg. C: C盘
             if (!indexpath.contains(seed.getSeedName())) {
                 indexpath = indexpath + File.separator + seed.getSeedName();
@@ -51,7 +52,7 @@ public class LuceneIndexStorage implements Process {
             System.exit(1);
         }
         folderName = FileUtil.makeDiskDir(indexpath);// 获取用户配置的索引文件夹
-        Constants.LUCENE_INDEX_DIR_CACHE.put(seed.getSeedName(), folderName);
+        Globals.LUCENE_INDEX_DIR_CACHE.put(seed.getSeedName(), folderName);
         initParams(seed.getSeedName());
         logger.info("种子[" + seed.getSeedName() + "]的组件LuceneStorage的初始化完成。");
     }
@@ -81,9 +82,9 @@ public class LuceneIndexStorage implements Process {
         // 关闭复合文件格式(即：合并多个Segment文件到一个.cfs中)，加快创建索引速度，但同时会增加搜索和索引使用的文件句柄的数量
         config.setUseCompoundFile(false);
         try {
-            FSDirectory dir = FSDirectory.open(Paths.get(Constants.LUCENE_INDEX_DIR_CACHE.get(seedName)));
+            FSDirectory dir = FSDirectory.open(Paths.get(Globals.LUCENE_INDEX_DIR_CACHE.get(seedName)));
             IndexWriter indexWriter = new IndexWriter(dir, config);
-            Constants.INDEX_WRITER_CACHE.put(seedName, indexWriter);
+            Globals.INDEX_WRITER_CACHE.put(seedName, indexWriter);
         } catch (Exception e) {
             logger.error("系统初始化种子[" + seedName + "]的Lucene索引时出错。");
         }
@@ -116,7 +117,7 @@ public class LuceneIndexStorage implements Process {
         doc.add(new TextField("content", content, Field.Store.NO)); // 内容不保存
 
         try {
-            IndexWriter indexWriter = Constants.INDEX_WRITER_CACHE.get(page.getSeedName());
+            IndexWriter indexWriter = Globals.INDEX_WRITER_CACHE.get(page.getSeedName());
             // 先删除，后增加，删除只是放到回收站
             indexWriter.updateDocument(new Term(unique_term, page.getUrl()), doc);
             // 清空回收站

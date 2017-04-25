@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.bytegriffin.get4j.core.Constants;
 import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.net.http.HttpClientEngine;
@@ -28,7 +27,7 @@ public class Seed {
     /**
      * 非必填项。爬虫工作线程数量，默认值是1
      */
-    private int threadNumber = 1;
+    private int threadNumber = DefaultConfig.thread_num;
     /**
      * 页面模型：list_detail（页面格式）、single（单个页面)、cascade（页面中给出所有的url链接）、site（单个站点）默认值是site
      */
@@ -56,11 +55,11 @@ public class Seed {
      * 当抓取模式fetch.mode为list_detail时为必填项，表示列表总页数，可以是整数，
      * 也可以是selector字符串
      */
-    private String fetchTotalPages = "1";
+    private String fetchTotalPages = DefaultConfig.fetch_total_pages;
     /**
      * 是否支持javascript
      */
-    private boolean fetchJavascriptSupport = false;
+    private boolean fetchJavascriptSupport = DefaultConfig.fetch_javascript_support;
     /**
      * url对应的登录名
      */
@@ -92,7 +91,7 @@ public class Seed {
     /**
      * 每次http请求之后都要延迟固定时间(秒)再次请求
      */
-    private Long fetchSleep = 0L;
+    private int fetchSleep = DefaultConfig.fetch_sleep;
     /**
      * 每次http请求之后都要延迟随机时间(秒)范围再次请求，范围上下限中间用横杠表示，例如：2-4，表示每次请求间隔2到4秒
      */
@@ -207,7 +206,7 @@ public class Seed {
     public void setFetchResourceSelectors(String fetchResourcceSelectorsStr) {
         List<String> fetchOtherUrlSelectors = new ArrayList<>();
         if (!StringUtil.isNullOrBlank(fetchResourcceSelectorsStr)) {
-            String[] array = fetchResourcceSelectorsStr.split(Constants.FETCH_RESOURCE_SPLIT);
+            String[] array = fetchResourcceSelectorsStr.split(DefaultConfig.fetch_resource_split);
             for (String str : array) {
                 fetchOtherUrlSelectors.add(str);
             }
@@ -246,15 +245,15 @@ public class Seed {
         this.fetchProbeSelector = fetchProbeSelector;
     }
 
-    public void setFetchSleep(Long fetchSleep) {
-        this.fetchSleep = fetchSleep;
-    }
+    public int getFetchSleep() {
+		return fetchSleep;
+	}
 
-    public Long getFetchSleep() {
-        return fetchSleep;
-    }
+	public void setFetchSleep(int fetchSleep) {
+		this.fetchSleep = fetchSleep;
+	}
 
-    public String getFetchSleepRange() {
+	public String getFetchSleepRange() {
         return fetchSleepRange;
     }
 

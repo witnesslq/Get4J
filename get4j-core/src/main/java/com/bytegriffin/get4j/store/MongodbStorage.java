@@ -5,7 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.bson.Document;
 
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.util.DateUtil;
@@ -55,13 +55,13 @@ public class MongodbStorage implements Process {
             IndexOptions indexOptions = new IndexOptions().unique(true);
             collection.createIndex(Indexes.ascending(index_field), indexOptions);
         }
-        Constants.MONGO_COLLECTION_CACHE.put(seed.getSeedName(), collection);
+        Globals.MONGO_COLLECTION_CACHE.put(seed.getSeedName(), collection);
         logger.info("种子[" + seed.getSeedName() + "]的组件MongodbStorage的初始化完成。");
     }
 
     @Override
     public void execute(Page page) {
-        MongoCollection<Document> collection = Constants.MONGO_COLLECTION_CACHE.get(page.getSeedName());
+        MongoCollection<Document> collection = Globals.MONGO_COLLECTION_CACHE.get(page.getSeedName());
         Document searchQuery = new Document();
         searchQuery.append("FETCH_URL", page.getUrl());
 

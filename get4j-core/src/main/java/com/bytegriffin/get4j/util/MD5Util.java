@@ -3,7 +3,7 @@ package com.bytegriffin.get4j.util;
 import java.security.MessageDigest;
 import java.util.UUID;
 
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.conf.DefaultConfig;
 
 /**
  * MD5生成器
@@ -41,8 +41,8 @@ public class MD5Util {
      */
     public synchronized static String generateSeedName(String salt) {
         // 为了保证list-detail模式下输入不同页数也生成同一个seedName，所以需要对url进行截断
-        if (salt.contains(Constants.FETCH_LIST_URL_VAR_LEFT) && salt.contains(Constants.FETCH_LIST_URL_VAR_RIGHT)) {
-            salt = salt.substring(0, salt.lastIndexOf(Constants.FETCH_LIST_URL_VAR_LEFT));
+        if (salt.contains(DefaultConfig.fetch_list_url_left) && salt.contains(DefaultConfig.fetch_list_url_right)) {
+            salt = salt.substring(0, salt.lastIndexOf(DefaultConfig.fetch_list_url_left));
         }
         java.security.MessageDigest md;
         String pwd = null;

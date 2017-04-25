@@ -24,7 +24,7 @@ import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.bytegriffin.get4j.util.UrlQueue;
@@ -120,7 +120,7 @@ public abstract class AbstractHttpEngine {
         if (httpProxys != null && httpProxys.size() > 0) {
             HttpProxySelector hplooper = new HttpProxySelector();
             hplooper.setQueue(httpProxys);
-            Constants.HTTP_PROXY_CACHE.put(seed.getSeedName(), hplooper);
+            Globals.HTTP_PROXY_CACHE.put(seed.getSeedName(), hplooper);
         }
 
         // 2.初始化Http UserAgent
@@ -128,12 +128,12 @@ public abstract class AbstractHttpEngine {
         if (userAgents != null && userAgents.size() > 0) {
             UserAgentSelector ualooper = new UserAgentSelector();
             ualooper.setQueue(userAgents);
-            Constants.USER_AGENT_CACHE.put(seed.getSeedName(), ualooper);
+            Globals.USER_AGENT_CACHE.put(seed.getSeedName(), ualooper);
         }
 
         // 3.设置HttpClient请求的间隔时间，
-        if (seed.getFetchSleep() != null && seed.getFetchSleep() != 0) { // 首先判断sleep参数，然后才判断sleep.range参数
-            Constants.FETCH_SLEEP_CACHE.put(seed.getSeedName(), seed.getFetchSleep());
+        if (seed.getFetchSleep() != 0) { // 首先判断sleep参数，然后才判断sleep.range参数
+            Globals.FETCH_SLEEP_CACHE.put(seed.getSeedName(), seed.getFetchSleep());
         } else {
             setSleepRange(seed, logger);
         }
@@ -157,22 +157,22 @@ public abstract class AbstractHttpEngine {
             logger.error("线程[" + Thread.currentThread().getName() + "]检查种子[" + seed.getSeedName() + "]的间隔范围配置中[" + sleepRange + "]不能出现字符串。");
             System.exit(1);
         }
-        long min = Long.valueOf(start);
-        long max = Long.valueOf(end);
+        int min = Integer.valueOf(start);
+        int max = Integer.valueOf(end);
         if (max == min) {
-            Constants.FETCH_SLEEP_CACHE.put(seed.getSeedName(), min);
+            Globals.FETCH_SLEEP_CACHE.put(seed.getSeedName(), min);
         } else if (min > max) {
-            Long temp = max;
+            int temp = max;
             max = min;
             min = temp;
         }
-        List<Long> list = new ArrayList<>();
-        for (Long i = min; i <= max; i++) {
+        List<Integer> list = new ArrayList<>();
+        for (Integer i = min; i <= max; i++) {
             list.add(i);
         }
         SleepRandomSelector sleeprandom = new SleepRandomSelector();
         sleeprandom.setQueue(list);
-        Constants.FETCH_SLEEP_RANGE_CACHE.put(seed.getSeedName(), sleeprandom);
+        Globals.FETCH_SLEEP_RANGE_CACHE.put(seed.getSeedName(), sleeprandom);
     }
 
     /**
@@ -182,9 +182,9 @@ public abstract class AbstractHttpEngine {
      * @param logger   logger
      */
     protected static void sleep(String seedName, Logger logger) {
-        Long millis = Constants.FETCH_SLEEP_CACHE.get(seedName);
+    	Integer millis = Globals.FETCH_SLEEP_CACHE.get(seedName);
         if (millis == null) {
-            SleepRandomSelector random = Constants.FETCH_SLEEP_RANGE_CACHE.get(seedName);
+            SleepRandomSelector random = Globals.FETCH_SLEEP_RANGE_CACHE.get(seedName);
             if (random == null) {
                 return;
             }

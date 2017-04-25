@@ -5,13 +5,13 @@
     <seed>
         <name>seed123</name>
         <description>
-             必填项。表示要抓取Seed的实例名称，如果需求是抓取多个Seed：seed1、seed2，那么seed之间的xml定义有先后关系，
-             先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
+            必填项。表示要抓取Seed的实例名称，如果需求是抓取多个Seed：seed1、seed2，那么seed之间的xml定义有先后关系，
+            先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
         </description>
         <property>
             <name>worker.thread.number</name>
             <value>3</value>
-            <description>非必填项。爬虫工作线程数量，默认值是1。根据url数量来动态分配</description>
+            <description>非必填项。爬虫工作线程数量，默认值default是1。根据url数量来动态分配</description>
         </property>
         <property>
             <name>fetch.page.mode</name>
@@ -33,17 +33,17 @@
             <name>fetch.probe.selector</name>
             <value></value>
             <description>
-                   非必填项。页面变化探测器，用于探测抓取页面的变化，如果有变化就立刻抓取，没有变化则继续探测。此项值的格式支持Jsoup（针对html或xml）
-                   或者Jsonpath（针对json）。默认不填或没配置此项就表示不启动探测功能，而默认值default表示探测整个页面变化，一般不推荐使用default，因为
-                   有的动态页面每次刷新页面中都可能包含一个不同的随机字符串，计算没有更新内容，但是比对也会出现不同的结果。
+                非必填项。页面变化探测器，用于探测抓取页面的变化，如果有变化就立刻抓取，没有变化则继续探测。此项值的格式支持Jsoup（针对html或xml）
+                或者Jsonpath（针对json）。默认不填或没配置此项就表示不启动探测功能，而默认值default表示探测整个页面变化，一般不推荐使用default，因为
+                有的动态页面每次刷新页面中都可能包含一个不同的随机字符串，计算没有更新内容，但是比对也会出现不同的结果。
             </description>
         </property>
         <property>
             <name>fetch.probe.sleep</name>
             <value>default</value>
             <description>
-                 非必填项。当配置了fetch.probe.selector此项属性才可用，用于监控页面变化探测频率，如果页面有变化就立刻抓取，没有变化则继续探测。
-                 每两次http请求之间的间隔时间(单位：秒)，默认值default表示每隔30秒去探测一次页面
+                非必填项。当配置了fetch.probe.selector此项属性才可用，用于监控页面变化探测频率，如果页面有变化就立刻抓取，没有变化则继续探测。
+                每两次http请求之间的间隔时间(单位：秒)，默认值default表示每隔30秒去探测一次页面
             </description>
         </property>
         <property>
@@ -89,7 +89,7 @@
             <value></value>
             <description>
                 非必填项。延迟策略，每两次http请求之间的间隔时间(单位：秒)，以防止频繁访问站点抓取不到内容，
-                默认值为0，注意每两次请求还跟当时网速等有关，并非真正起到完全固定的时间
+                默认值default为0，注意每两次请求还跟当时网速等有关，并非真正起到完全固定的时间
             </description>
         </property>
         <property>
@@ -103,19 +103,18 @@
         <property>
             <name>fetch.javascript.support</name>
             <value></value>
-            <description>非必填项。抓取的页面是否支持javascript效果，true表示支持，但是会影响抓取速度，默认值为false
+            <description>非必填项。抓取的页面是否支持javascript效果，true表示支持，但是会影响抓取速度，默认值default为false
             </description>
         </property>
         <property>
             <name>fetch.http.proxy</name>
             <value></value>
-            <description>非必填项。抓取网站所需的http代理，可配合一定的时间延迟fetch.delay、不同UserAgent、http代理模拟人为操作</description>
+            <description>非必填项。抓取网站所需的http代理，默认值default表示conf/http_proxy文件，如果想配置在本爬虫其它目录下，前缀可以用classpath；如果想配置到爬虫外的其它路径可以用操作系统的绝对路径</description>
         </property>
         <property>
             <name>fetch.http.user_agent</name>
             <value></value>
-            <description>非必填项。抓取网站所需的UserAgent，可配合一定的时间延迟fetch.delay、不同cookie、http代理模拟人为操作
-            </description>
+            <description>非必填项。抓取网站所需的UserAgent，默认值default表示conf/user_agent文件，如果想配置在本爬虫其它目录下，前缀可以用classpath；如果想配置到爬虫外的其它路径可以用操作系统的绝对路径</description>
         </property>
         <property>
             <name>download.disk</name>
@@ -146,7 +145,7 @@
             <name>parse.element.selector</name>
             <value></value>
             <description>
-                   当属性parse.class.impl没填时为必填项。内置解析实现类，目前只有这么一种单元素内置解析类，支持：jsoup的css选择器、正则表达式（html或xml内容）或jsonpath（json内容）
+                当属性parse.class.impl没填时为必填项。内置解析实现类，目前只有这么一种单元素内置解析类，支持：jsoup的css选择器、正则表达式（html或xml内容）或jsonpath（json内容）
             </description>
         </property>
         <property>
@@ -158,16 +157,16 @@
             <name>store.mongodb</name>
             <value></value>
             <description>
-                    非必填项。保存到mongodb数据库中，多个可以写成mongodb://host1:27017,host2:27017
-                	有密码可写成：mongodb://user1:pwd1@host1/?authSource=db1&amp;ssl=true
+                非必填项。保存到mongodb数据库中，多个可以写成mongodb://host1:27017,host2:27017
+                有密码可写成：mongodb://user1:pwd1@host1/?authSource=db1&amp;ssl=true
             </description>
         </property>
         <property>
             <name>store.lucene.index</name>
             <value></value>
             <description>
-            	非必填项。保存结果到lucene索引中，如果选择默认路径那就填default；如果不需要保存索引那就不需要配置此项；
-            	如果想配置在本爬虫其它目录下，前缀可以用classpath；如果想配置到爬虫外的其它路径可以用操作系统的绝对路径
+                非必填项。保存结果到lucene索引中，如果选择默认路径那就填default；如果不需要保存索引那就不需要配置此项；
+                如果想配置在本爬虫其它目录下，前缀可以用classpath；如果想配置到爬虫外的其它路径可以用操作系统的绝对路径
             </description>
         </property>
     </seed>

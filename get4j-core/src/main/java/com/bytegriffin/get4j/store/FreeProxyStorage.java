@@ -9,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.net.http.HttpEngine;
@@ -42,7 +42,7 @@ public class FreeProxyStorage implements Process {
 
         // 1.验证抓取的代理
         HashSet<String> validates = new HashSet<>();
-        HttpEngine http = Constants.HTTP_ENGINE_CACHE.get(page.getSeedName());
+        HttpEngine http = Globals.HTTP_ENGINE_CACHE.get(page.getSeedName());
         for (HttpProxy proxy : proxys) {
             boolean isReached = http.testHttpProxy(page.getUrl(), proxy);
             if (isReached) {

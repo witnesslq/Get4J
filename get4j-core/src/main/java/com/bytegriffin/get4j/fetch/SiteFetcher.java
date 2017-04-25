@@ -6,7 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.net.http.HttpEngine;
@@ -28,7 +28,7 @@ public class SiteFetcher implements Process {
     @Override
     public void init(Seed seed) {
         // 1.获取相应的http引擎
-        http = Constants.HTTP_ENGINE_CACHE.get(seed.getSeedName());
+        http = Globals.HTTP_ENGINE_CACHE.get(seed.getSeedName());
         // 2.初始化url选择/过滤器缓存
         FetchResourceSelector.init(seed);
         logger.info("种子[" + seed.getSeedName() + "]的组件SiteFetcher的初始化完成。");

@@ -3,12 +3,13 @@ package com.bytegriffin.get4j.probe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
-import com.bytegriffin.get4j.probe.ProbePageSerial.ProbePage;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
+import com.bytegriffin.get4j.probe.ProbePageSerial.ProbePage;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.MD5Util;
 import com.bytegriffin.get4j.util.StringUtil;
@@ -41,17 +42,18 @@ public class PageChangeProber {
         // 1.设置page对象
         page = new Page(seed.getSeedName(), UrlAnalyzer.formatListDetailUrl(seed.getFetchUrl()));
         fetchProbeSelector = seed.getFetchProbeSelector();
-        if (Constants.default_config.equalsIgnoreCase(seed.getFetchProbeSleep()) ||
+        
+        if (DefaultConfig.default_value.equalsIgnoreCase(seed.getFetchProbeSleep()) ||
                 StringUtil.isNullOrBlank(seed.getFetchProbeSleep()) ||
                 !StringUtil.isNumeric(seed.getFetchProbeSleep()) ||
                 Integer.valueOf(seed.getFetchProbeSleep()) <= 0) {
-            fetchProbeSleep = Constants.default_probe_sleep * 1000;
+            fetchProbeSleep = DefaultConfig.probe_sleep * 1000;
         } else {
             fetchProbeSleep = Integer.valueOf(seed.getFetchProbeSleep()) * 1000;
         }
 
         // 2.创建probe文件夹
-        FileUtil.makeFile(Constants.probe_folder, ProbeFileStorage.filename);
+        FileUtil.makeFile(DefaultConfig.probe_folder, ProbeFileStorage.filename);
 
         // 3.缓存ProbePage文件对象
         if (FileUtil.isExistContont(ProbeFileStorage.probe_file)) {
@@ -59,7 +61,7 @@ public class PageChangeProber {
         }
 
         // 4.获取相应的http引擎
-        http = Constants.HTTP_ENGINE_CACHE.get(seed.getSeedName());
+        http = Globals.HTTP_ENGINE_CACHE.get(seed.getSeedName());
         logger.info("种子[" + seed.getSeedName() + "]的组件PageChangeProber的初始化完成。");
     }
 
@@ -85,7 +87,7 @@ public class PageChangeProber {
             } else if (page.isXmlContent()) {
                 content = page.getXmlContent();
             }
-            if (!Constants.default_config.equalsIgnoreCase(fetchProbeSelector)) {
+            if (!DefaultConfig.default_value.equalsIgnoreCase(fetchProbeSelector)) {
                 content = UrlAnalyzer.selectContent(page, fetchProbeSelector);
             }
             ProbeFileStorage.append(ProbeFileStorage.probe_file, page.getUrl(), content);
@@ -105,7 +107,7 @@ public class PageChangeProber {
             }
 
             String content;
-            if (Constants.default_config.equals(fetchProbeSelector)) {
+            if (DefaultConfig.default_value.equals(fetchProbeSelector)) {
                 content = newContent;
             } else {
                 content = UrlAnalyzer.selectContent(page, fetchProbeSelector);

@@ -76,7 +76,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.FileUtil;
@@ -445,7 +445,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 .setConnectionManagerShared(true).setRetryHandler(retryHandler).setKeepAliveStrategy(keepAliveStrategy)
                 .setDefaultRequestConfig(defaultRequestConfig);
 
-        Constants.HTTP_CLIENT_BUILDER_CACHE.put(seedName, httpClientBuilder);
+        Globals.HTTP_CLIENT_BUILDER_CACHE.put(seedName, httpClientBuilder);
     }
 
     /**
@@ -468,16 +468,16 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
      * @param seedName seedName
      */
     private static void setHttpProxy(String seedName) {
-        HttpProxySelector hpl = Constants.HTTP_PROXY_CACHE.get(seedName);
+        HttpProxySelector hpl = Globals.HTTP_PROXY_CACHE.get(seedName);
         if (hpl == null) {
             return;
         }
         HttpProxy proxy = hpl.choice();
         if (proxy.getHttpHost() != null) {
-            Constants.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setProxy(proxy.getHttpHost());
+            Globals.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setProxy(proxy.getHttpHost());
         }
         if (proxy.getCredsProvider() != null) {
-            Constants.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setDefaultCredentialsProvider(proxy.getCredsProvider());
+            Globals.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setDefaultCredentialsProvider(proxy.getCredsProvider());
         }
     }
 
@@ -485,13 +485,13 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
      * 设置User_Agent
      */
     private static void setUserAgent(String seedName) {
-        UserAgentSelector ual = Constants.USER_AGENT_CACHE.get(seedName);
+        UserAgentSelector ual = Globals.USER_AGENT_CACHE.get(seedName);
         if (ual == null) {
             return;
         }
         String userAgent = ual.choice();
         if (!StringUtil.isNullOrBlank(userAgent)) {
-            Constants.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setUserAgent(userAgent);
+            Globals.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setUserAgent(userAgent);
         }
     }
 
@@ -514,7 +514,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             setUserAgent(page.getSeedName());
             // 生成site url
             setHost(page);
-            httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
+            httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
             request = new HttpGet(url);
             request.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
             request.addHeader("Host", page.getHost());
@@ -610,7 +610,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         }
         String start = DateUtil.getCurrentDate();
         String fileName = FileUtil.generateResourceName(page.getUrl(), "");
-        fileName = Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName()) + fileName;
+        fileName = Globals.DOWNLOAD_DIR_CACHE.get(page.getSeedName()) + fileName;
         FileUtil.createNullFile(fileName, contentlength);
         CloseableHttpClient httpClient = null;
         String url = page.getUrl();
@@ -618,7 +618,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         try {
             setHttpProxy(page.getSeedName());
             setUserAgent(page.getSeedName());
-            httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
+            httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
             request = new HttpGet(url);
             //request.addHeader("Range", "bytes=" + offset + "-" + (this.offset + this.length - 1));//断点续传的话需要设置Range属性，当然前提是服务器支持
             HttpResponse response = httpClient.execute(request);
@@ -646,7 +646,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
      */
     private static void setRedirectFalse(String seedName) {
         RequestConfig config = RequestConfig.custom().setRedirectsEnabled(false).build();//不允许重定向
-        Constants.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setDefaultRequestConfig(config);
+        Globals.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setDefaultRequestConfig(config);
     }
 
     /**
@@ -665,7 +665,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         setHttpProxy(page.getSeedName());
         setUserAgent(page.getSeedName());
         setRedirectFalse(page.getSeedName());
-        CloseableHttpClient httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
+        CloseableHttpClient httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
         for (String url : resources) {
             HttpGet request = null;
 
@@ -705,7 +705,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 }
 
                 byte[] content = EntityUtils.toByteArray(entity);
-                String resourceName = Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
+                String resourceName = Globals.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
                 Header header = entity.getContentType();
                 if (header == null) {
                     continue;
@@ -774,7 +774,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         setHttpProxy(page.getSeedName());
         setUserAgent(page.getSeedName());
         setRedirectFalse(page.getSeedName());
-        CloseableHttpClient httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
+        CloseableHttpClient httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
         HttpGet request = null;
         try {
             request = new HttpGet(url);
@@ -817,7 +817,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             }
             String contentType = header.getValue();
             String suffix = "";
-            String resourceName = Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
+            String resourceName = Globals.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
             if (StringUtil.isNullOrBlank(contentType)) {
                 resourceName += FileUtil.generateResourceName(url, suffix);
                 FileUtil.writeFileToDisk(resourceName, content);
@@ -876,7 +876,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         try {
             setHttpProxy(page.getSeedName());
             setUserAgent(page.getSeedName());
-            httpClient = Constants.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
+            httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
             request = new HttpGet(page.getUrl());
             request.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
             HttpResponse response = httpClient.execute(request);

@@ -18,7 +18,8 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.conf.DefaultConfig;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.net.http.HttpProxy;
@@ -65,7 +66,7 @@ public final class FileUtil {
     }
 
     /**
-     * 读取http代理文件转换为HttpProxy对象到内存中 http_proxy文件的格式是ip:port@username:password
+     * 读取http代理文件转换为HttpProxy对象到内存中 http_proxy文件的格式是ip:port或者ip:port@username:password
      *
      * @param httpProxyFile String
      * @return List<HttpProxy>
@@ -293,14 +294,14 @@ public final class FileUtil {
      * @param page Page
      */
     public static void downloadPagesToDisk(Page page) {
-        String folderName = Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
+        String folderName = Globals.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
         String fileName = folderName + File.separator;
         if (page.isJsonContent()) {
-            fileName += generatePageName(page.getUrl(), Constants.JSON_PAGE_SUFFIX);
+            fileName += generatePageName(page.getUrl(), DefaultConfig.json_page_suffix);
         } else if (page.isHtmlContent()) {
-            fileName += generatePageName(page.getUrl(), Constants.DEFAULT_PAGE_SUFFIX);
+            fileName += generatePageName(page.getUrl(), DefaultConfig.html_page_suffix);
         } else if (page.isXmlContent()) {
-            fileName += generatePageName(page.getUrl(), Constants.XML_PAGE_SUFFIX);
+            fileName += generatePageName(page.getUrl(), DefaultConfig.xml_page_suffix);
         } else {// 这种情况为资源文件，直接返回
             return;
         }
@@ -383,7 +384,7 @@ public final class FileUtil {
         }
 
         // 此时newUrl的格式为 www.aaa.com/path 或者 www.aaa.com
-        if (!Constants.IS_KEEP_FILE_URL) {
+        if (!DefaultConfig.download_file_url_naming) {
             newUrl = newUrl.substring(newUrl.lastIndexOf("/") + 1, newUrl.length());
         }
 
@@ -393,7 +394,7 @@ public final class FileUtil {
         }
 
         if (StringUtil.isNullOrBlank(newUrl)) {
-            newUrl = Constants.DEFAULT_HOME_PAGE_NAME;
+            newUrl = DefaultConfig.home_page_name;
         } else {
 
             // 默认用下划线取代url中的特殊字符
@@ -426,7 +427,7 @@ public final class FileUtil {
             url = url.substring(0, url.length() - 1);
         }
         // 此时newUrl的格式为 www.aaa.com/path 或者 www.aaa.com
-        if (!Constants.IS_KEEP_FILE_URL) {
+        if (!DefaultConfig.download_file_url_naming) {
             url = url.substring(url.lastIndexOf("/") + 1, url.length());
         }
         // 去除url中的参数

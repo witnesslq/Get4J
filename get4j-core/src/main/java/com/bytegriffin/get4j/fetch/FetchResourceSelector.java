@@ -1,7 +1,7 @@
 package com.bytegriffin.get4j.fetch;
 
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.util.StringUtil;
@@ -65,7 +65,7 @@ public class FetchResourceSelector {
         if (otherSelectors != null && otherSelectors.size() > 0) {
             FetchResourceSelector ff = new FetchResourceSelector();
             ff.setSelectors(otherSelectors);
-            Constants.FETCH_RESOURCE_SELECTOR_CACHE.put(seed.getSeedName(), ff);
+            Globals.FETCH_RESOURCE_SELECTOR_CACHE.put(seed.getSeedName(), ff);
         }
     }
 

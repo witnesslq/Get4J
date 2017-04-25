@@ -5,8 +5,9 @@ import java.io.File;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.conf.Seed;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.core.Process;
@@ -43,8 +44,8 @@ public class DiskDownloader implements Process {
             staticServer = diskpath.endsWith("/") ? diskpath : diskpath + "/";// 静态资源服务器地址
             folderName = FileUtil.makeDiskDir(defaultAvatarPath);// 获取默认的服务器磁盘地址
         } else {
-            if (Constants.default_config.equalsIgnoreCase(diskpath)) {
-                diskpath = Constants.getDownloadDisk(seed.getSeedName());
+            if (DefaultConfig.default_value.equalsIgnoreCase(diskpath)) {
+                diskpath = DefaultConfig.getDownloadDisk(seed.getSeedName());
             } else if (diskpath.contains(File.separator) || diskpath.contains(":")) {
                 if (!diskpath.contains(seed.getSeedName())) {
                     diskpath = diskpath + File.separator + seed.getSeedName();
@@ -55,14 +56,14 @@ public class DiskDownloader implements Process {
             }
             folderName = FileUtil.makeDiskDir(diskpath);// 获取用户配置的磁盘地址
         }
-        Constants.DOWNLOAD_DIR_CACHE.put(seed.getSeedName(), folderName);
+        Globals.DOWNLOAD_DIR_CACHE.put(seed.getSeedName(), folderName);
         logger.info("种子[" + seed.getSeedName() + "]的组件DiskDownloader的初始化完成。");
     }
 
     @Override
     public void execute(Page page) {
         // 1.在磁盘上生成页面
-        PageMode fm = Constants.FETCH_PAGE_MODE_CACHE.get(page.getSeedName());
+        PageMode fm = Globals.FETCH_PAGE_MODE_CACHE.get(page.getSeedName());
         if (!PageMode.list_detail.equals(fm)) {// 当启动list_detail模式，默认不会下载页面的
             FileUtil.downloadPagesToDisk(page);
         }
@@ -74,7 +75,7 @@ public class DiskDownloader implements Process {
         if (!StringUtil.isNullOrBlank(page.getAvatar())) {
             HttpClientEngine.downloadAvatar(page);// 下载avatar资源
             // 另开一个线程专门负责启用脚本同步avatar资源文件
-            if (Constants.SYNC_OPEN) {
+            if (DefaultConfig.sync_open) {
                 BatchScheduler.addResource(page.getSeedName(), page.getAvatar());
             }
             String avatar = page.getAvatar();
@@ -85,7 +86,7 @@ public class DiskDownloader implements Process {
         }
 
         // 4.设置page的资源保存路径属性
-        page.setResourceSavePath(Constants.DOWNLOAD_DIR_CACHE.get(page.getSeedName()));
+        page.setResourceSavePath(Globals.DOWNLOAD_DIR_CACHE.get(page.getSeedName()));
         logger.info("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]完成。");
     }
 

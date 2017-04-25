@@ -11,8 +11,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.bytegriffin.get4j.core.Constants;
-import com.bytegriffin.get4j.probe.ProbePageSerial;
+import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.probe.ProbePageSerial.ProbePage;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.MD5Util;
@@ -30,7 +29,7 @@ public class ProbeFileStorage {
      */
     private static int probe_buffer_length = 89;
     public static String filename = "probe_pages";
-    public static String probe_file = Constants.probe_folder + filename;
+    public static String probe_file = DefaultConfig.probe_folder + filename;
 
     /**
      * 读取Probe文件中与url相等的值

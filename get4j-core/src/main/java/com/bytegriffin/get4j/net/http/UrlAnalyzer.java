@@ -27,7 +27,8 @@ import org.jsoup.select.Elements;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.bytegriffin.get4j.core.Constants;
+import com.bytegriffin.get4j.conf.DefaultConfig;
+import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.util.StringUtil;
@@ -81,8 +82,8 @@ public final class UrlAnalyzer {
      * @return
      */
     public static String formatListDetailUrl(String fetchUrl) {
-        return fetchUrl.replace(Constants.FETCH_LIST_URL_VAR_LEFT, "")
-                .replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "").trim();
+        return fetchUrl.replace(DefaultConfig.fetch_list_url_left, "")
+                .replace(DefaultConfig.fetch_list_url_right, "").trim();
     }
 
     /**
@@ -230,7 +231,7 @@ public final class UrlAnalyzer {
      * @return HashSet<String>
      */
     public final HashSet<String> sniffDetailLinks() {
-        String detailSelect = Constants.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
+        String detailSelect = Globals.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
         if (StringUtil.isNullOrBlank(detailSelect)) {
             return null;
         }
@@ -249,8 +250,8 @@ public final class UrlAnalyzer {
                 urls.add(link);
             }
         } else if (page.isJsonContent()) { // json格式：通过jsonpath来获取detail链接
-            if (detailSelect.startsWith(Constants.JSON_PATH_PREFIX)) {// json字符串里的detail页面提供的是绝对路径
-                if (detailSelect.contains(Constants.FETCH_DETAIL_JSON_HTML_SPLIT)) { // 特殊情况：当Json属性中包含Html，并且Html中存在Detail Link时，之间用逗号隔开，所以需要jsonpath和jsoup两个解析
+            if (detailSelect.startsWith(DefaultConfig.json_path_prefix)) {// json字符串里的detail页面提供的是绝对路径
+                if (detailSelect.contains(DefaultConfig.fetch_detail_json_html_split)) { // 特殊情况：当Json属性中包含Html，并且Html中存在Detail Link时，之间用逗号隔开，所以需要jsonpath和jsoup两个解析
                     List<String> contents = FetchResourceSelector.jsonPath2List(page.getJsonContent(), detailSelect, "");
                     for (String field : contents) {
                         if (field == null) {
@@ -267,10 +268,10 @@ public final class UrlAnalyzer {
                 } else {
                     urls = FetchResourceSelector.jsonPath(page.getJsonContent(), detailSelect, "");
                 }
-            } else if (detailSelect.contains(Constants.JSON_PATH_PREFIX)) { // json字符串里的detail页面提供的是相对路径
-                String[] str = detailSelect.split("\\" + Constants.JSON_PATH_PREFIX);
+            } else if (detailSelect.contains(DefaultConfig.json_path_prefix)) { // json字符串里的detail页面提供的是相对路径
+                String[] str = detailSelect.split("\\" + DefaultConfig.json_path_prefix);
                 String urlpath = str[0];
-                String jsonpath = Constants.JSON_PATH_PREFIX + str[1];
+                String jsonpath = DefaultConfig.json_path_prefix + str[1];
                 urls = FetchResourceSelector.jsonPath(page.getJsonContent(), jsonpath, urlpath);
             }
         } else if (page.isXmlContent()) { // xml格式
@@ -287,7 +288,7 @@ public final class UrlAnalyzer {
      */
     public final void sniffAndSetResources() {
         HashSet<String> resources = new HashSet<>();
-        FetchResourceSelector resourceselector = Constants.FETCH_RESOURCE_SELECTOR_CACHE.get(page.getSeedName());
+        FetchResourceSelector resourceselector = Globals.FETCH_RESOURCE_SELECTOR_CACHE.get(page.getSeedName());
         if (resourceselector == null || resourceselector.isConfigAll()) {// 如果ResourceSelector配置了all或者默认没有配置此项
             if (page.isHtmlContent()) {// html格式在all模式下会启动jsoup抓取各种资源的src和href
                 String siteUrl = page.getUrl();
@@ -327,9 +328,9 @@ public final class UrlAnalyzer {
                     if (StringUtil.isNullOrBlank(select)) {
                         continue;
                     }
-                    String[] str = select.split("\\" + Constants.JSON_PATH_PREFIX);
+                    String[] str = select.split("\\" + DefaultConfig.json_path_prefix);
                     String urlpath = str[0];
-                    String jsonpath = Constants.JSON_PATH_PREFIX + str[1];
+                    String jsonpath = DefaultConfig.json_path_prefix + str[1];
                     HashSet<String> url = FetchResourceSelector.jsonPath(page.getJsonContent(), jsonpath, urlpath);
                     resources.addAll(url);
                 }
@@ -353,9 +354,9 @@ public final class UrlAnalyzer {
      * @return map key：detail_link value：avatar_link
      */
     public Map<String, String> mappingDetailLinkAndAvatar() {
-        String detailSelect = Constants.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
+        String detailSelect = Globals.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
         Map<String, String> map = new HashMap<>();
-        FetchResourceSelector resourceselector = Constants.FETCH_RESOURCE_SELECTOR_CACHE.get(page.getSeedName());
+        FetchResourceSelector resourceselector = Globals.FETCH_RESOURCE_SELECTOR_CACHE.get(page.getSeedName());
         List<String> selectors = resourceselector.getSelectors();
         if (page.isHtmlContent()) {
             // html格式：默认只认为在list_detail模式下的resource.selector选择出来的资源
@@ -402,9 +403,9 @@ public final class UrlAnalyzer {
             }
             List<String> avatars = new ArrayList<>();
             for (String select : selectors) {// 最多只有一条记录
-                String[] str = select.split("\\" + Constants.JSON_PATH_PREFIX);
+                String[] str = select.split("\\" + DefaultConfig.json_path_prefix);
                 String urlpath = str[0];
-                String jsonpath = Constants.JSON_PATH_PREFIX + str[1];
+                String jsonpath = DefaultConfig.json_path_prefix + str[1];
                 avatars = FetchResourceSelector.jsonPath2List(page.getJsonContent(), jsonpath, urlpath);
             }
             setDetailLinkAvatarMapping(detailink, avatars, map);

@@ -29,7 +29,7 @@ public class Worker implements Runnable {
         if (StringUtil.isNullOrBlank(seedName)) {
             return;
         }
-        Chain chain = Constants.CHAIN_CACHE.get(seedName);
+        Chain chain = Globals.CHAIN_CACHE.get(seedName);
         ConcurrentQueue<String> urlQueue = UrlQueue.getUnVisitedLink(seedName);
         logger.info("线程[" + Thread.currentThread().getName() + "]开始执行任务[" + seedName + "]。。。");
         while (urlQueue != null && !urlQueue.isEmpty()) {

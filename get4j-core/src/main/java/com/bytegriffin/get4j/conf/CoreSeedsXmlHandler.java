@@ -71,7 +71,7 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
                     seed.setFetchUserAgentFile(value);
                 } else if (name.equalsIgnoreCase(fetch_sleep)) {
                     if (!StringUtil.isNullOrBlank(value)) {
-                        seed.setFetchSleep(Long.valueOf(value));
+                        seed.setFetchSleep(Integer.valueOf(value));
                     }
                 } else if (name.equalsIgnoreCase(fetch_sleep_range)) {
                     seed.setFetchSleepRange(value);

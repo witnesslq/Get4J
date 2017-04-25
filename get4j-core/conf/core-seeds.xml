@@ -11,7 +11,7 @@
         <property>
             <name>worker.thread.number</name>
             <value>3</value>
-            <description>非必填项。爬虫工作线程数量，默认值是1。根据url数量来动态分配</description>
+            <description>非必填项。爬虫工作线程数量，默认值default是1。根据url数量来动态分配</description>
         </property>
         <property>
             <name>fetch.page.mode</name>
@@ -89,7 +89,7 @@
             <value></value>
             <description>
                 非必填项。延迟策略，每两次http请求之间的间隔时间(单位：秒)，以防止频繁访问站点抓取不到内容，
-                默认值为0，注意每两次请求还跟当时网速等有关，并非真正起到完全固定的时间
+                默认值default为0，注意每两次请求还跟当时网速等有关，并非真正起到完全固定的时间
             </description>
         </property>
         <property>
@@ -103,19 +103,18 @@
         <property>
             <name>fetch.javascript.support</name>
             <value></value>
-            <description>非必填项。抓取的页面是否支持javascript效果，true表示支持，但是会影响抓取速度，默认值为false
+            <description>非必填项。抓取的页面是否支持javascript效果，true表示支持，但是会影响抓取速度，默认值default为false
             </description>
         </property>
         <property>
             <name>fetch.http.proxy</name>
             <value></value>
-            <description>非必填项。抓取网站所需的http代理，可配合一定的时间延迟fetch.delay、不同UserAgent、http代理模拟人为操作</description>
+            <description>非必填项。抓取网站所需的http代理，默认值default表示conf/http_proxy文件，如果想配置在本爬虫其它目录下，前缀可以用classpath；如果想配置到爬虫外的其它路径可以用操作系统的绝对路径</description>
         </property>
         <property>
             <name>fetch.http.user_agent</name>
             <value></value>
-            <description>非必填项。抓取网站所需的UserAgent，可配合一定的时间延迟fetch.delay、不同cookie、http代理模拟人为操作
-            </description>
+            <description>非必填项。抓取网站所需的UserAgent，默认值default表示conf/user_agent文件，如果想配置在本爬虫其它目录下，前缀可以用classpath；如果想配置到爬虫外的其它路径可以用操作系统的绝对路径</description>
         </property>
         <property>
             <name>download.disk</name>

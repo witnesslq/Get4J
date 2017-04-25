@@ -21,9 +21,9 @@ public @interface Cascade {
 
     String startTime() default "";
 
-    long interval() default 0;
+    int interval() default 0;
 
-    long sleep() default 0;
+    int sleep() default 0;
 
     String sleepRange() default "";
 
