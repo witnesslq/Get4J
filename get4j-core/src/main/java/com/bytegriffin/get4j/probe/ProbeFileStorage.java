@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +21,6 @@ import com.bytegriffin.get4j.util.MD5Util;
 
 /**
  * Probe文件存储器 <br>
- * 注意：本类在Win10操作系统下会出现文件消失的状况。
  */
 public class ProbeFileStorage {
 
@@ -28,7 +30,7 @@ public class ProbeFileStorage {
      * probe序列化文件中对象的固定长度字节，这样才容易遍历出文件中存储的多个相同大小的ProbePage对象
      */
     private static int probe_buffer_length = 89;
-    public static String filename = "probe_pages";
+    public static String filename = "probe_pages.bin";
     public static String probe_file = DefaultConfig.probe_folder + filename;
 
     /**
@@ -113,10 +115,11 @@ public class ProbeFileStorage {
         FileOutputStream tempFos = null;
         ProbePageSerial.ProbePage newProbePage = null;
         List<ProbePage> list = read();
+        String tempfile = probe_file + "." + System.currentTimeMillis() + ".tmp";
         try {
             if (!list.isEmpty()) {
                 // 2.1 更新就是先创建一个临时文件  windows下是 C:\Users\用户名\AppData\Local\Temp\
-                File tempFile = new File(probe_file + System.currentTimeMillis() + ".tmp");
+                File tempFile = new File(tempfile);
                 tempFos = new FileOutputStream(tempFile);
                 // 2.2 将probe文件除了url相同的数据转存到临时文件中
                 for (ProbePage pp : list) {
@@ -129,26 +132,19 @@ public class ProbeFileStorage {
                 }
 
                 // 2.3 将要更新的数据追加到临时文件中
-                newProbePage = append(tempFile.getCanonicalPath(), url, content);
-
-                // 2.4 删除原probe文件
-                if (!new File(probe_file).delete()) {
-                    logger.error("不能删除probe原文件。");
-                }
-                // 2.5 将临时文件重命名为probe文件
-                if (!tempFile.renameTo(new File(probe_file))) {
-                    logger.error("不能重命名probe新文件。");
-                }
-
-                return newProbePage;
+                return append(tempFile.getCanonicalPath(), url, content);
             }
         } catch (IOException e) {
             logger.error("更新probe文件时出错。", e);
         } finally {
-            // 必须关闭才能重命名成功，临时文件在关闭后会自动删除
             try {
                 tempFos.flush();
                 tempFos.close();
+                // 2.4 将临时文件重命名为probe文件，原probe文件存在的话就直接覆盖
+                // 必须要在流关闭之后才能重命名，否则在windows系统下报错
+                if (!list.isEmpty()) {
+                	Files.move(Paths.get(tempfile), Paths.get(probe_file), StandardCopyOption.REPLACE_EXISTING);
+                }
             } catch (IOException e) {
                 logger.error("更新probe文件时出错。", e);
             }

@@ -346,7 +346,9 @@ public class SpiderEngine {
      * 第三步：创建工作环境
      */
     private void buildConfiguration() {
-    	configuration.setDownloadFileNameRule(DefaultConfig.default_value);
+    	if(configuration != null){
+    		configuration.setDownloadFileNameRule(DefaultConfig.default_value);
+    	}
     	DefaultConfig.download_file_url_naming = (configuration != null &&
                 !DefaultConfig.default_value.equals(configuration.getDownloadFileNameRule()));
     }
