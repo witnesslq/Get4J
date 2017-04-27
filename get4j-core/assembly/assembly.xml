@@ -14,7 +14,7 @@
     <fileSets>
         <fileSet>
 
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory>${file.separator}</outputDirectory>
             <includes>
                 <include>bin/*</include>
                 <include>conf/*</include>

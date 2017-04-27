@@ -29,18 +29,18 @@
     </modules>
 
     <properties>
-        <log4j.version>2.8.1</log4j.version>
+        <log4j.version>2.8.2</log4j.version>
         <slf4j.version>1.7.25</slf4j.version>
         <dom4j.version>2.0.0</dom4j.version>
         <httpcore.version>4.4.6</httpcore.version>
         <httpclient.version>4.5.3</httpclient.version>
         <jsoup.version>1.10.2</jsoup.version>
-        <htmlunit.version>2.25</htmlunit.version>
-        <fastjson.version>1.2.29</fastjson.version>
+        <htmlunit.version>2.26</htmlunit.version>
+        <fastjson.version>1.2.31</fastjson.version>
         <jsonpath.version>2.2.0</jsonpath.version>
         <!-- 注意：以下是java8的，和java6、java7不一样 -->
         <hikaricp.version>2.6.1</hikaricp.version>
-        <mysql-connector.version>6.0.5</mysql-connector.version>
+        <mysql-connector.version>6.0.6</mysql-connector.version>
         <mongo.version>3.4.2</mongo.version>
         <commons-net.version>3.6</commons-net.version>
         <snakeyaml.version>1.18</snakeyaml.version>
