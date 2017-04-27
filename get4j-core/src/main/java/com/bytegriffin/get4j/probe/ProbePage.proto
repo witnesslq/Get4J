@@ -5,6 +5,6 @@ option java_outer_classname = "ProbePageSerial";
 
 message ProbePage {
   string url = 1;
-  string content=2;
-  string probe_time=3;
+  string content=2; 
+  string finish=3; 
 }

@@ -72,27 +72,42 @@ public class PageChangeProber {
 
     public void start() {
         isrun = true;
+        setFinish();
     }
 
+    /**
+     * 设置抓取完成状态，表示此次抓取过程完全执行
+     */
+    public void setFinish(){
+    	if(page == null){
+    		return;
+    	}
+    	if(ProbeFileStorage.finished.equalsIgnoreCase(probePage.getFinish())){
+    		return;
+    	}
+    	String content = null;
+        if (page.isHtmlContent()) {
+            content = page.getHtmlContent();
+        } else if (page.isJsonContent()) {
+            content = page.getJsonContent();
+        } else if (page.isXmlContent()) {
+            content = page.getXmlContent();
+        }
+        if (!DefaultConfig.default_value.equalsIgnoreCase(fetchProbeSelector)) {
+            content = UrlAnalyzer.getPagePartContent(page, fetchProbeSelector);
+        }
+        probePage = ProbeFileStorage.update(page.getUrl(), content, ProbeFileStorage.finished);
+    }
 
     public void run() {
         // 1.第一次启动需要判断probe文件中等于url数据是否为空，如果为空的话则表示要先要抓取一次。
         // 注意：此时还可以添加 判断数据库中是否存在与url相等的记录
         if (probePage == null) {
-            http.probePageContent(page);
-            String content = null;
-            if (page.isHtmlContent()) {
-                content = page.getHtmlContent();
-            } else if (page.isJsonContent()) {
-                content = page.getJsonContent();
-            } else if (page.isXmlContent()) {
-                content = page.getXmlContent();
-            }
+            String content = http.probePageContent(page);
             if (!DefaultConfig.default_value.equalsIgnoreCase(fetchProbeSelector)) {
-                content = UrlAnalyzer.selectContent(page, fetchProbeSelector);
+                content = UrlAnalyzer.getPagePartContent(page, fetchProbeSelector);
             }
-            ProbeFileStorage.append(ProbeFileStorage.probe_file, page.getUrl(), content);
-            probePage = ProbeFileStorage.read(page.getUrl());
+            probePage = ProbeFileStorage.append(ProbeFileStorage.probe_file, page.getUrl(), content, ProbeFileStorage.un_finish);
             return;
         }
 
@@ -113,7 +128,7 @@ public class PageChangeProber {
             if (DefaultConfig.default_value.equals(fetchProbeSelector)) {
                 content = newContent;
             } else {
-                content = UrlAnalyzer.selectContent(page, fetchProbeSelector);
+                content = UrlAnalyzer.getPagePartContent(page, fetchProbeSelector);
             }
 
             if (StringUtil.isNullOrBlank(content)) {
@@ -125,10 +140,10 @@ public class PageChangeProber {
             }
 
             // 3.比对probe文件中存储url页面内容与新抓取的页面内容，
-            // 如果相同，则需要继续轮询抓取页面
-            // 如果不同，需要更新probe文件中相同url的content内容 并且 需要抓取新变化的内容
-            if (!probePage.getContent().equalsIgnoreCase(MD5Util.convert(content))) {
-                probePage = ProbeFileStorage.update(page.getUrl(), content);
+            // 如果相同并且probe文件finsh状态为已完成，则需要继续轮询监控抓取页面
+            // 如果不同或者probe文件finish状态为未完成，需要更新probe文件中相同url的content内容 并且 需要抓取新变化的内容
+            if (!probePage.getContent().equalsIgnoreCase(MD5Util.convert(content)) || ProbeFileStorage.un_finish.equalsIgnoreCase(probePage.getFinish())) {
+                probePage = ProbeFileStorage.update(page.getUrl(), content, ProbeFileStorage.un_finish);
                 logger.error("探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]发现新增内容，准备抓取更新操作。。。");
                 stop();
                 break;

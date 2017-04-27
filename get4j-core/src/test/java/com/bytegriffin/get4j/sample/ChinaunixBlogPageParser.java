@@ -23,8 +23,6 @@ public class ChinaunixBlogPageParser implements PageParser {
                 //.probe("div.classify_middle1", 30)
                 //.jdbc("jdbc:mysql://localhost:3306/get4j?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root")
                 .thread(3).start();
-
-
     }
 
 }

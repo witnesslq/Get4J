@@ -87,24 +87,47 @@ public final class UrlAnalyzer {
     }
 
     /**
-     * 获取html中指定的元素
+     * 获取页面中指定的元素
      *
      * @param page   page
      * @param select select
      * @return String
      */
-    public static String selectContent(Page page, String select) {
-        String content = null;
+    public static void selectPageElement(Page page, String select) {
         if (page.isHtmlContent()) {
             Document document = Jsoup.parse(page.getHtmlContent(), page.getUrl());
             Elements eles = document.select(select);
-            content = eles.toString();
             page.setHtmlContent(eles.text());
         } else if (page.isJsonContent()) {
             try {
                 String text = JsonPath.read(page.getJsonContent(), select);
                 page.setJsonContent(text);
-                content = text;
+            } catch (PathNotFoundException p) {
+                logger.error("种子[" + page.getSeedName() + "]在使用Jsonpath[" + select + "]定位解析Json字符串时出错，", p);
+            }
+        } else if (page.isXmlContent()) {
+            Document document = Jsoup.parse(page.getXmlContent(), "", Parser.xmlParser());
+            Elements eles = document.select(select);
+            page.setXmlContent(eles.text());
+        }
+    }
+
+    /**
+     * 获取页面中指定的部分区域内容
+     * 与selectPageElement方法的区别就是本方法获取的是带有（Html/XML等）标签的内容
+     * @param page
+     * @param select
+     * @return String
+     */
+    public static String getPagePartContent(Page page, String select) {
+    	String content = null;
+        if (page.isHtmlContent()) {
+            Document document = Jsoup.parse(page.getHtmlContent(), page.getUrl());
+            Elements eles = document.select(select);
+            content = eles.toString();
+        } else if (page.isJsonContent()) {
+            try {//Json中暂时只支持获取属性
+            	content = JsonPath.read(page.getJsonContent(), select);
             } catch (PathNotFoundException p) {
                 logger.error("种子[" + page.getSeedName() + "]在使用Jsonpath[" + select + "]定位解析Json字符串时出错，", p);
             }
@@ -112,7 +135,6 @@ public final class UrlAnalyzer {
             Document document = Jsoup.parse(page.getXmlContent(), "", Parser.xmlParser());
             Elements eles = document.select(select);
             content = eles.toString();
-            page.setXmlContent(eles.text());
         }
         return content;
     }

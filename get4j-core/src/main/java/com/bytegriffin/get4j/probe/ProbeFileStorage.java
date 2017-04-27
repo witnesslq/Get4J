@@ -16,7 +16,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.probe.ProbePageSerial.ProbePage;
-import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.MD5Util;
 
 /**
@@ -27,11 +26,22 @@ public class ProbeFileStorage {
     private static final Logger logger = LogManager.getLogger(ProbeFileStorage.class);
 
     /**
-     * probe序列化文件中对象的固定长度字节，这样才容易遍历出文件中存储的多个相同大小的ProbePage对象
+     * probe序列化文件中对象的固定长度字节，这样才更加方便地遍历出文件中存储的多个相同大小的ProbePage对象
+     * 可通过probePage.getSerializedSize()来获取大小值
      */
-    private static int probe_buffer_length = 89;
-    public static String filename = "probe_pages.bin";
-    public static String probe_file = DefaultConfig.probe_folder + filename;
+    private static final int probe_buffer_length = 71;
+    /**
+     * 设置状态位是为了抓取过程中程序非法关闭，重启后仍然能继续抓取，
+     * 而不是判断probe文件有内容就不抓
+     * 0表示抓取未完成，重启程序后需要继续抓取
+     */
+    static final String un_finish = "0";
+    /**
+     * 1表示已完成，重启程序后不用再抓，直接轮训监控
+     */
+    static final String finished = "1";
+    static String filename = "probe_pages.bin";
+    static String probe_file = DefaultConfig.probe_folder + filename;
 
     /**
      * 读取Probe文件中与url相等的值
@@ -104,14 +114,16 @@ public class ProbeFileStorage {
         return null;
     }
 
+
     /**
      * 更新Probe文件：不能直接删除并更新数据，需要生成一个临时文件进行转存
      *
      * @param probePage 本地ProbePage
      * @param content
+     * @param isfinish
      * @return 是否更新成功
      */
-    public synchronized static ProbePage update(String url, String content) {
+    public synchronized static ProbePage update(String url, String content, String isfinish) {
         FileOutputStream tempFos = null;
         ProbePageSerial.ProbePage newProbePage = null;
         List<ProbePage> list = read();
@@ -127,12 +139,12 @@ public class ProbeFileStorage {
                         continue;
                     }
                     ProbePageSerial.ProbePage tempProbe = ProbePageSerial.ProbePage.newBuilder().setUrl(MD5Util.convert(pp.getUrl())).
-                            setContent(MD5Util.convert(pp.getContent())).setProbeTime(DateUtil.getCurrentDate()).build();
+                            setContent(MD5Util.convert(pp.getContent())).setFinish(isfinish).build();
                     tempProbe.writeTo(tempFos);
                 }
 
                 // 2.3 将要更新的数据追加到临时文件中
-                return append(tempFile.getCanonicalPath(), url, content);
+                return append(tempFile.getCanonicalPath(), url, content, isfinish);
             }
         } catch (IOException e) {
             logger.error("更新probe文件时出错。", e);
@@ -158,14 +170,15 @@ public class ProbeFileStorage {
      * @param file
      * @param url
      * @param content
+     * @param isfinish
      */
-    public synchronized static ProbePage append(String file, String url, String content) {
+    public synchronized static ProbePage append(String file, String url, String content, String isfinish) {
         FileOutputStream ff = null;
         ProbePageSerial.ProbePage probePage = null;
         try {
             ff = new FileOutputStream(file, true);// 追加内容
             probePage = ProbePageSerial.ProbePage.newBuilder().
-                    setUrl(MD5Util.convert(url)).setContent(MD5Util.convert(content)).setProbeTime(DateUtil.getCurrentDate()).build();
+                    setUrl(MD5Util.convert(url)).setContent(MD5Util.convert(content)).setFinish(isfinish).build();
             probePage.writeTo(ff);
             ff.flush();
             return probePage;
@@ -180,4 +193,5 @@ public class ProbeFileStorage {
         }
         return probePage;
     }
+    		
 }

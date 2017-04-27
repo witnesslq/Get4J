@@ -24,7 +24,7 @@ public class ElementSelectPageParser implements PageParser {
 
     @Override
     public void parse(Page page) {
-        UrlAnalyzer.selectContent(page, elementSeletor);
+        UrlAnalyzer.selectPageElement(page, elementSeletor);
         logger.info("线程[" + Thread.currentThread().getName() + "]解析种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]完成。");
     }
 
