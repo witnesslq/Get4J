@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.annotation.Cascade;
+import com.bytegriffin.get4j.annotation.Config;
 import com.bytegriffin.get4j.annotation.ListDetail;
 import com.bytegriffin.get4j.annotation.Single;
 import com.bytegriffin.get4j.annotation.Site;
@@ -44,6 +45,8 @@ public class Spider {
     private static Seed seed;
 
     private static ResourceSync resourceSync;
+    
+    private static Configuration configuration;
 
     private Spider() {
     }
@@ -446,6 +449,37 @@ public class Spider {
         return this;
     }
 
+    /**
+     * 下载文件命名规则，一般为default或url两种类型
+     * url表示文件名中包含url，default表示不包含
+     * @param rule
+     * @return
+     */
+    public Spider downloadFilenameRule(boolean isContainUrl){
+    	if(isContainUrl){
+    		configuration.setDownloadFileNameRule("url");
+    	} else {
+    		configuration.setDownloadFileNameRule(DefaultConfig.default_value);
+    	}
+    	return this;
+    }
+
+    /**
+     * 当系统发生异常，可将相关信息发送给指定接收人
+     * @param recipient
+     * @return
+     */
+    public Spider email(String... recipient){
+    	StringBuilder sb = new StringBuilder();
+    	for(int i=0; i<recipient.length; i++){
+    		sb.append(recipient[i]);
+    		if(i < recipient.length-1){
+    			sb.append(DefaultConfig.email_recipient_split);
+    		}
+    	}
+    	configuration.setEmailRecipient(sb.toString());
+    	return this;
+    }
 
     /**
      * 设置ftp为资源同步方式
@@ -544,6 +578,7 @@ public class Spider {
         me = new Spider();
         seed = new Seed();
         resourceSync = new ResourceSync();
+        configuration = new Configuration();
         return me.getAnnotation(clazz);
     }
 
@@ -673,6 +708,17 @@ public class Spider {
                     }
                 }
 
+            } else if ("Config".equalsIgnoreCase(type)) {
+            	 boolean anno = clazz.isAnnotationPresent(Sync.class);
+                 if (anno) {
+                	 Config config = (Config) clazz.getAnnotation(Config.class);
+                	 if("url".equalsIgnoreCase(config.downloadFilenameRule())){
+                		 this.downloadFilenameRule(true);
+                	 } else {
+                		 this.downloadFilenameRule(false);
+                	 }
+                     this.email(config.email());
+                 }
             }
         }
 
@@ -691,6 +737,7 @@ public class Spider {
         seed = new Seed();
         resourceSync = new ResourceSync();
         me = new Spider(PageMode.list_detail);
+        configuration = new Configuration();
         return me;
     }
 
@@ -705,6 +752,7 @@ public class Spider {
         seed = new Seed();
         resourceSync = new ResourceSync();
         me = new Spider(PageMode.single);
+        configuration = new Configuration();
         return me;
     }
 
@@ -719,6 +767,7 @@ public class Spider {
         seed = new Seed();
         resourceSync = new ResourceSync();
         me = new Spider(PageMode.cascade);
+        configuration = new Configuration();
         return me;
     }
 
@@ -733,6 +782,7 @@ public class Spider {
         seed = new Seed();
         resourceSync = new ResourceSync();
         me = new Spider(PageMode.site);
+        configuration = new Configuration();
         return me;
     }
 
@@ -749,7 +799,7 @@ public class Spider {
         if (StringUtil.isNullOrBlank(seed.getSeedName())) {
             seed.setSeedName(MD5Util.generateSeedName(seed.getFetchUrl()));
         }
-        SpiderEngine.create().setSeed(seed).setResourceSync(resourceSync).build();
+        SpiderEngine.create().setSeed(seed).setResourceSync(resourceSync).setConfiguration(configuration).build();
     }
 
     /**

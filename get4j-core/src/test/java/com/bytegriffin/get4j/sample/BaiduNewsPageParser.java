@@ -18,10 +18,14 @@ public class BaiduNewsPageParser implements PageParser {
     }
 
     public static void main(String[] args) throws Exception {
-        Spider.cascade().fetchUrl("http://news.baidu.com/")
+    	
+        Spider.cascade().fetchUrl("http://tousu.baidu.com/news/add")
                 .parser(BaiduNewsPageParser.class)
+                .email("get4jvip@126.com")
                 //.jdbc("jdbc:mysql://localhost:3306/get4j?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root")
-                .defaultLucene().thread(1).start();
+                //.defaultLucene()
+                .thread(1).start();
+    	
     }
 
 }

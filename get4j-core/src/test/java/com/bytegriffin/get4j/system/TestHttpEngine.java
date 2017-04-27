@@ -36,7 +36,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class TestHttpEngine {
 
 
-    private static String url = "http://huaban.com/favorite/home/";
+    private static String url = "http://tousu.baidu.com/news/add";
 
     public static void testunit() throws FailingHttpStatusCodeException, MalformedURLException, IOException {
         long start = System.currentTimeMillis();
@@ -87,7 +87,7 @@ public class TestHttpEngine {
 
         CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
         // 发送get请求
-        HttpGet request = new HttpGet("https://www.tuandai.com/pages/ajax/newinvest_list.ashx?pageindex=1&pagesize=5&Cmd=GetInvest_List&type=6&status=1");
+        HttpGet request = new HttpGet(url);
 //		List <NameValuePair> params = new ArrayList<NameValuePair>();  
 //        params.add(new BasicNameValuePair("pageindex", "1"));
 //        params.add(new BasicNameValuePair("pagesize", "5"));
@@ -109,7 +109,7 @@ public class TestHttpEngine {
         long aaa = end - start;
         String content = EntityUtils.toString(response.getEntity(), Consts.UTF_8);
         parse(content);
-        System.err.println(aaa + " " + content);
+        System.err.println(aaa + " " + response.getStatusLine().getStatusCode());
     }
 
     public static final String getAbsoluteURL(String baseUrl, String relativeUrl) {
@@ -127,7 +127,7 @@ public class TestHttpEngine {
     }
 
     public static void main(String... args) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
-        // testunit();
-        httpclient();
+         testunit();
+        // httpclient();
     }
 }

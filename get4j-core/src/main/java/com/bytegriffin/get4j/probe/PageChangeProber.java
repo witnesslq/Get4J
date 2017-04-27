@@ -10,6 +10,7 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.probe.ProbePageSerial.ProbePage;
+import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.MD5Util;
 import com.bytegriffin.get4j.util.StringUtil;
@@ -102,7 +103,9 @@ public class PageChangeProber {
             // 当页面内容为空时，发送Email通知
             if (StringUtil.isNullOrBlank(newContent)) {
                 stop();
-                logger.error("探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]内容为空。");
+                String msg = "探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]内容为空。";
+                logger.error(msg);
+                EmailSender.sendMail(msg);
                 break;
             }
 
@@ -115,7 +118,9 @@ public class PageChangeProber {
 
             if (StringUtil.isNullOrBlank(content)) {
                 stop();
-                logger.error("探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面选择器[" + content + "]出错或者是页面改版。");
+                String msg = "探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面选择器[" + content + "]出错或者是页面改版。";
+                logger.error(msg);
+                EmailSender.sendMail(msg);
                 break;
             }
 

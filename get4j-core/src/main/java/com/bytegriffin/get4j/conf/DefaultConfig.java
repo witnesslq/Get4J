@@ -152,4 +152,9 @@ public class DefaultConfig {
      * 每次同步的最大时间间隔，单位是秒
      */
     public static int sync_batch_time = 10;
+    
+    /**
+     * 多个email接收者之间的分隔符
+     */
+    public static final String email_recipient_split = ";";
 }

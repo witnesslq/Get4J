@@ -35,6 +35,8 @@ public class ConfigurationXmlHandler extends AbstractConfig {
             String value = property.element(value_node).getStringValue();
             if (name.equalsIgnoreCase(download_file_name)) {
                 conf.setDownloadFileNameRule(value);
+            } else if (name.equalsIgnoreCase(email_recipient_name)) {
+            	conf.setEmailRecipient(value);
             }
         }
         return conf;

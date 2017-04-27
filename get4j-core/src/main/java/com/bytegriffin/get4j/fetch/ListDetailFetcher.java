@@ -52,7 +52,7 @@ public class ListDetailFetcher implements Process {
 
         List<String> listurls = Globals.LIST_URLS_CACHE.get(page.getSeedName());
         if (listurls.contains(page.getUrl())) {// 访问的是list url
-            // 1.获取并设置列表页Page的HtmlContent或JsonContent属性
+            // 1.获取并设置列表页Page的Content属性
             page = http.getPageContent(page);
 
             // 2.设置Page其它属性 （detailSelect要先设置）

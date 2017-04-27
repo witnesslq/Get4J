@@ -36,7 +36,7 @@ public class SiteFetcher implements Process {
 
     @Override
     public void execute(Page page) {
-        // 1.获取并设置Page的HtmlContent或JsonContent属性、Cookies属性
+        // 1.获取并设置Page的Content属性、Cookies属性
         page = http.getPageContent(page);
 
         // 2.获取并设置Page的Resource属性

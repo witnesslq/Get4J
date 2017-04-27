@@ -78,6 +78,7 @@ import org.apache.logging.log4j.Logger;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
+import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.StringUtil;
@@ -362,6 +363,8 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 .setRelativeRedirectsAllowed(true).setSocketTimeout(soket_timeout).setConnectTimeout(conn_timeout)
                 .setCircularRedirectsAllowed(true).setConnectionRequestTimeout(conn_timeout)
                 .setExpectContinueEnabled(true)
+                //HttpClient是默认开启跳转功能的，但是遇到一些链接会报错：http://tousu.baidu.com/news/add
+                .setRedirectsEnabled(false)
                 .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
                 .setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC)).build();
 
@@ -585,6 +588,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         } catch (Exception e) {
             UrlQueue.newUnVisitedLink(page.getSeedName(), url);
             logger.error("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容失败。", e);
+            EmailSender.sendMail(e);
             if (request != null) {
                 request.abort();
             }
@@ -627,6 +631,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             logger.info("线程[" + Thread.currentThread().getName() + "]下载大小为[" + contentlength / (1024 * 1024) + "]MB的文件[" + fileName + "]总共花费时间为[" + log + "]。");
         } catch (Exception e) {
             logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的大文件[" + page.getUrl() + "]时失败。", e);
+            EmailSender.sendMail(e);
             if (request != null) {
                 request.abort();
             }
@@ -751,6 +756,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 UrlQueue.newUnVisitedResource(page.getSeedName(), url);
                 logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + url
                         + "]资源失败。", e);
+                EmailSender.sendMail(e);
                 if (request != null) {
                     request.abort();
                 }
@@ -859,6 +865,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             UrlQueue.newUnVisitedResource(page.getSeedName(), url);
             logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + url
                     + "]资源失败。", e);
+            EmailSender.sendMail(e);
             if (request != null) {
                 request.abort();
             }
@@ -923,8 +930,8 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             }
 
         } catch (Exception e) {
-
             logger.error("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容失败。", e);
+            EmailSender.sendMail(e);
             if (request != null) {
                 request.abort();
             }

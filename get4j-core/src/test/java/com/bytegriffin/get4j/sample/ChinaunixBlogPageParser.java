@@ -20,7 +20,7 @@ public class ChinaunixBlogPageParser implements PageParser {
                 .totalPages(1).detailSelector("div.two_cont2_1>a[href]").parser(ChinaunixBlogPageParser.class).defaultUserAgent()
                 .resourceSelector("div.classify_con1")
                 //.defaultProbe()
-                .probe("div.classify_middle1", 30)
+                //.probe("div.classify_middle1", 30)
                 //.jdbc("jdbc:mysql://localhost:3306/get4j?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root")
                 .thread(3).start();
 

@@ -56,6 +56,7 @@ public abstract class AbstractConfig {
     protected static final String store_mongodb = "store.mongodb";
     protected static final String store_lucene_index = "store.lucene.index";
     protected static final String download_file_name = "download.file.name";
+    protected static final String email_recipient_name = "email.recipient";
 
     /******** yaml node ************/
     public static final String ftp_node = "ftp";

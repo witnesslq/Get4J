@@ -11,12 +11,13 @@ import org.apache.lucene.index.IndexWriter;
 import org.bson.Document;
 
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
-import com.bytegriffin.get4j.probe.PageChangeProber;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.HttpProxySelector;
 import com.bytegriffin.get4j.net.http.SleepRandomSelector;
 import com.bytegriffin.get4j.net.http.UserAgentSelector;
 import com.bytegriffin.get4j.parse.PageParser;
+import com.bytegriffin.get4j.probe.PageChangeProber;
+import com.bytegriffin.get4j.send.EmailSender;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.mongodb.client.MongoCollection;
 
@@ -120,6 +121,9 @@ public final class Globals {
      */
     public static final Map<String, HttpEngine> HTTP_ENGINE_CACHE = new HashMap<>();
 
-
-
+    /**
+     * 全局Email发送器，如果配置了email.recipient就表示当系统出现异常发送邮件提醒
+     */
+    public static EmailSender emailSender;
+    
 }

@@ -30,6 +30,7 @@ import com.bytegriffin.get4j.net.sync.RsyncSyncer;
 import com.bytegriffin.get4j.net.sync.ScpSyncer;
 import com.bytegriffin.get4j.parse.AutoDelegateParser;
 import com.bytegriffin.get4j.probe.PageChangeProber;
+import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.store.DBStorage;
 import com.bytegriffin.get4j.store.FailUrlStorage;
 import com.bytegriffin.get4j.store.FreeProxyStorage;
@@ -346,11 +347,15 @@ public class SpiderEngine {
      * 第三步：创建工作环境
      */
     private void buildConfiguration() {
-    	if(configuration != null){
-    		configuration.setDownloadFileNameRule(DefaultConfig.default_value);
+    	if(configuration == null){
+    		return;
     	}
-    	DefaultConfig.download_file_url_naming = (configuration != null &&
-                !DefaultConfig.default_value.equals(configuration.getDownloadFileNameRule()));
+    	DefaultConfig.download_file_url_naming = !DefaultConfig.default_value.equals(configuration.getDownloadFileNameRule());
+    	
+    	if(!StringUtil.isNullOrBlank(configuration.getEmailRecipient())){
+    		EmailSender es = new EmailSender(configuration.getEmailRecipient());
+    		Globals.emailSender = es;
+    	}
     }
 
     /**
@@ -363,7 +368,7 @@ public class SpiderEngine {
             Launcher job = new Launcher(seed);
             Timer timer = new Timer();
             logger.info("爬虫开始抓取[" + seed.getSeedName() + "]。。。");
-            // 注意：如果配置了probe属性，那么程序不再支持interval功能，而是由probe来
+            // 注意：如果配置了probe属性，那么程序不再支持interval功能，而是由probe来接管
             if (!StringUtil.isNullOrBlank(seed.getFetchProbeSelector())) {
             	if (!StringUtil.isNullOrBlank(starttime)) {
             		timer.schedule(job, DateUtil.strToDate(starttime));
