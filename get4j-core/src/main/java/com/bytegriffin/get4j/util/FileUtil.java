@@ -202,7 +202,7 @@ public final class FileUtil {
     }
 
     /**
-     * 追加内容
+     * 按行追加内容
      *
      * @param file     File
      * @param contents Collection<String>

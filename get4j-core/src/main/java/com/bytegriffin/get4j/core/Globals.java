@@ -34,7 +34,7 @@ public final class Globals {
     /**
      * 全局chain工作流缓存 key:seed_name value: site
      */
-    static final Map<String, Chain> CHAIN_CACHE = new HashMap<>();
+    public static final Map<String, Chain> CHAIN_CACHE = new HashMap<>();
 
     /**
      * 全局http_proxy缓存 key:seed_name value: HttpProxySelector

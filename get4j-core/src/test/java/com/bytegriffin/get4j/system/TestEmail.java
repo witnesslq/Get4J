@@ -6,7 +6,7 @@ import com.bytegriffin.get4j.send.EmailSender;
 public class TestEmail {
 	
 	public static void main(String[] args){
-		Globals.emailSender = new EmailSender("get4jvip@126.com");
+		Globals.emailSender = new EmailSender("get4jvip@163.com;get4j@sina.com");
 		try{
 		 int a= 199/0;
 		 System.out.println(a);

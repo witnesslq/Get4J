@@ -31,17 +31,18 @@ import com.sun.mail.util.MailSSLSocketFactory;
 
 /**
  * 邮件发送器：当系统出现异常会将相关信息发送给指定接收人<br>
- * 为了避免反复发送相同内容的邮件和频繁启动线程，相同的错误的邮件仅发送一次。<br>
- * 注意：接受者的环境必须能够收到126邮箱发送的邮件
+ * 为了避免反复发送相同内容的邮件和频繁启动线程，强制将相同错误的邮件仅发送一次。<br>
+ * 系统一旦发生异常，就会自动发送一封邮件给系统管理员。<br>
+ * 注意：接受者的环境必须能够收到sina邮箱发送的邮件
  */
 public final class EmailSender implements Runnable{
 
 	private static final Logger logger = LogManager.getLogger(EmailSender.class);
-	private static final String host = "smtp.126.com";
-	private static final String username = "get4jvip@126.com";
+	private static final String host = "smtp.sina.com";
+	private static final String username = "get4j@sina.com";
 	// 加密过的授权密码
 	private static final String encrypt_password = "Z2V0NGp2aXA=";
-	private static String subject = "【Get4J提醒】爬虫系统出现问题";
+	private static String subject = "【Get4J提醒】爬虫系统发现异常";
 	private static String recipient;// 邮件接收人
 	private static Session session;
 	// 存放已经发送过的内容，为了节省内存已经过md5加密成定长字符串
@@ -149,7 +150,7 @@ public final class EmailSender implements Runnable{
 			Transport.send(message);
 			logger.info("线程[" + Thread.currentThread().getName() + "]发送Email完成。");
 		} catch (MessagingException e) {
-			// 如果发现是504错误，可以把接受者加到126邮箱的白名单中，或者修改邮件标题和邮件内容，否则126会当成垃圾邮件处理
+			// 如果发现是504错误，修改邮件标题和邮件内容，否则126会当成垃圾邮件处理，因此默认修改为sina邮箱
 			logger.info("线程[" + Thread.currentThread().getName() + "]发送Email时失败。", e);
 		}
 	}
@@ -185,7 +186,7 @@ public final class EmailSender implements Runnable{
 			MimeBodyPart messageBodyPart = new MimeBodyPart();
 			StringBuilder sb = new StringBuilder();
 			sb.append("您好：<br>");
-			sb.append("&nbsp;&nbsp;&nbsp;&nbsp;Get4J在["+DateUtil.getCurrentDate()+"]时刻发现问题：<br>");
+			sb.append("&nbsp;&nbsp;&nbsp;&nbsp;Get4J在["+DateUtil.getCurrentDate()+"]时刻发现的问题：<br>");
 			sb.append(exception.replaceAll("\\s+at+\\s", "<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; at "));
 			messageBodyPart.setContent(sb.toString(), "text/html; charset=utf-8");
 			multipart.addBodyPart(messageBodyPart);

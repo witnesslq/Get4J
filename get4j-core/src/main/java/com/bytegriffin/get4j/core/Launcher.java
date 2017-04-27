@@ -2,7 +2,6 @@ package com.bytegriffin.get4j.core;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -95,10 +94,9 @@ public class Launcher extends TimerTask {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Set<String> seedNameKeys = Globals.CHAIN_CACHE.keySet();
-        for (String seedName : seedNameKeys) {
-            FailUrlStorage.dumpFile(seedName);
-        }
+        // dump坏链
+        FailUrlStorage.dumpFile();
+        
         // 关闭闲置链接，以便下一次多线程调用
         HttpEngine he = Globals.HTTP_ENGINE_CACHE.get(seed.getSeedName());
         if (he instanceof HttpClientEngine) {
@@ -124,7 +122,7 @@ public class Launcher extends TimerTask {
                 }
             }
         }
-        // 清空这次抓取访问过的url集合
+        // 清空这次抓取访问过的url集合，以方便下次轮训抓取时过滤重复链接
         clearVisitedUrlQueue(seed);
     }
 
