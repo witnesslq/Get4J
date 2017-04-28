@@ -131,7 +131,7 @@ public final class EmailSender implements Runnable{
 	}
 
 	/**
-	 * 当系统出现异常，系统会由get4jvip@126.com发送给邮件接受者一封提醒邮件
+	 * 当系统出现异常，系统会由get4j@sina.com发送给邮件接受者一封提醒邮件
 	 * 
 	 * @param info
 	 * @throws Exception

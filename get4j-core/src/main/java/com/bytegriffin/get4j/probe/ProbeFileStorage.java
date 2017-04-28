@@ -130,7 +130,7 @@ public class ProbeFileStorage {
         String tempfile = probe_file + "." + System.currentTimeMillis() + ".tmp";
         try {
             if (!list.isEmpty()) {
-                // 2.1 更新就是先创建一个临时文件  windows下是 C:\Users\用户名\AppData\Local\Temp\
+                // 2.1 更新就是先创建一个临时文件  
                 File tempFile = new File(tempfile);
                 tempFos = new FileOutputStream(tempFile);
                 // 2.2 将probe文件除了url相同的数据转存到临时文件中

@@ -23,7 +23,7 @@ import com.bytegriffin.get4j.util.StringUtil;
  * 3.页面改版：需要重新设置爬虫<br>
  * 4.页面url不能再被访问：需要查明情况再定<br>
  * 注意：应尽量避免监控整个页面内容，即：fetchProbeSelector值尽量避免设置为default<br>
- * 因为有的页面每次请求都会在页面中动态生成一个随机字符串，这样就会导致程序判断每次访问页面都发生了变化。
+ * 因为当每次请求动态页面时，页面上都可能会生成一个随机字符串，这样就导致程序判断每次访问页面都发生了变化。
  */
 public class PageChangeProber {
 
