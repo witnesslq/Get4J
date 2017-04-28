@@ -39,8 +39,8 @@ public final class FailUrlStorage {
 			ConcurrentQueue<String> failurls = UrlQueue.getFailVisitedUrl(seedName);
 			if (failurls != null && failurls.size() > 0 && failurls.list.size() > 0) {
 				allFailUrls.addAll(failurls.list);
+				logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + seedName + "]时一共有[" + failurls.size()+ "]个坏链产生。");
 			}
-			logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + seedName + "]时一共有[" + failurls.size()+ "]个坏链产生。");
 		}
 		FileUtil.append(failUrlFile, allFailUrls);
 		String content = null;
