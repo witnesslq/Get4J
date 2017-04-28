@@ -10,7 +10,7 @@ if "%1" == "stop" goto doStop
 echo """""""""""""""""""""""""""""""""""""""""""""""""""""
 echo "               Get4J    Console                    "
 echo """""""""""""""""""""""""""""""""""""""""""""""""""""
-echo "Usage:    get  <Commands>                          "
+echo "Usage:    spider  <Commands>                       "
 echo "Commands:       start       start the spider       "
 echo "                restart     restart the spider     "
 echo "                stop        stop the spider        "

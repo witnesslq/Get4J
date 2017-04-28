@@ -1,5 +1,7 @@
 package com.bytegriffin.get4j.send;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -19,7 +21,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -211,7 +212,10 @@ public final class EmailSender implements Runnable{
 	 * @return
 	 */
 	private static String getStackTrace(Throwable t) {
-		return ExceptionUtils.getStackTrace(t);
+		StringWriter sw = new StringWriter();  
+        PrintWriter pw = new PrintWriter(sw, true);  
+        t.printStackTrace(pw);  
+        return sw.getBuffer().toString();  
     }
 	
 }

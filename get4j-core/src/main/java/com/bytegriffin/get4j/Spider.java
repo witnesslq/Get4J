@@ -573,8 +573,7 @@ public class Spider {
      * @throws Exception
      */
     public static Spider annotation(Class<?> clazz) throws Exception {
-        // 关闭httpclient中的日志，否则信息打印太多了。
-        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+    	DefaultConfig.closeHttpClientLog();
         me = new Spider();
         seed = new Seed();
         resourceSync = new ResourceSync();
@@ -732,8 +731,7 @@ public class Spider {
      * @return Spider
      */
     public static Spider list_detail() {
-        // 关闭httpclient中的日志，否则信息打印太多了。
-        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+    	DefaultConfig.closeHttpClientLog();
         seed = new Seed();
         resourceSync = new ResourceSync();
         me = new Spider(PageMode.list_detail);
@@ -747,8 +745,7 @@ public class Spider {
      * @return Spider
      */
     public static Spider single() {
-        // 关闭httpclient中的日志，否则信息打印太多了。
-        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+    	DefaultConfig.closeHttpClientLog();
         seed = new Seed();
         resourceSync = new ResourceSync();
         me = new Spider(PageMode.single);
@@ -762,8 +759,7 @@ public class Spider {
      * @return Spider
      */
     public static Spider cascade() {
-        // 关闭httpclient中的日志，否则信息打印太多了。
-        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+    	DefaultConfig.closeHttpClientLog();
         seed = new Seed();
         resourceSync = new ResourceSync();
         me = new Spider(PageMode.cascade);
@@ -777,8 +773,7 @@ public class Spider {
      * @return Spider
      */
     public static Spider site() {
-        // 关闭httpclient中的日志，否则信息打印太多了。
-        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+    	DefaultConfig.closeHttpClientLog();
         seed = new Seed();
         resourceSync = new ResourceSync();
         me = new Spider(PageMode.site);
@@ -809,7 +804,7 @@ public class Spider {
      * 可以直接调用defaultProxy方法即可
      */
     public static void initFreeProxy() {
-        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+    	DefaultConfig.closeHttpClientLog();
         List<Seed> seeds = new ArrayList<Seed>();
         Seed xicidaili = new Seed("xicidaili");
         xicidaili.setPageMode(PageMode.list_detail);
@@ -829,7 +824,7 @@ public class Spider {
      * @param args 命令行参数
      */
     public static void main(String... args) {
-        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+    	DefaultConfig.closeHttpClientLog();
         Context context = new Context(new CoreSeedsXmlHandler());
         List<Seed> seeds = context.load();
 

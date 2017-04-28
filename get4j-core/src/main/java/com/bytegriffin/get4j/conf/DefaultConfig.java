@@ -8,6 +8,13 @@ import com.bytegriffin.get4j.net.sync.Syncer;
  * 默认配置常量：负责系统中所有的默认配置参数
  */
 public class DefaultConfig {
+	
+	/**
+	 * 关闭httpclient中的日志，否则信息打印太多了。
+	 */
+	public static void closeHttpClientLog(){
+		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+	}
 
     /**
      * 默认：比如下载目录为default时指的是/data/download/${seedname}目录下

@@ -9,6 +9,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
@@ -39,7 +40,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
     @Override
     public void init(Seed seed) {
         // 1.初始化WebClient
-        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+    	DefaultConfig.closeHttpClientLog();
         WebClient webClient = new WebClient(BrowserVersion.CHROME);
         webClient.getOptions().setUseInsecureSSL(true);// 支持https
         webClient.getOptions().setJavaScriptEnabled(true); // 启用JS解释器，默认为true
