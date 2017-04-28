@@ -10,7 +10,7 @@ import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.util.StringUtil;
 
 /**
- * 代理解析入口：负责解析所有内置以及自定义的解析类
+ * 代理解析入口：负责代理所有内置以及自定义的解析类
  */
 public class AutoDelegateParser implements Process {
 
