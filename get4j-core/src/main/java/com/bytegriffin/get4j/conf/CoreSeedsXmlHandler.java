@@ -45,7 +45,7 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
                 String value = property.element(value_node).getStringValue();
                 if (name.equalsIgnoreCase(woker_thread_count)) {
                     if (!StringUtil.isNullOrBlank(value)) {
-                        seed.setThreadNumber(Integer.valueOf(value));
+                        seed.setThreadCount(Integer.valueOf(value));
                     }
                 } else if (name.equalsIgnoreCase(fetch_url)) {
                     seed.setFetchUrl(value);

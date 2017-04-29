@@ -68,7 +68,7 @@ public class Launcher extends TimerTask {
         // 设置执行线程
         ExecutorService executorService;
         CountDownLatch latch;
-        int threadNum = seed.getThreadNumber();
+        int threadNum = seed.getThreadCount();
         if (threadNum <= 1) {
             latch = new CountDownLatch(1);
             executorService = Executors.newSingleThreadExecutor();

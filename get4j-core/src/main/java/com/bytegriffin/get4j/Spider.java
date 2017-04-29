@@ -122,11 +122,11 @@ public class Spider {
     /**
      * 爬虫工作线程数量，非必填项。默认值是1。
      *
-     * @param num 爬虫线程数
+     * @param count 爬虫线程数
      * @return Spider
      */
-    public Spider thread(int num) {
-        seed.setThreadNumber(num);
+    public Spider thread(int count) {
+        seed.setThreadCount(count);
         return this;
     }
 
@@ -809,7 +809,7 @@ public class Spider {
         Seed xicidaili = new Seed("xicidaili");
         xicidaili.setPageMode(PageMode.list_detail);
         xicidaili.setFetchUrl("http://www.xicidaili.com/nn/{1}");
-        xicidaili.setThreadNumber(1);
+        xicidaili.setThreadCount(1);
         xicidaili.setFetchTotalPages("5");
         xicidaili.setParseClassImpl("com.bytegriffin.get4j.parse.FreeProxyPageParser");
         xicidaili.setStoreFreeProxy(DefaultConfig.http_proxy);

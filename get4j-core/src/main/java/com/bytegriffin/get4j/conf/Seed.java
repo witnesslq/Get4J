@@ -27,7 +27,7 @@ public class Seed {
     /**
      * 非必填项。爬虫工作线程数量，默认值是1
      */
-    private int threadNumber = DefaultConfig.thread_num;
+    private int threadCount = DefaultConfig.thread_count;
     /**
      * 页面模型：list_detail（页面格式）、single（单个页面)、cascade（页面中给出所有的url链接）、site（单个站点）默认值是site
      */
@@ -386,15 +386,15 @@ public class Seed {
         return storeLuceneIndex;
     }
 
-    public int getThreadNumber() {
-        return threadNumber;
-    }
+    public int getThreadCount() {
+		return threadCount;
+	}
 
-    public void setThreadNumber(int threadNumber) {
-        this.threadNumber = threadNumber;
-    }
+	public void setThreadCount(int threadCount) {
+		this.threadCount = threadCount;
+	}
 
-    public String getFetchTotalPages() {
+	public String getFetchTotalPages() {
         return fetchTotalPages;
     }
 

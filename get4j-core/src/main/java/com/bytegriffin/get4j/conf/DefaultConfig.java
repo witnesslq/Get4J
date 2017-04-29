@@ -24,7 +24,7 @@ public class DefaultConfig {
     /**
      * 默认 线程数目
      */
-    public static final int thread_num = 1;
+    public static final int thread_count = 1;
     
     /**
      * 默认 抓取延迟为0秒
