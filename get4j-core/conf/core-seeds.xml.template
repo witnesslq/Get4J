@@ -9,7 +9,7 @@
             先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
         </description>
         <property>
-            <name>worker.thread.number</name>
+            <name>worker.thread.count</name>
             <value>3</value>
             <description>非必填项。爬虫工作线程数量，默认值default是1。根据url数量来动态分配</description>
         </property>

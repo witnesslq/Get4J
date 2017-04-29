@@ -31,7 +31,7 @@ public abstract class AbstractConfig {
     protected static final String configuration_node = "configuration";
 
     /******** xml node name ************/
-    protected static final String woker_thread_number = "worker.thread.number";
+    protected static final String woker_thread_count = "worker.thread.count";
     protected static final String fetch_page_mode = "fetch.page.mode";
     protected static final String fetch_url = "fetch.url";
     protected static final String fetch_probe_selector = "fetch.probe.selector";
