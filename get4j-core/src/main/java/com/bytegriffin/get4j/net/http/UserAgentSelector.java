@@ -3,7 +3,7 @@ package com.bytegriffin.get4j.net.http;
 import java.util.List;
 
 /**
- * 循环获取User Agent，更好地模拟人为操作
+ * 随机获取User Agent，更好地模拟人为操作
  */
 public class UserAgentSelector extends RandomSelector<String> {
 

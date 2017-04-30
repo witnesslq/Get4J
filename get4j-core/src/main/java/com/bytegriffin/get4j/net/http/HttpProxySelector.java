@@ -3,7 +3,7 @@ package com.bytegriffin.get4j.net.http;
 import java.util.List;
 
 /**
- * 循环获取Http Proxy，更好地模拟人为操作
+ * 随机获取Http Proxy，更好地模拟人为操作
  */
 public class HttpProxySelector extends RandomSelector<HttpProxy> {
 
