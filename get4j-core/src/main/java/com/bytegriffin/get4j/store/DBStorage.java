@@ -14,9 +14,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.Seed;
+import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.Process;
+import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.MD5Util;
 import com.bytegriffin.get4j.util.StringUtil;
@@ -58,10 +60,10 @@ public class DBStorage implements Process {
         Page dbpage = readOne(dataSource, page);
         if (dbpage == null) {
             String insertSql = insertsql + buildInsertSql(page);
-            write(dataSource, insertSql);
+            write(page.getSeedName(), dataSource, insertSql);
         } else if (page.isRequireUpdate(dbpage)) {
             String updateSql = updatesql + buildUpdateSql(page, dbpage.getId());
-            write(dataSource, updateSql);
+            write(page.getSeedName(), dataSource, updateSql);
         }
         logger.info("线程[" + Thread.currentThread().getName() + "]保存种子[" + page.getSeedName() + "]url为[" + page.getUrl() + "]到关系型数据库中。");
     }
@@ -243,6 +245,8 @@ public class DBStorage implements Process {
             }
         } catch (Exception e) {
             logger.error("找不到数据 : " + sql, e);
+            EmailSender.sendMail(e);
+            ExceptionCatcher.addException(page.getSeedName(), e);
         } finally {
             try {
                 if (rs != null) {
@@ -264,10 +268,11 @@ public class DBStorage implements Process {
     /**
      * 向数据库中批量写多个数据
      *
+     * @param String     seedName
      * @param dataSource DataSource
      * @param sql        String
      */
-    private synchronized void write(DataSource dataSource, String sql) {
+    private synchronized void write(String seedName, DataSource dataSource, String sql) {
         Connection con = null;
         Statement stmt = null;
         try {
@@ -285,6 +290,8 @@ public class DBStorage implements Process {
             } catch (SQLException e1) {
                 e1.printStackTrace();
             }
+            EmailSender.sendMail(e);
+            ExceptionCatcher.addException(seedName, e);
             logger.error("不能执行更新sql: " + sql, e);
         } finally {
             try {

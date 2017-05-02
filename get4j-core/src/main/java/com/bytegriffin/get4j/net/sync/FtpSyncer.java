@@ -11,6 +11,9 @@ import org.apache.commons.net.ftp.FTPReply;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.bytegriffin.get4j.core.ExceptionCatcher;
+import com.bytegriffin.get4j.send.EmailSender;
+
 /**
  * Ftp同步器：用于将下载的资源文件资源文件，比如：avatar文件同步到图片服务器
  * 注意：远程的dir目录就是SeedName
@@ -61,6 +64,8 @@ public class FtpSyncer implements Syncer {
                     ftpClient.changeToParentDirectory();
                 } catch (FileNotFoundException e) {
                     logger.error("Ftp同步资源时出错。", e);
+                    EmailSender.sendMail(e);
+                	ExceptionCatcher.addException(e);
                 } finally {
                     if (inputStream != null) {
                         inputStream.close();

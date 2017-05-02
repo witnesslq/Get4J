@@ -28,11 +28,13 @@ import org.jsoup.select.Elements;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.bytegriffin.get4j.conf.DefaultConfig;
+import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
+import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.StringUtil;
-import com.bytegriffin.get4j.util.UrlQueue;
+import com.bytegriffin.get4j.core.UrlQueue;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 
@@ -78,8 +80,8 @@ public final class UrlAnalyzer {
      * 格式化list_detail模式下的url
      * 将http://www.aa.com/list?page={1} ==> http://www.aa.com/list?page=1
      *
-     * @param fetchUrl
-     * @return
+     * @param fetchUrl String
+     * @return String
      */
     public static String formatListDetailUrl(String fetchUrl) {
         return fetchUrl.replace(DefaultConfig.fetch_list_url_left, "")
@@ -102,8 +104,10 @@ public final class UrlAnalyzer {
             try {
                 String text = JsonPath.read(page.getJsonContent(), select);
                 page.setJsonContent(text);
-            } catch (PathNotFoundException p) {
-                logger.error("种子[" + page.getSeedName() + "]在使用Jsonpath[" + select + "]定位解析Json字符串时出错，", p);
+            } catch (PathNotFoundException e) {
+            	EmailSender.sendMail(e);
+                ExceptionCatcher.addException(page.getSeedName(), e);
+                logger.error("种子[" + page.getSeedName() + "]在使用Jsonpath[" + select + "]定位解析Json字符串时出错，", e);
             }
         } else if (page.isXmlContent()) {
             Document document = Jsoup.parse(page.getXmlContent(), "", Parser.xmlParser());
@@ -115,8 +119,8 @@ public final class UrlAnalyzer {
     /**
      * 获取页面中指定的部分区域内容
      * 与selectPageElement方法的区别就是本方法获取的是带有（Html/XML等）标签的内容
-     * @param page
-     * @param select
+     * @param page Page
+     * @param select String
      * @return String
      */
     public static String getPagePartContent(Page page, String select) {
@@ -128,8 +132,10 @@ public final class UrlAnalyzer {
         } else if (page.isJsonContent()) {
             try {//Json中暂时只支持获取属性
             	content = JsonPath.read(page.getJsonContent(), select);
-            } catch (PathNotFoundException p) {
-                logger.error("种子[" + page.getSeedName() + "]在使用Jsonpath[" + select + "]定位解析Json字符串时出错，", p);
+            } catch (PathNotFoundException e) {
+            	EmailSender.sendMail(e);
+                ExceptionCatcher.addException(page.getSeedName(), e);
+                logger.error("种子[" + page.getSeedName() + "]在使用Jsonpath[" + select + "]定位解析Json字符串时出错，", e);
             }
         } else if (page.isXmlContent()) {
             Document document = Jsoup.parse(page.getXmlContent(), "", Parser.xmlParser());
@@ -189,7 +195,6 @@ public final class UrlAnalyzer {
         } else if (page.isXmlContent()) { // xml格式：程序会自动嗅探出所有非资源文件的带绝路径的url
             urls.addAll(sniffUrlFromXml(false));
         }
-
         return urls;
     }
 
@@ -212,6 +217,8 @@ public final class UrlAnalyzer {
             String path = uri.getPath();
             siteprefix = domain + path.substring(0, path.lastIndexOf("/") + 1);
         } catch (URISyntaxException e) {
+        	EmailSender.sendMail(e);
+            ExceptionCatcher.addException(page.getSeedName(), e);
             logger.error("线程[" + Thread.currentThread().getName() + "]嗅探种子[" + page.getSeedName() + "]在嗅探整站链接提取url前缀时出错：", e);
         }
         if (page.isHtmlContent()) {// html格式会启动jsoup抓取各种资源的src和href
@@ -267,10 +274,8 @@ public final class UrlAnalyzer {
             Document doc = Jsoup.parse(content, siteUrl);
             Elements eles = doc.select(detailSelect);// a标签
             HashSet<String> href = getAllUrlByElement(eles);// a标签
-            // 过滤<a>标签中的资源，
-            for (String link : href) {
-                urls.add(link);
-            }
+            // 过滤<a>标签中的资源
+            urls.addAll(href);
         } else if (page.isJsonContent()) { // json格式：通过jsonpath来获取detail链接
             if (detailSelect.startsWith(DefaultConfig.json_path_prefix)) {// json字符串里的detail页面提供的是绝对路径
                 if (detailSelect.contains(DefaultConfig.fetch_detail_json_html_split)) { // 特殊情况：当Json属性中包含Html，并且Html中存在Detail Link时，之间用逗号隔开，所以需要jsonpath和jsoup两个解析
@@ -282,10 +287,8 @@ public final class UrlAnalyzer {
                         Document doc = Jsoup.parse(field, page.getUrl());
                         Elements eles = doc.select(detailSelect);
                         HashSet<String> href = getAllUrlByElement(eles);// a标签
-                        // 过滤<a>标签中的资源，
-                        for (String link : href) {
-                            urls.add(link);
-                        }
+                        // 过滤<a>标签中的资源
+                        urls.addAll(href);
                     }
                 } else {
                     urls = FetchResourceSelector.jsonPath(page.getJsonContent(), detailSelect, "");
@@ -663,6 +666,8 @@ public final class UrlAnalyzer {
         } catch (Exception ex) {
             logger.warn("转换相对路径时，发现了非法的url格式：[" + relativeUrl + "]。");
             UrlQueue.newFailVisitedUrl(page.getSeedName(), relativeUrl);
+            EmailSender.sendMail(ex);
+            ExceptionCatcher.addException(page.getSeedName(), ex);
         }
         return path;
     }

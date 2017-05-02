@@ -1,7 +1,5 @@
 package com.bytegriffin.get4j.send;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -25,6 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.DefaultConfig;
+import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.MD5Util;
@@ -111,7 +110,7 @@ public final class EmailSender implements Runnable{
     	if(Globals.emailSender == null){
 			return;
 		}
-    	String content = getStackTrace(t);
+    	String content = ExceptionCatcher.getStackTrace(t);
     	sendOnce(content);
     }
 	
@@ -206,16 +205,4 @@ public final class EmailSender implements Runnable{
 		
 	}
 
-	/**
-	 * 获取完整的堆栈信息
-	 * @param t
-	 * @return
-	 */
-	private static String getStackTrace(Throwable t) {
-		StringWriter sw = new StringWriter();  
-        PrintWriter pw = new PrintWriter(sw, true);  
-        t.printStackTrace(pw);  
-        return sw.getBuffer().toString();  
-    }
-	
 }

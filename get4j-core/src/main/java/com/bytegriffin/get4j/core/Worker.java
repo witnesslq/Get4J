@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.util.ConcurrentQueue;
 import com.bytegriffin.get4j.util.StringUtil;
-import com.bytegriffin.get4j.util.UrlQueue;
+import com.bytegriffin.get4j.core.UrlQueue;
 
 /**
  * 工作线程
@@ -33,7 +33,6 @@ public class Worker implements Runnable {
         ConcurrentQueue<String> urlQueue = UrlQueue.getUnVisitedLink(seedName);
         logger.info("线程[" + Thread.currentThread().getName() + "]开始执行任务[" + seedName + "]。。。");
         while (urlQueue != null && !urlQueue.isEmpty()) {
-
             Object obj = urlQueue.outFirst();
             if (obj == null) {
                 break;

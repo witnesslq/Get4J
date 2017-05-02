@@ -21,10 +21,12 @@ import org.apache.lucene.store.FSDirectory;
 
 import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.conf.Seed;
+import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.download.DiskDownloader;
+import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.FileUtil;
 
@@ -87,6 +89,8 @@ public class LuceneIndexStorage implements Process {
             Globals.INDEX_WRITER_CACHE.put(seedName, indexWriter);
         } catch (Exception e) {
             logger.error("系统初始化种子[" + seedName + "]的Lucene索引时出错。");
+            EmailSender.sendMail(e);
+            ExceptionCatcher.addException(seedName, e);
         }
     }
 
@@ -106,15 +110,8 @@ public class LuceneIndexStorage implements Process {
 
         // TextField 索引并分词
         doc.add(new TextField("title", page.getTitle(), Field.Store.YES));
-        String content = "";
-        if (page.isHtmlContent()) {
-            content = page.getHtmlContent();
-        } else if (page.isJsonContent()) {
-            content = page.getJsonContent();
-        } else if (page.isXmlContent()) {
-            content = page.getXmlContent();
-        }
-        doc.add(new TextField("content", content, Field.Store.NO)); // 内容不保存
+
+        doc.add(new TextField("content", page.getContent(), Field.Store.NO)); // 内容不保存
 
         try {
             IndexWriter indexWriter = Globals.INDEX_WRITER_CACHE.get(page.getSeedName());
@@ -124,6 +121,8 @@ public class LuceneIndexStorage implements Process {
             indexWriter.forceMergeDeletes();
             indexWriter.commit();
         } catch (IOException e) {
+        	EmailSender.sendMail(e);
+            ExceptionCatcher.addException(page.getSeedName(), e);
             logger.error("线程[" + Thread.currentThread().getName() + "]保存种子[" + page.getSeedName() + "]url为[" + page.getUrl()
                     + "]到Lucene索引中是出错。", e);
         }

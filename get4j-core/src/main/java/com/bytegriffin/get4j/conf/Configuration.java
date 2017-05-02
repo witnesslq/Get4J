@@ -11,9 +11,9 @@ public class Configuration {
 	 *  HttpClient无法获取到首页名称的话，那么它会按照index.html自动补全
      */
     private String downloadFileNameRule;
-    
+
     /**
-     * 非必填项。指定邮件接收人，当系统出现异常，邮件接收人会受到由get4jvip@126.com发送的通知邮件，收件人可以为多个，
+     * 非必填项。指定邮件接收人，当系统出现异常，邮件接收人会受到由get4j@sina.com发送的通知邮件，收件人可以为多个，
      * 多个收件人地址之间可用分号;隔开表示抄送。如果不配置此项或者默认值default为空表示不会发送。
      */
     private String emailRecipient;
@@ -33,7 +33,5 @@ public class Configuration {
 	public void setEmailRecipient(String emailRecipient) {
 		this.emailRecipient = emailRecipient;
 	}
-
-    
 
 }

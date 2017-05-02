@@ -26,6 +26,7 @@ import com.mongodb.client.MongoCollection;
  */
 public final class Globals {
 
+
     /**
      * 当PageMode存放list列表url key：seed_name value：该seed下所有的列表url
      */
@@ -125,5 +126,16 @@ public final class Globals {
      * 全局Email发送器，如果配置了email.recipient就表示当系统出现异常发送邮件提醒
      */
     public static EmailSender emailSender;
+
+    /**
+     * key:seed_name | value:每次开始抓取时间
+     */
+    public static Map<String, String> PER_START_TIME_CACHE = new HashMap<>();
     
+
+    /**
+     * 当PageMode存放list列表url key：seed_name value：该seed对应的launcher
+     */
+    public static Map<String, Launcher> LAUNCHER_CACHE = new HashMap<>();
+
 }

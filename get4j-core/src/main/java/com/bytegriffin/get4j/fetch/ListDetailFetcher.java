@@ -16,7 +16,7 @@ import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.StringUtil;
-import com.bytegriffin.get4j.util.UrlQueue;
+import com.bytegriffin.get4j.core.UrlQueue;
 
 /**
  * List-Detail格式的页面抓取器<br>
@@ -103,6 +103,7 @@ public class ListDetailFetcher implements Process {
             page.setFetchTime(detailPage.getFetchTime());
             page.setHtmlContent(detailPage.getHtmlContent());
             page.setJsonContent(detailPage.getJsonContent());
+            page.setXmlContent(detailPage.getXmlContent());
             page.setResources(detailPage.getResources());
             page.setResourceSavePath(detailPage.getResourceSavePath());
             page.setId(detailPage.getId());

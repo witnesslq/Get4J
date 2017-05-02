@@ -13,7 +13,7 @@ import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.util.DateUtil;
-import com.bytegriffin.get4j.util.UrlQueue;
+import com.bytegriffin.get4j.core.UrlQueue;
 
 /**
  * 级联页面抓取器<br>

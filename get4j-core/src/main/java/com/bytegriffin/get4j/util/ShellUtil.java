@@ -7,6 +7,9 @@ import java.io.InputStreamReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.bytegriffin.get4j.core.ExceptionCatcher;
+import com.bytegriffin.get4j.send.EmailSender;
+
 public final class ShellUtil {
 
     private static final Logger logger = LogManager.getLogger(ShellUtil.class);
@@ -36,6 +39,8 @@ public final class ShellUtil {
             logger.info("Shell命令[" + shellCommand + "]执行完毕");
         } catch (Exception ioe) {
             logger.info("执行Shell命令[" + shellCommand + "]时发生异常：", ioe);
+            EmailSender.sendMail(ioe);
+            ExceptionCatcher.addException(ioe);
         } finally {
             try {
                 if (stdInput != null) {
@@ -45,6 +50,8 @@ public final class ShellUtil {
                     stdError.close();
                 }
             } catch (IOException e) {
+            	EmailSender.sendMail(e);
+            	ExceptionCatcher.addException(e);
                 logger.info("执行Shell命令[" + shellCommand + "]时发生异常：", e);
             }
         }

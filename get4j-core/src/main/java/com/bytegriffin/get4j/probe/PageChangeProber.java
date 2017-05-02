@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.conf.Seed;
+import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.net.http.HttpEngine;
@@ -66,7 +67,7 @@ public class PageChangeProber {
         logger.info("种子[" + seed.getSeedName() + "]的组件PageChangeProber的初始化完成。");
     }
 
-    public void stop() {
+    private void stop() {
         isrun = false;
     }
 
@@ -85,14 +86,7 @@ public class PageChangeProber {
     	if(ProbeFileStorage.finished.equalsIgnoreCase(probePage.getFinish())){
     		return;
     	}
-    	String content = null;
-        if (page.isHtmlContent()) {
-            content = page.getHtmlContent();
-        } else if (page.isJsonContent()) {
-            content = page.getJsonContent();
-        } else if (page.isXmlContent()) {
-            content = page.getXmlContent();
-        }
+    	String content = page.getContent();
         if (!DefaultConfig.default_value.equalsIgnoreCase(fetchProbeSelector)) {
             content = UrlAnalyzer.getPagePartContent(page, fetchProbeSelector);
         }
@@ -121,6 +115,7 @@ public class PageChangeProber {
                 String msg = "探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]内容为空。";
                 logger.error(msg);
                 EmailSender.sendMail(msg);
+                ExceptionCatcher.addException(page.getSeedName(), msg);
                 break;
             }
 
@@ -136,6 +131,7 @@ public class PageChangeProber {
                 String msg = "探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面选择器[" + content + "]出错或者是页面改版。";
                 logger.error(msg);
                 EmailSender.sendMail(msg);
+                ExceptionCatcher.addException(page.getSeedName(), msg);
                 break;
             }
 
@@ -152,6 +148,8 @@ public class PageChangeProber {
             try {
                 Thread.sleep(fetchProbeSleep);
             } catch (InterruptedException e) {
+            	EmailSender.sendMail(e);
+                ExceptionCatcher.addException(page.getSeedName(), e);
                 logger.error("探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]时出错。", e);
             }
             logger.info("正在探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]的页面变化。。。");

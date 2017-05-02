@@ -1,4 +1,6 @@
-package com.bytegriffin.get4j.util;
+package com.bytegriffin.get4j.core;
+
+import com.bytegriffin.get4j.util.ConcurrentQueue;
 
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,6 +21,25 @@ public final class UrlQueue {
     private static ConcurrentHashMap<String, ConcurrentQueue<String>> VISITED_RESOURCES = new ConcurrentHashMap<>();
     //key: seed name  value: 该seed所涉及的所有未访问过的资源文件 css/js等
     private static ConcurrentHashMap<String, ConcurrentQueue<String>> UN_VISITED_RESOURCES = new ConcurrentHashMap<>();
+
+    public static int getVisitedUrlCount(String seedName){
+    	return getSize(VISITED_LINKS.get(seedName));
+    }
+
+    public static int getUnVisitedUrlCount(String seedName){
+    	return getSize(UN_VISITED_LINKS.get(seedName));
+    }
+
+    public static int getFailVisitedUrlCount(String seedName){
+    	return getSize(FAIL_VISITED_URLS.get(seedName));
+    }
+
+    private static int getSize(ConcurrentQueue<String> queues){
+    	if(queues == null || queues.isEmpty()){
+    		return 0;
+    	}
+    	return queues.size();
+    }
 
     /**
      * 追加未访问的links队列<br/>

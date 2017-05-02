@@ -27,7 +27,7 @@ import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.util.StringUtil;
-import com.bytegriffin.get4j.util.UrlQueue;
+import com.bytegriffin.get4j.core.UrlQueue;
 
 /**
  * HttpEngine共有属性方法

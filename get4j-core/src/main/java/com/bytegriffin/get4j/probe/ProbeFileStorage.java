@@ -46,7 +46,7 @@ public class ProbeFileStorage {
     /**
      * 读取Probe文件中与url相等的值
      *
-     * @param file
+     * @param url String
      * @return List
      */
     public static ProbePage read(String url) {
@@ -83,7 +83,6 @@ public class ProbeFileStorage {
     /**
      * 读取Probe文件
      *
-     * @param file
      * @return
      */
     public static List<ProbePage> read() {
@@ -118,7 +117,7 @@ public class ProbeFileStorage {
     /**
      * 更新Probe文件：不能直接删除并更新数据，需要生成一个临时文件进行转存
      *
-     * @param probePage 本地ProbePage
+     * @param url
      * @param content
      * @param isfinish
      * @return 是否更新成功

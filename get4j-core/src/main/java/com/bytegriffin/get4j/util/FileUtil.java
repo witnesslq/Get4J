@@ -19,10 +19,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.DefaultConfig;
+import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.net.http.HttpProxy;
+import com.bytegriffin.get4j.send.EmailSender;
 
 /**
  * 文件工具类
@@ -163,7 +165,9 @@ public final class FileUtil {
             }
             br.close();
         } catch (Exception e) {
-            e.printStackTrace();
+        	logger.error("读取文件时出错。", e);
+        	EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
         }
         return result;
     }
@@ -220,7 +224,9 @@ public final class FileUtil {
                 }
                 fw.flush();
             } catch (IOException e) {
-                e.printStackTrace();
+            	logger.error("删除文件时出错。");
+                EmailSender.sendMail(e);
+            	ExceptionCatcher.addException(e);
             } finally {
                 try {
                     if (fw != null) {
@@ -266,6 +272,8 @@ public final class FileUtil {
             }
         } catch (IOException ex) {
             logger.error("删除文件时出错。");
+            EmailSender.sendMail(ex);
+        	ExceptionCatcher.addException(ex);
         }
     }
 
@@ -317,6 +325,8 @@ public final class FileUtil {
         } catch (UnsupportedEncodingException e) {
             logger.error("Seed[" + page.getSeedName() + "]通过线程[" + Thread.currentThread().getName() + "]往硬盘上写入名为["
                     + fileName + "]时出错。", e);
+            EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
         }
         FileUtil.writeFileToDisk(fileName, content);
     }
@@ -344,6 +354,8 @@ public final class FileUtil {
             fos.flush();
         } catch (Exception e) {
             logger.error("线程[" + Thread.currentThread().getName() + "]往硬盘上写入页面时出错。", e);
+            EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
         } finally {
             try {
                 if (fos != null) {
@@ -530,7 +542,9 @@ public final class FileUtil {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+        	logger.error("线程[" + Thread.currentThread().getName() + "]下载文件到磁盘时出错。", e);
+            EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
         } finally {
             try {
                 if (raf != null) {

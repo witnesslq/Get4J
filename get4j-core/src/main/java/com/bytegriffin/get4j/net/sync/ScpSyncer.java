@@ -6,7 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+import com.bytegriffin.get4j.core.ExceptionCatcher;
+import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.ShellUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -75,6 +76,8 @@ public class ScpSyncer implements Syncer {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 logger.error("Scp同步资源时出错。", e);
+                EmailSender.sendMail(e);
+            	ExceptionCatcher.addException(e);
             }
         }
     }

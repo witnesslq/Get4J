@@ -452,7 +452,7 @@ public class Spider {
     /**
      * 下载文件命名规则，一般为default或url两种类型
      * url表示文件名中包含url，default表示不包含
-     * @param rule
+     * @param isContainUrl
      * @return
      */
     public Spider downloadFilenameRule(boolean isContainUrl){

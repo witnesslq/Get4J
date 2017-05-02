@@ -11,11 +11,12 @@ import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.conf.Seed;
+import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.StringUtil;
-import com.bytegriffin.get4j.util.UrlQueue;
+import com.bytegriffin.get4j.core.UrlQueue;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
 import com.gargoylesoftware.htmlunit.ImmediateRefreshHandler;
@@ -218,6 +219,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
             UrlQueue.newUnVisitedLink(page.getSeedName(), url);
             logger.error("线程[" + Thread.currentThread().getName() + "]种子[" + page.getSeedName() + "]获取链接[" + url + "]内容失败。", e);
             EmailSender.sendMail(e);
+            ExceptionCatcher.addException(page.getSeedName(), e);
         }
 
         return page;
@@ -258,6 +260,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
         } catch (Exception e) {
             logger.error("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]内容失败。", e);
             EmailSender.sendMail(e);
+            ExceptionCatcher.addException(page.getSeedName(), e);
         }
         return null;
     }

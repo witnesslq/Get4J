@@ -40,7 +40,7 @@ public class FetchResourceSelector {
             .compile(".*(\\.(css|js|bmp|gif|jpe?g|png|ico|tiff?|svg|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf|mmf"
                     + "|rm|rmvb|smil|wmv|swf|wma|7z|tar|zip|rar|gz|tgz|exe|asf|iso|3gp|mkv|flac|ape|dll|OCX|rtf|jar|au"
                     + "|psd|lzh|pdf|dat|apk|ipa|epub|mobi|deb|sisx|cab|pxl|csv|doc|xls|ppt|pptx|msi|chm|torrent|docx|aif"
-                    + "|pptx|xlsx|xv|xvx|tp|tl|hqx|mdf|arj|txt|otf|ttf|woff|eot|so|bat|lib|ini|less|sass|scss))$");
+                    + "|xlsx|xv|xvx|tp|tl|hqx|mdf|arj|txt|otf|ttf|woff|eot|so|bat|lib|ini|less|sass|scss))$");
 
     /**
      * 配置的resource选择字符串集合

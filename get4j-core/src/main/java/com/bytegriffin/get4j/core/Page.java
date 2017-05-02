@@ -159,7 +159,7 @@ public class Page {
      * @return Object
      */
     public Object json(String jsonPath) {
-        if (!this.isHtmlContent()) {
+        if (!this.isHtmlContent() && !this.isXmlContent()) {
             return null;
         }
         return JsonPath.read(jsonContent, jsonPath);
@@ -172,7 +172,7 @@ public class Page {
      * @return String
      */
     public String jsoupText(String jsoupSelect) {
-        Document doc = Jsoup.parse(this.htmlContent);
+        Document doc = Jsoup.parse(this.jsonContent);
         Elements eles = doc.select(jsoupSelect);
         return eles.text();
     }
@@ -186,6 +186,18 @@ public class Page {
     public Elements jsoup(String jsoupSelect) {
         Document doc = Jsoup.parse(this.htmlContent);
         return doc.select(jsoupSelect);
+    }
+
+    public String getContent(){
+        String content = "";
+        if (this.isHtmlContent()) {
+            content = this.getHtmlContent();
+        } else if (this.isJsonContent()) {
+            content = this.getJsonContent();
+        } else if (this.isXmlContent()) {
+            content = this.getXmlContent();
+        }
+        return content;
     }
 
     /**

@@ -7,7 +7,7 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 
 /**
- * 针对页面中或Json中的某一个元素的解析器<br />
+ * 针对页面中的某一个元素的解析器<br />
  * 这个Parser主要用于长期获取网页上的某个值<br />
  * 而不是一堆值，一堆值需要自己写解析类<br />
  * 默认支持Jsoup的css选择器和正则表达式

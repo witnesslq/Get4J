@@ -384,9 +384,7 @@ public class SpiderEngine {
                     timer.schedule(job, DateUtil.strToDate(starttime), Long.valueOf(interval) * 1000);
                 }
             }
-            
         }
     }
-
 
 }

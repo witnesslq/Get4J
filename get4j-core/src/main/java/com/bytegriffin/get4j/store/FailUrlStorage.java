@@ -12,7 +12,7 @@ import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.ConcurrentQueue;
 import com.bytegriffin.get4j.util.FileUtil;
-import com.bytegriffin.get4j.util.UrlQueue;
+import com.bytegriffin.get4j.core.UrlQueue;
 
 /**
  * 坏链存储器<br>
