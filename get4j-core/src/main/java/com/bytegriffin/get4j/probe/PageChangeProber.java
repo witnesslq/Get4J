@@ -88,7 +88,7 @@ public class PageChangeProber {
     	}
     	String content = page.getContent();
         if (!DefaultConfig.default_value.equalsIgnoreCase(fetchProbeSelector)) {
-            content = UrlAnalyzer.getPagePartContent(page, fetchProbeSelector);
+            content = UrlAnalyzer.selectPageContent(page, fetchProbeSelector);
         }
         probePage = ProbeFileStorage.update(page.getUrl(), content, ProbeFileStorage.finished);
     }
@@ -99,7 +99,7 @@ public class PageChangeProber {
         if (probePage == null) {
             String content = http.probePageContent(page);
             if (!DefaultConfig.default_value.equalsIgnoreCase(fetchProbeSelector)) {
-                content = UrlAnalyzer.getPagePartContent(page, fetchProbeSelector);
+                content = UrlAnalyzer.selectPageContent(page, fetchProbeSelector);
             }
             probePage = ProbeFileStorage.append(ProbeFileStorage.probe_file, page.getUrl(), content, ProbeFileStorage.un_finish);
             return;
@@ -123,7 +123,7 @@ public class PageChangeProber {
             if (DefaultConfig.default_value.equals(fetchProbeSelector)) {
                 content = newContent;
             } else {
-                content = UrlAnalyzer.getPagePartContent(page, fetchProbeSelector);
+                content = UrlAnalyzer.selectPageContent(page, fetchProbeSelector);
             }
 
             if (StringUtil.isNullOrBlank(content)) {

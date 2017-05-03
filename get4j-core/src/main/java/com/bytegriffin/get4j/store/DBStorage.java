@@ -33,7 +33,7 @@ public class DBStorage implements Process {
 
     private static final Logger logger = LogManager.getLogger(DBStorage.class);
 
-    private final static String insertsql = "insert into page (ID,SEED_NAME,FETCH_URL,SITE_HOST,TITLE,AVATAR,FETCH_CONTENT,COOKIES,RESOURCES_URL,FETCH_TIME,CREATE_TIME) values ( ";
+    private final static String insertsql = "insert into page (ID,SEED_NAME,FETCH_URL,SITE_HOST,TITLE,AVATAR,FETCH_CONTENT,COOKIES,RESOURCES_URL,FETCH_TIME,CREATE_TIME ";
 
     private final static String updatesql = "update page set ";
 
@@ -75,7 +75,11 @@ public class DBStorage implements Process {
      * @return String
      */
     private String buildInsertSql(Page page) {
-        String sql = "'" + MD5Util.uuid() + "','" + page.getSeedName() + "','" + page.getUrl() + "',";
+    	String sql = "";
+    	for(int i=1; i<=page.getFields().size(); i++){
+    		sql += ",FIELD"+i;
+    	}
+        sql += " ) values ( '" + MD5Util.uuid() + "','" + page.getSeedName() + "','" + page.getUrl() + "',";
         if (page.getHost() == null) {
             sql += "" + null + ",";
         } else {
@@ -123,7 +127,15 @@ public class DBStorage implements Process {
         } else {
             sql += "'" + page.getFetchTime() + "',";
         }
-        sql += "'" + DateUtil.getCurrentDate() + "' )";
+        sql += "'" + DateUtil.getCurrentDate() + "' ";
+        for(Object obj : page.getFields().values()){
+        	if(obj == null){
+        		sql += ","+null+"";
+        	} else {
+        		sql += ",'"+obj+"'";
+        	}
+        }
+        sql += " )";
         return sql;
     }
 
@@ -188,7 +200,16 @@ public class DBStorage implements Process {
         } else {
             sql += "FETCH_TIME='" + page.getFetchTime() + "',";
         }
-        sql += "UPDATE_TIME='" + DateUtil.getCurrentDate() + "' where id='" + dbId + "' ";
+        sql += "UPDATE_TIME='" + DateUtil.getCurrentDate() + "' ";
+        int i = 1;
+        for(Object obj : page.getFields().values()){
+        	if(obj == null){
+        		sql += ",FIELD"+ (i++) +"="+null+"";
+        	} else {
+        		sql += ",FIELD"+ (i++) +"='"+obj+"'";
+        	}
+        }
+        sql += " where id='" + dbId + "' ";
         return sql;
     }
 
@@ -204,7 +225,7 @@ public class DBStorage implements Process {
         Page rowData = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        String sql = "select * from page where fetch_url=' " + page.getUrl() + "'";
+        String sql = "select * from page where fetch_url='" + page.getUrl() + "'";
         try {
             con = dataSource.getConnection();
             pstmt = con.prepareStatement(sql);

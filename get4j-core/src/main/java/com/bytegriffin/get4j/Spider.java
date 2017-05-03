@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.annotation.Cascade;
 import com.bytegriffin.get4j.annotation.Config;
+import com.bytegriffin.get4j.annotation.Field;
 import com.bytegriffin.get4j.annotation.ListDetail;
 import com.bytegriffin.get4j.annotation.Single;
 import com.bytegriffin.get4j.annotation.Site;
@@ -22,6 +23,8 @@ import com.bytegriffin.get4j.conf.ConfigurationXmlHandler;
 import com.bytegriffin.get4j.conf.Context;
 import com.bytegriffin.get4j.conf.CoreSeedsXmlHandler;
 import com.bytegriffin.get4j.conf.DefaultConfig;
+import com.bytegriffin.get4j.conf.DynamicField;
+import com.bytegriffin.get4j.conf.DynamicFieldXmlHandler;
 import com.bytegriffin.get4j.conf.ResourceSync;
 import com.bytegriffin.get4j.conf.ResourceSyncYamlHandler;
 import com.bytegriffin.get4j.conf.Seed;
@@ -47,11 +50,21 @@ public class Spider {
     private static ResourceSync resourceSync;
     
     private static Configuration configuration;
+    
+    private static DynamicField dynamicField;
+    
+    private Map<String, String> dynamicFieldMap;
 
     private Spider() {
     }
 
     private Spider(PageMode pageMode) {
+    	DefaultConfig.closeHttpClientLog();
+    	dynamicFieldMap = new HashMap<>();
+    	seed = new Seed();
+        resourceSync = new ResourceSync();
+        configuration = new Configuration();
+        dynamicField = new DynamicField();
         pageMode(pageMode);
     }
 
@@ -480,6 +493,51 @@ public class Spider {
     	configuration.setEmailRecipient(sb.toString());
     	return this;
     }
+    
+    /**
+     * 通过反射的方式设置一个类的多个动态字段
+     * @param clazz
+     * @return
+     */
+    public Spider field(Class<?> clazz){        
+        java.lang.reflect.Field[] fields = clazz.getDeclaredFields();
+        if(fields == null || fields.length == 0){
+        	logger.error("类[" + clazz.getName() + "]的属性并没有配置Field注解。");
+            System.exit(1);
+        }
+        for(java.lang.reflect.Field field : fields){
+        	String name = field.getName();
+        	Field column = field.getAnnotation(Field.class);
+            String selector = column.value();
+            field(name, selector);
+        }
+		return this;
+    }
+
+    /**
+     * 设置一个动态字段
+     * @param name 自定义字段名称
+     * @param selector 对应字段的页面选择器
+     * @return
+     */
+    public Spider field(String name, String selector){
+    	dynamicField.setSeedName(seed.getSeedName());
+    	dynamicFieldMap.put(name, selector);
+    	dynamicField.setFields(dynamicFieldMap);
+    	return this;
+    }
+
+    /**
+     * 设置多个动态字段
+     * @param name 自定义字段名称
+     * @param selector 对应字段的页面选择器
+     * @return
+     */
+    public Spider fields(Map<String, String> fields){
+    	dynamicField.setSeedName(seed.getSeedName());
+    	dynamicField.setFields(fields);
+    	return this;
+    }
 
     /**
      * 设置ftp为资源同步方式
@@ -537,7 +595,7 @@ public class Spider {
     }
 
     /**
-     * 设置scp为资源同步方式 <br>
+     * 设置scp为资源同步方式 <br>pageFieldsMappings = new ArrayList<>();
      * 需要ssh-keygen配置无密码登陆
      *
      * @param host     服务器地址
@@ -578,6 +636,7 @@ public class Spider {
         seed = new Seed();
         resourceSync = new ResourceSync();
         configuration = new Configuration();
+        dynamicField = new DynamicField();
         return me.getAnnotation(clazz);
     }
 
@@ -731,12 +790,7 @@ public class Spider {
      * @return Spider
      */
     public static Spider list_detail() {
-    	DefaultConfig.closeHttpClientLog();
-        seed = new Seed();
-        resourceSync = new ResourceSync();
-        me = new Spider(PageMode.list_detail);
-        configuration = new Configuration();
-        return me;
+    	return new Spider(PageMode.list_detail);
     }
 
     /**
@@ -745,12 +799,7 @@ public class Spider {
      * @return Spider
      */
     public static Spider single() {
-    	DefaultConfig.closeHttpClientLog();
-        seed = new Seed();
-        resourceSync = new ResourceSync();
-        me = new Spider(PageMode.single);
-        configuration = new Configuration();
-        return me;
+        return new Spider(PageMode.single);
     }
 
     /**
@@ -759,12 +808,7 @@ public class Spider {
      * @return Spider
      */
     public static Spider cascade() {
-    	DefaultConfig.closeHttpClientLog();
-        seed = new Seed();
-        resourceSync = new ResourceSync();
-        me = new Spider(PageMode.cascade);
-        configuration = new Configuration();
-        return me;
+        return new Spider(PageMode.cascade);
     }
 
     /**
@@ -773,12 +817,7 @@ public class Spider {
      * @return Spider
      */
     public static Spider site() {
-    	DefaultConfig.closeHttpClientLog();
-        seed = new Seed();
-        resourceSync = new ResourceSync();
-        me = new Spider(PageMode.site);
-        configuration = new Configuration();
-        return me;
+        return new Spider(PageMode.site);
     }
 
     /**
@@ -794,13 +833,16 @@ public class Spider {
         if (StringUtil.isNullOrBlank(seed.getSeedName())) {
             seed.setSeedName(MD5Util.generateSeedName(seed.getFetchUrl()));
         }
-        SpiderEngine.create().setSeed(seed).setResourceSync(resourceSync).setConfiguration(configuration).build();
+        if(dynamicField.getFields() != null && !dynamicField.getFields().isEmpty()){
+        	dynamicField.setSeedName(seed.getSeedName());
+        }
+        SpiderEngine.create().setSeed(seed).setResourceSync(resourceSync).setConfiguration(configuration).setDynamicField(dynamicField).build();
     }
 
     /**
      * 获取互联网上免费代理<br>
      * 并自动将可用的代理保存到本地http_proxy文件中<br>
-     * 此方法一般在启动爬虫之前使用，下次在启动爬虫时需要代理时，
+     * 此方法一般在启动爬虫之前使用，下次在启动爬虫需要代理时，<br>
      * 可以直接调用defaultProxy方法即可
      */
     public static void initFreeProxy() {
@@ -834,8 +876,11 @@ public class Spider {
         context = new Context(new ConfigurationXmlHandler());
         Configuration configuration = context.load();
 
-        SpiderEngine.create().setSeeds(seeds).setResourceSync(synchronizer).setConfiguration(configuration).build();
-        logger.info("爬虫启动开始...");
+        context = new Context(new DynamicFieldXmlHandler());
+        List<DynamicField> dynamicFields = context.load();
+
+        SpiderEngine.create().setSeeds(seeds).setResourceSync(synchronizer).setConfiguration(configuration).setDynamicFields(dynamicFields).build();
+        logger.info("爬虫开始启动...");
     }
 
 }

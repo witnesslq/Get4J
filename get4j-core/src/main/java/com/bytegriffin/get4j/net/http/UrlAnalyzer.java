@@ -95,25 +95,53 @@ public final class UrlAnalyzer {
      * @param select select
      * @return String
      */
-    public static void selectPageElement(Page page, String select) {
+    public static String selectPageText(Page page, String select) {
+    	if(StringUtil.isNullOrBlank(select)){
+    		return null;
+    	}
+    	String text = null;
         if (page.isHtmlContent()) {
             Document document = Jsoup.parse(page.getHtmlContent(), page.getUrl());
             Elements eles = document.select(select);
-            page.setHtmlContent(eles.text());
+            if(select.contains("[src]")){
+            	text = eles.attr("src");
+            } else if(select.contains("[href]")){
+            	text = eles.attr("href");
+            } else {
+            	text = eles.text();
+            }
         } else if (page.isJsonContent()) {
             try {
-                String text = JsonPath.read(page.getJsonContent(), select);
-                page.setJsonContent(text);
+            	text = JsonPath.read(page.getJsonContent(), select);
             } catch (PathNotFoundException e) {
             	EmailSender.sendMail(e);
                 ExceptionCatcher.addException(page.getSeedName(), e);
                 logger.error("种子[" + page.getSeedName() + "]在使用Jsonpath[" + select + "]定位解析Json字符串时出错，", e);
             }
         } else if (page.isXmlContent()) {
-            Document document = Jsoup.parse(page.getXmlContent(), "", Parser.xmlParser());
-            Elements eles = document.select(select);
-            page.setXmlContent(eles.text());
+            Document doc = Jsoup.parse(page.getXmlContent(), "", Parser.xmlParser());
+            String attrKey = "";
+            if (select.contains("[") && select.contains("]")) {
+                attrKey = select.substring(select.indexOf("[") + 1, select.lastIndexOf("]"));
+            }
+            Elements eles = doc.select(select);
+            if(StringUtil.isNullOrBlank(attrKey)){
+            	text = eles.text();
+            } else {
+            	for (Element ele : eles) {
+                    if (!StringUtil.isNullOrBlank(attrKey) && ele.hasAttr(attrKey)) {
+                        text = ele.attr(attrKey).trim();
+                        break;
+                    } else {
+                        if (!StringUtil.isNullOrBlank(ele.text().trim())) {
+                            text = ele.text().trim();
+                            break;
+                        }
+                    }
+                }
+            }
         }
+        return text;
     }
 
     /**
@@ -123,7 +151,10 @@ public final class UrlAnalyzer {
      * @param select String
      * @return String
      */
-    public static String getPagePartContent(Page page, String select) {
+    public static String selectPageContent(Page page, String select) {
+    	if(StringUtil.isNullOrBlank(select)){
+    		return null;
+    	}
     	String content = null;
         if (page.isHtmlContent()) {
             Document document = Jsoup.parse(page.getHtmlContent(), page.getUrl());

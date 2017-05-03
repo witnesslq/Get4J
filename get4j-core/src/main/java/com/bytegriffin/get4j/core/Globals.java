@@ -26,7 +26,6 @@ import com.mongodb.client.MongoCollection;
  */
 public final class Globals {
 
-
     /**
      * 当PageMode存放list列表url key：seed_name value：该seed下所有的列表url
      */
@@ -131,11 +130,15 @@ public final class Globals {
      * key:seed_name | value:每次开始抓取时间
      */
     public static Map<String, String> PER_START_TIME_CACHE = new HashMap<>();
-    
 
     /**
      * 当PageMode存放list列表url key：seed_name value：该seed对应的launcher
      */
     public static Map<String, Launcher> LAUNCHER_CACHE = new HashMap<>();
+
+    /**
+     * key：seedName value:field_map (key: name value: selector)
+     */
+    public static Map<String, Map<String,String>> DYNAMIC_FIELDS_CACHE = new HashMap<>();
 
 }

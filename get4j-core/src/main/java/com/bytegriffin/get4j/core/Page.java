@@ -83,7 +83,7 @@ public class Page {
     /**
      * 自定义动态字段
      */
-    private Map<String, Object> field = new HashMap<>();
+    private Map<String, Object> fields = new HashMap<>();
 
     public Page() {
     }
@@ -301,27 +301,24 @@ public class Page {
         return flag;
     }
 
-    /**
-     * 获取动态字段
-     *
-     * @param fieldKey 字段名称
-     * @return Object
-     */
-    public Object getField(String fieldKey) {
-        return field.get(fieldKey);
-    }
 
-    /**
-     * 设置动态字段
-     *
-     * @param fieldKey   字段名称
-     * @param fieldValue 字段值
-     */
-    public void putField(String fieldKey, Object fieldValue) {
-        field.put(fieldKey, fieldValue);
-    }
+    public Map<String, Object> getFields() {
+		return fields;
+	}
 
-    public void setUrl(String url) {
+	public void setFields(Map<String, Object> fields) {
+		this.fields = fields;
+	}
+	
+	public void putField(String name, Object value){
+		this.fields.put(name, value);
+	}
+
+	public Object getField(String name){
+		return this.fields.get(name);
+	}
+
+	public void setUrl(String url) {
         this.url = url;
     }
 

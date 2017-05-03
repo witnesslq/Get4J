@@ -34,7 +34,7 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
         }
         List<Element> siteElements = seedNode.elements(seed_node);
         List<Seed> seeds = new ArrayList<>();
-        HashSet<String> hashset = new HashSet<>();//过滤相同siteName
+        HashSet<String> hashset = new HashSet<>();//过滤相同seedName
         for (Element element : siteElements) {
             String seedName = element.element(name_node).getStringValue();
             Seed seed = new Seed(seedName);

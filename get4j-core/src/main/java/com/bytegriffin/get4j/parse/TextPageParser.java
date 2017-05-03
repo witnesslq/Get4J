@@ -12,19 +12,26 @@ import com.bytegriffin.get4j.net.http.UrlAnalyzer;
  * 而不是一堆值，一堆值需要自己写解析类<br />
  * 默认支持Jsoup的css选择器和正则表达式
  */
-public class ElementSelectPageParser implements PageParser {
+public class TextPageParser implements PageParser {
 
-    private static final Logger logger = LogManager.getLogger(ElementSelectPageParser.class);
+    private static final Logger logger = LogManager.getLogger(TextPageParser.class);
 
     private String elementSeletor;
 
-    ElementSelectPageParser(String elementSeletor) {
+    TextPageParser(String elementSeletor) {
         this.elementSeletor = elementSeletor;
     }
 
     @Override
     public void parse(Page page) {
-        UrlAnalyzer.selectPageElement(page, elementSeletor);
+        String text = UrlAnalyzer.selectPageText(page, elementSeletor);
+        if (page.isHtmlContent()) {
+        	page.setHtmlContent(text);
+        } else if (page.isJsonContent()) {
+            page.setJsonContent(text);
+        } else if (page.isXmlContent()) {
+        	page.setXmlContent(text);
+        }
         logger.info("线程[" + Thread.currentThread().getName() + "]解析种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]完成。");
     }
 

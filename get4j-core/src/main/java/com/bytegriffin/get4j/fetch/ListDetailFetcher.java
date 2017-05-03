@@ -99,6 +99,7 @@ public class ListDetailFetcher implements Process {
             // 5.将详情页面属性指定为传递对象，当Page类增加新属性后此段代码也需要更新
             page.setTitle(detailPage.getTitle());
             page.setAvatar(detailPage.getAvatar());
+            page.setCharset(detailPage.getCharset());
             page.setCookies(detailPage.getCookies());
             page.setFetchTime(detailPage.getFetchTime());
             page.setHtmlContent(detailPage.getHtmlContent());

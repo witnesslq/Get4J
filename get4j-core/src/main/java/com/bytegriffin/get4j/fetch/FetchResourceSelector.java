@@ -219,7 +219,7 @@ public class FetchResourceSelector {
      *
      * @param xmlContent xmlContent
      * @param select     select
-     * @return HashSet<String>
+     * @return HashSet
      */
     public static HashSet<String> xmlSelect(String xmlContent, String select) {
         HashSet<String> urls = new HashSet<>();

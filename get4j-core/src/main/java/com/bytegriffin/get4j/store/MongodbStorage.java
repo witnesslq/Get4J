@@ -100,6 +100,10 @@ public class MongodbStorage implements Process {
         } else if (page.isXmlContent()) {
             doc.append("FETCH_CONTENT", page.getXmlContent());
         }
+        int i = 1;
+        for(Object obj : page.getFields().values()){
+        	doc.append("FIELD"+i++, obj);
+        }
         return doc;
     }
 

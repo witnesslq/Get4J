@@ -12,11 +12,13 @@ import org.apache.logging.log4j.Logger;
 import com.bytegriffin.get4j.conf.AbstractConfig;
 import com.bytegriffin.get4j.conf.Configuration;
 import com.bytegriffin.get4j.conf.DefaultConfig;
+import com.bytegriffin.get4j.conf.DynamicField;
 import com.bytegriffin.get4j.conf.ResourceSync;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.download.DiskDownloader;
 import com.bytegriffin.get4j.download.HdfsDownloader;
 import com.bytegriffin.get4j.fetch.CascadeFetcher;
+import com.bytegriffin.get4j.fetch.DynamicFieldFetcher;
 import com.bytegriffin.get4j.fetch.ListDetailFetcher;
 import com.bytegriffin.get4j.fetch.SingleFetcher;
 import com.bytegriffin.get4j.fetch.SiteFetcher;
@@ -49,6 +51,7 @@ public class SpiderEngine {
     private List<Seed> seeds;
     private Configuration configuration;
     private ResourceSync resourceSync;
+    private List<DynamicField> dynamicFields;
 
     private static final Logger logger = LogManager.getLogger(SpiderEngine.class);
 
@@ -67,6 +70,7 @@ public class SpiderEngine {
      * 构建爬虫参数
      */
     public void build() {
+    	buildDynamicField();
         buildProcess();
         buildResourceSync();
         buildConfiguration();
@@ -120,6 +124,27 @@ public class SpiderEngine {
     }
 
     /**
+     * 设置动态字段映射
+     * @param DynamicField
+     * @return
+     */
+    public SpiderEngine setDynamicField(DynamicField dynamicField) {
+        this.dynamicFields = new ArrayList<>();
+        this.dynamicFields.add(dynamicField);
+        return this;
+    }
+
+    /**
+     * 设置动态字段映射列表
+     * @param dynamicFields
+     * @return
+     */
+    public SpiderEngine setDynamicFields(List<DynamicField> dynamicFields) {
+        this.dynamicFields = dynamicFields;
+        return this;
+    }
+
+    /**
      * 根据配置选择具体的Http引擎<br>
      * 1.初始化Http引擎的部分参数<br>
      * 2.测试在具体Http引擎下的代理是否可用<br>
@@ -158,7 +183,19 @@ public class SpiderEngine {
     }
 
     /**
-     * 第一步：根据配置文件或api动态地构建爬虫工作流程
+     * 第一步：映射动态字段
+     */
+    private void buildDynamicField(){
+    	if(dynamicFields == null || dynamicFields.size() == 0){
+    		return;
+    	}
+    	for(DynamicField p : dynamicFields){
+    		Globals.DYNAMIC_FIELDS_CACHE.put(p.getSeedName(), p.getFields());
+    	}
+    }
+
+    /**
+     * 第二步：根据配置文件或api动态地构建爬虫工作流程
      */
     private void buildProcess() {
         if (seeds == null || seeds.size() == 0) {
@@ -204,6 +241,14 @@ public class SpiderEngine {
                 ld.init(seed);
                 chain.addProcess(ld);
                 subProcess.append("ListDetailFetcher");
+            }
+
+            if(Globals.DYNAMIC_FIELDS_CACHE.get(seedName) != null 
+            	&& !Globals.DYNAMIC_FIELDS_CACHE.get(seedName).isEmpty()){
+            	DynamicFieldFetcher df = new DynamicFieldFetcher();
+            	df.init(seed);
+            	chain.addProcess(df);
+            	subProcess.append("-DynamicFieldsFetcher");
             }
 
             if (!StringUtil.isNullOrBlank(seed.getDownloadDisk())) {
@@ -281,7 +326,7 @@ public class SpiderEngine {
     }
 
     /**
-     * 第二步：创建资源同步
+     * 第三步：创建资源同步
      */
     private void buildResourceSync() {
         if (resourceSync == null || resourceSync.getSync() == null || resourceSync.getSync().isEmpty()) {
@@ -344,7 +389,7 @@ public class SpiderEngine {
     }
 
     /**
-     * 第三步：创建工作环境
+     * 第四步：创建工作环境
      */
     private void buildConfiguration() {
     	if(configuration == null){
@@ -359,7 +404,7 @@ public class SpiderEngine {
     }
 
     /**
-     * 第四步：启动定时器，按照配置的时间启动抓取任务
+     * 第五步：启动定时器，按照配置的时间启动抓取任务
      */
     private void buildTimer() {
         for (Seed seed : seeds) {

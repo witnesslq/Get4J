@@ -21,7 +21,7 @@ public class AutoDelegateParser implements Process {
         PageParser pp = null;
         String clazz = seed.getParseClassImpl();
         if (!StringUtil.isNullOrBlank(seed.getParseElementSelector())) {// new内置ElementSelectPageParser
-            pp = new ElementSelectPageParser(seed.getParseElementSelector());
+            pp = new TextPageParser(seed.getParseElementSelector());
         } else { // 自定义
             try {
                 pp = (PageParser) Class.forName(clazz).newInstance();

@@ -24,8 +24,11 @@ public class ConfigurationXmlHandler extends AbstractConfig {
         if (doc == null) {
             return null;
         }
-        Element sitesNode = doc.getRootElement();
-        List<Element> configurationElements = sitesNode.elements(configuration_node);
+        Element configurationNode = doc.getRootElement();
+        if (configurationNode == null) {
+            return null;
+        }
+        List<Element> configurationElements = configurationNode.elements(configuration_node);
         Configuration conf = new Configuration();
         for (Element property : configurationElements) {
             if (property == null) {

@@ -10,6 +10,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
@@ -110,8 +111,15 @@ public class LuceneIndexStorage implements Process {
 
         // TextField 索引并分词
         doc.add(new TextField("title", page.getTitle(), Field.Store.YES));
-
         doc.add(new TextField("content", page.getContent(), Field.Store.NO)); // 内容不保存
+        int i = 1;
+        for(Object obj : page.getFields().values()){
+        	if(obj instanceof String){
+        		doc.add(new TextField("FIELD"+i++, obj.toString(), Field.Store.YES));
+        	} else if(obj instanceof Integer){
+        		doc.add(new StoredField("FIELD"+i++, Integer.valueOf(obj.toString()))); 
+        	}
+        }
 
         try {
             IndexWriter indexWriter = Globals.INDEX_WRITER_CACHE.get(page.getSeedName());

@@ -22,7 +22,11 @@ public abstract class AbstractConfig {
     protected final static String configuration_xml_file = conf_path + "configuration.xml";
     // 资源同步yaml文件
     public final static String resource_sync_yaml_file = conf_path + "resource-sync.yaml";
-
+    // 全局xml配置文件
+    protected final static String dynamic_fields_xml_file = conf_path + "dynamic-fields.xml";
+    // xml格式检验文件
+    protected final static String dynamic_fields_xsd_file = conf_path + "dynamic-fields.xsd";
+    
     /******** xml node ************/
     protected static final String seed_node = "seed";
     protected static final String name_node = "name";
@@ -72,5 +76,10 @@ public abstract class AbstractConfig {
     public static final String password_node = "password";
     public static final String dir_node = "dir";
     public static final String module_node = "module";
+    
+    /******** xml node ************/
+    protected static final String fields_node = "fields";
+    protected static final String field_node = "field";
+    protected static final String selector_node = "selector";
 
 }
