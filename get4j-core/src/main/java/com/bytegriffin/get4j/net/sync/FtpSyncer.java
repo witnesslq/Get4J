@@ -15,7 +15,7 @@ import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.send.EmailSender;
 
 /**
- * Ftp同步器：用于将下载的资源文件资源文件，比如：avatar文件同步到图片服务器
+ * Ftp同步器：用于同步下载的资源文件到FTP服务器上，比如：avatar文件同步到图片服务器
  * 注意：远程的dir目录就是SeedName
  */
 public class FtpSyncer implements Syncer {

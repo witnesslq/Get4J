@@ -13,7 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Scp同步器：用于将下载的资源文件资源文件，比如：avatar文件同步到图片服务器
+ * Scp同步器：用于同步下载的资源文件到资源服务器上，比如：avatar文件同步到图片服务器
  * 由于Scp本身不支持增量同步，所以需要先在目标服务器端创建文件夹，然后一个一个文件进行复制
  * 需要用ssh-keygen配置无密码方式，目前只支持Unix，不支持windows
  *
