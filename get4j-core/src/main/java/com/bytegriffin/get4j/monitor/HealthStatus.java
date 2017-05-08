@@ -1,11 +1,5 @@
 package com.bytegriffin.get4j.monitor;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
-import java.lang.management.OperatingSystemMXBean;
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
 import java.util.List;
 
 import com.bytegriffin.get4j.core.ExceptionCatcher;
@@ -24,45 +18,6 @@ public class HealthStatus implements HealthStatusMXBean {
 
 	public HealthStatus(String seedName) {
 		this.seedName = seedName;
-	}
-
-	@Override
-	public String getOS() {
-		OperatingSystemMXBean operateSystemMBean = ManagementFactory.getOperatingSystemMXBean();
-		String operateName = operateSystemMBean.getName();
-		int processListCount = operateSystemMBean.getAvailableProcessors();
-		String archName = operateSystemMBean.getArch();
-		String version = operateSystemMBean.getVersion();
-		return operateName + " " + archName + " " + version + " " + processListCount;
-	}
-
-	@Override
-	public MemoryUsage getHeapMemory() {
-		MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
-		return memory.getHeapMemoryUsage();
-	}
-
-	@Override
-	public MemoryUsage getNonHeapMemory() {
-		MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
-		return memory.getNonHeapMemoryUsage();
-	}
-
-	@Override
-	public ThreadInfo[] getThreads() {
-		ThreadMXBean tm = (ThreadMXBean) ManagementFactory.getThreadMXBean();
-		long[] ids = tm.getAllThreadIds();
-		return tm.getThreadInfo(ids);
-	}
-
-	@Override
-	public ThreadInfo[] getDeadLockThreads() {
-		ThreadMXBean thread = ManagementFactory.getThreadMXBean();
-		long[] deadlockedIds = thread.findDeadlockedThreads();
-		if (deadlockedIds != null && deadlockedIds.length > 0) {
-			return thread.getThreadInfo(deadlockedIds);
-		}
-		return null;
 	}
 
 	@Override
