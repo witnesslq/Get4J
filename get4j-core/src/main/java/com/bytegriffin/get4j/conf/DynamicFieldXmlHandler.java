@@ -1,15 +1,17 @@
 package com.bytegriffin.get4j.conf;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.Element;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * 解析dynamic-fields.xml配置文件
@@ -31,8 +33,8 @@ public class DynamicFieldXmlHandler extends AbstractConfig {
             return null;
         }
         List<Element> elements = rootNode.elements(seed_node);
-        List<DynamicField> mappings = new ArrayList<>();
-        HashSet<String> hashset = new HashSet<>();
+        List<DynamicField> mappings = Lists.newArrayList();
+        Set<String> hashset = Sets.newHashSet();
         for (Element element : elements) {
             String seedName = element.element(name_node).getStringValue();
             hashset.add(seedName);
@@ -40,7 +42,7 @@ public class DynamicFieldXmlHandler extends AbstractConfig {
             List<Element> fieldlist = fields.elements(field_node);
             DynamicField mapping = new DynamicField();
             mapping.setSeedName(seedName);
-            Map<String,String> map = new HashMap<>();
+            Map<String,String> map = Maps.newHashMap();
             for (Element field : fieldlist) {
                 String name = field.element(name_node).getStringValue();
                 String value = field.element(selector_node).getStringValue();

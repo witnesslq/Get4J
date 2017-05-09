@@ -3,7 +3,6 @@ package com.bytegriffin.get4j.sample;
 import com.bytegriffin.get4j.Spider;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;
-import com.bytegriffin.get4j.util.StringUtil;
 
 /**
  * 点评网商铺信息
@@ -12,9 +11,7 @@ public class DianpingShopPageParser implements PageParser {
 
     @Override
     public void parse(Page page) {
-        if (!StringUtil.isNullOrBlank(page.getTitle())) {
-            System.err.println(page.getTitle() + "   " + page.getCharset() + "  " + page.getUrl() + "  ");
-        }
+        System.err.println(page.getTitle() + "   " + page.getCharset() + "  " + page.getUrl() + "  ");
     }
 
     public static void main(String[] args) throws Exception {

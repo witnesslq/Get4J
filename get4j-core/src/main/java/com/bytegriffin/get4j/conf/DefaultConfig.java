@@ -57,16 +57,15 @@ public class DefaultConfig {
     public static final String http_proxy = System.getProperty("user.dir") + File.separator + "conf" + File.separator + "http_proxy";
 
     /**
-     * 默认 dump文件存储位置
+     * 默认 fail url 坏链存储文件
      */
-    public static final String dump_folder = System.getProperty("user.dir") + File.separator + "data" + File.separator + "dump" + File.separator;
+    public static final String fail_url_file = System.getProperty("user.dir") + File.separator + "data" + File.separator + "dump" + File.separator + "fail_url";
 
     /**
-     * 默认 页面变化探测器文件夹位置
+     * 默认 页面变化探测器文件
      */
-    public static final String probe_folder = System.getProperty("user.dir") + File.separator + "data" + File.separator + "probe" + File.separator;
-    
-    
+    public static final String probe_page_file = System.getProperty("user.dir") + File.separator + "data" + File.separator + "probe" + File.separator+ "probe_pages.bin";
+
     /**
      * 获取相应种子的下载地址
      *

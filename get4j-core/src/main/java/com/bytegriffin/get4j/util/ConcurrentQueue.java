@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.google.common.collect.Lists;
+
 public class ConcurrentQueue<E> {
 
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
@@ -12,7 +14,7 @@ public class ConcurrentQueue<E> {
 
     private final Lock writeLock = readWriteLock.writeLock();
 
-    public final LinkedList<E> list = new LinkedList<>();
+    public final LinkedList<E> list = Lists.newLinkedList();
 
     public void add(E e) {
         writeLock.lock();

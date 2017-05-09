@@ -7,7 +7,6 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -31,10 +30,12 @@ import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
+import com.bytegriffin.get4j.core.UrlQueue;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.send.EmailSender;
-import com.bytegriffin.get4j.util.StringUtil;
-import com.bytegriffin.get4j.core.UrlQueue;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 
@@ -96,7 +97,7 @@ public final class UrlAnalyzer {
      * @return String
      */
     public static String selectPageText(Page page, String select) {
-    	if(StringUtil.isNullOrBlank(select)){
+    	if(Strings.isNullOrEmpty(select)){
     		return null;
     	}
     	String text = null;
@@ -125,15 +126,15 @@ public final class UrlAnalyzer {
                 attrKey = select.substring(select.indexOf("[") + 1, select.lastIndexOf("]"));
             }
             Elements eles = doc.select(select);
-            if(StringUtil.isNullOrBlank(attrKey)){
+            if(Strings.isNullOrEmpty(attrKey)){
             	text = eles.text();
             } else {
             	for (Element ele : eles) {
-                    if (!StringUtil.isNullOrBlank(attrKey) && ele.hasAttr(attrKey)) {
+                    if (!Strings.isNullOrEmpty(attrKey) && ele.hasAttr(attrKey)) {
                         text = ele.attr(attrKey).trim();
                         break;
                     } else {
-                        if (!StringUtil.isNullOrBlank(ele.text().trim())) {
+                        if (!Strings.isNullOrEmpty(ele.text().trim())) {
                             text = ele.text().trim();
                             break;
                         }
@@ -152,7 +153,7 @@ public final class UrlAnalyzer {
      * @return String
      */
     public static String selectPageContent(Page page, String select) {
-    	if(StringUtil.isNullOrBlank(select)){
+    	if(Strings.isNullOrEmpty(select)){
     		return null;
     	}
     	String content = null;
@@ -204,7 +205,7 @@ public final class UrlAnalyzer {
      * @return HashSet<String>
      */
     public final HashSet<String> sniffAllLinks() {
-        HashSet<String> urls = new HashSet<>();
+        HashSet<String> urls = Sets.newHashSet();
         if (page.isHtmlContent()) {// html格式会启动jsoup抓取各种资源的src和href
             String siteUrl = page.getUrl();
             Document doc = Jsoup.parse(page.getHtmlContent(), siteUrl);
@@ -239,7 +240,7 @@ public final class UrlAnalyzer {
      * @return HashSet<String>
      */
     public final HashSet<String> sniffSiteLinks() {
-        HashSet<String> urls = new HashSet<>();
+        HashSet<String> urls = Sets.newHashSet();
         String siteUrl = page.getUrl();
         String siteprefix = "";// 网站域名前缀，如果不是这个前缀开头，程序会认为是外链，不会抓取
         try {
@@ -254,7 +255,7 @@ public final class UrlAnalyzer {
         }
         if (page.isHtmlContent()) {// html格式会启动jsoup抓取各种资源的src和href
             String content = page.getHtmlContent();
-            if (StringUtil.isNullOrBlank(content)) {
+            if (Strings.isNullOrEmpty(content)) {
                 return null;
             }
             Document doc = Jsoup.parse(content, siteUrl);
@@ -292,14 +293,14 @@ public final class UrlAnalyzer {
      */
     public final HashSet<String> sniffDetailLinks() {
         String detailSelect = Globals.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
-        if (StringUtil.isNullOrBlank(detailSelect)) {
+        if (Strings.isNullOrEmpty(detailSelect)) {
             return null;
         }
-        HashSet<String> urls = new HashSet<>();
+        HashSet<String> urls = Sets.newHashSet();
         if (page.isHtmlContent()) {// html格式会启动jsoup抓取detail链接
             String siteUrl = page.getUrl();
             String content = page.getHtmlContent();
-            if (StringUtil.isNullOrBlank(content)) {
+            if (Strings.isNullOrEmpty(content)) {
                 return null;
             }
             Document doc = Jsoup.parse(content, siteUrl);
@@ -343,7 +344,7 @@ public final class UrlAnalyzer {
      * 如果ResourceSelector配置了none，什么都不做，即表示：什么资源都不抓取，全部过滤 <br>
      */
     public final void sniffAndSetResources() {
-        HashSet<String> resources = new HashSet<>();
+        HashSet<String> resources = Sets.newHashSet();
         FetchResourceSelector resourceselector = Globals.FETCH_RESOURCE_SELECTOR_CACHE.get(page.getSeedName());
         if (resourceselector == null || resourceselector.isConfigAll()) {// 如果ResourceSelector配置了all或者默认没有配置此项
             if (page.isHtmlContent()) {// html格式在all模式下会启动jsoup抓取各种资源的src和href
@@ -373,7 +374,7 @@ public final class UrlAnalyzer {
             List<String> selectors = resourceselector.getSelectors();
             if (page.isHtmlContent()) {// html格式
                 for (String select : selectors) {
-                    if (StringUtil.isNullOrBlank(select)) {
+                    if (Strings.isNullOrEmpty(select)) {
                         continue;
                     }
                     HashSet<String> url = resourceselector.cssSelect(page, select);
@@ -381,7 +382,7 @@ public final class UrlAnalyzer {
                 }
             } else if (page.isJsonContent()) { // json格式
                 for (String select : selectors) {
-                    if (StringUtil.isNullOrBlank(select)) {
+                    if (Strings.isNullOrEmpty(select)) {
                         continue;
                     }
                     String[] str = select.split("\\" + DefaultConfig.json_path_prefix);
@@ -392,7 +393,7 @@ public final class UrlAnalyzer {
                 }
             } else if (page.isXmlContent()) { // xml 格式：扩展Jsoup搜索xml属性的问题支持中括号来搜索属性例如： node[name] ===> <node name="123"></node>
                 for (String select : selectors) {
-                    if (StringUtil.isNullOrBlank(select)) {
+                    if (Strings.isNullOrEmpty(select)) {
                         continue;
                     }
                     HashSet<String> url = FetchResourceSelector.xmlSelect(page.getXmlContent(), select);
@@ -411,7 +412,7 @@ public final class UrlAnalyzer {
      */
     public Map<String, String> mappingDetailLinkAndAvatar() {
         String detailSelect = Globals.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> map = Maps.newHashMap();
         FetchResourceSelector resourceselector = Globals.FETCH_RESOURCE_SELECTOR_CACHE.get(page.getSeedName());
         List<String> selectors = resourceselector.getSelectors();
         if (page.isHtmlContent()) {
@@ -419,7 +420,7 @@ public final class UrlAnalyzer {
             // 是avatar与detail_link共同外面的css选择器或正则表达式，这样才能一一映射，
             // 缺点是：在List_Detail模式下配置fetch.resource.selector时，程序只认为它是与detail link数量一一对应的资源，而非其它资源
             for (String select : selectors) {// 最多只有一条记录
-                if (StringUtil.isNullOrBlank(select)) {
+                if (Strings.isNullOrEmpty(select)) {
                     continue;
                 }
                 Document doc = Jsoup.parse(page.getHtmlContent(), page.getUrl());
@@ -433,7 +434,7 @@ public final class UrlAnalyzer {
                     // 假设每个detail link只对应一个img图像，如果是多个img就不好处理了（默认取第一个），地址需要转换成绝对地址.....
                     Elements avatarLink = d.select(imgSelector);
                     String dlink = detailLink.attr("href");
-                    if (StringUtil.isNullOrBlank(dlink) || dlink.startsWith("#") || dlink.equalsIgnoreCase("null")
+                    if (Strings.isNullOrEmpty(dlink) || dlink.startsWith("#") || dlink.equalsIgnoreCase("null")
                             || dlink.contains("javascript:") || dlink.contains("mailto:") || dlink.contains("about:blank")) {
                         dlink = detailLink.next().attr("href");
                     }
@@ -443,10 +444,10 @@ public final class UrlAnalyzer {
                     dlink = getAbsoluteURL(page.getUrl(), dlink);
                     String avatar = avatarLink.attr("src");
                     //当然第一个img如果是空，就获取第二个
-                    if (StringUtil.isNullOrBlank(avatar) || avatar.startsWith("#") || avatar.equalsIgnoreCase("null")) {
+                    if (Strings.isNullOrEmpty(avatar) || avatar.startsWith("#") || avatar.equalsIgnoreCase("null")) {
                         avatar = avatarLink.next().attr("src");
                     }
-                    if (!StringUtil.isNullOrBlank(avatar)) {
+                    if (!Strings.isNullOrEmpty(avatar)) {
                         avatar = getAbsoluteURL(page.getUrl(), avatar);
                     }
                     map.put(dlink, avatar);
@@ -496,7 +497,7 @@ public final class UrlAnalyzer {
         }
         for (int i = 0; i < detailLink.size(); i++) {
             String dlink = detailLink.get(i);
-            if (StringUtil.isNullOrBlank(dlink) || dlink.startsWith("#") || dlink.equalsIgnoreCase("null")
+            if (Strings.isNullOrEmpty(dlink) || dlink.startsWith("#") || dlink.equalsIgnoreCase("null")
                     || dlink.contains("javascript:") || dlink.contains("mailto:") || dlink.contains("about:blank")) {
                 continue;
             }
@@ -506,10 +507,10 @@ public final class UrlAnalyzer {
             dlink = getAbsoluteURL(page.getUrl(), dlink);
             //当然第一个img如果是空，就获取第二个
             String avatar = avatars.get(i);
-            if (StringUtil.isNullOrBlank(avatar) || avatar.startsWith("#") || avatar.equalsIgnoreCase("null")) {
+            if (Strings.isNullOrEmpty(avatar) || avatar.startsWith("#") || avatar.equalsIgnoreCase("null")) {
                 avatar = null;
             }
-            if (!StringUtil.isNullOrBlank(avatar)) {
+            if (!Strings.isNullOrEmpty(avatar)) {
                 avatar = getAbsoluteURL(page.getUrl(), avatar);
             }
             map.put(dlink, avatar);
@@ -529,9 +530,9 @@ public final class UrlAnalyzer {
      * @param isResource 是否是资源文件，当isResource=true时，此urls存放的是资源的url，否则为普通链接url
      */
     private HashSet<String> sniffUrlFromJson(boolean isResource) {
-        HashSet<String> urls = new HashSet<>();
+        HashSet<String> urls = Sets.newHashSet();
         JSONObject jsonObj = JSONObject.parseObject(page.getJsonContent());
-        HashSet<String> sets = new HashSet<>();
+        HashSet<String> sets = Sets.newHashSet();
         sets = travelJson(jsonObj, sets);
         for (String url : sets) {
             if (FetchResourceSelector.isFindResources(url) == isResource) {
@@ -581,9 +582,9 @@ public final class UrlAnalyzer {
     private HashSet<String> sniffUrlFromXml(boolean isResource) {
         Document doc = Jsoup.parse(page.getXmlContent(), "", Parser.xmlParser());
         List<Node> nodelist = doc.childNodes();
-        HashSet<String> sets = new HashSet<>();
+        HashSet<String> sets =  Sets.newHashSet();
         sets = travelXml(nodelist, sets);
-        HashSet<String> urls = new HashSet<>();
+        HashSet<String> urls =  Sets.newHashSet();
         for (String url : sets) {
             if (FetchResourceSelector.isFindResources(url) == isResource) {
                 urls.add(url);
@@ -631,10 +632,10 @@ public final class UrlAnalyzer {
         for (Attribute attr : atts.asList()) {
             String attrname = attr.getKey();
             String link = attr.getValue();
-            if (StringUtil.isNullOrBlank(attrname) || attrname.startsWith("xmlns")) {
+            if (Strings.isNullOrEmpty(attrname) || attrname.startsWith("xmlns")) {
                 continue;
             }
-            if (!StringUtil.isNullOrBlank(link) && isStartHttpUrl(link)) {
+            if (!Strings.isNullOrEmpty(link) && isStartHttpUrl(link)) {
                 urls.add(link.trim());
             }
         }
@@ -652,8 +653,7 @@ public final class UrlAnalyzer {
      */
     public final HashSet<String> getAllUrlByElement(Elements elements) {
         String url = page.getUrl();
-
-        HashSet<String> urls = new HashSet<>();
+        HashSet<String> urls = Sets.newHashSet();
         for (Element link : elements) {
             //链接只考虑href 与 src 两种
             String source = link.toString().contains("href") ? "href" : "src";
@@ -661,7 +661,7 @@ public final class UrlAnalyzer {
             // 绝对路径：之前由于Jsoup调用的是parse(content, baseUri)方法，所以这个值绝对不为空
             String absLink = link.absUrl(source);
 
-            if (StringUtil.isNullOrBlank(absLink) || StringUtil.isNullOrBlank(url) || url.equals(absLink)
+            if (Strings.isNullOrEmpty(absLink) || Strings.isNullOrEmpty(url) || url.equals(absLink)
                     || absLink.startsWith("#") || absLink.equalsIgnoreCase("null")
                     || absLink.contains("javascript:") || absLink.contains("mailto:") || absLink.contains("about:blank")) {
                 continue;
@@ -714,5 +714,21 @@ public final class UrlAnalyzer {
     public static boolean isStartHttpUrl(String url) {
         return (url.startsWith("http://") || url.startsWith("https://"));
     }
+    
+
+    /**
+     * 格式化Url: www.website.com ===> http://www.website.com
+     * Site设置的Url必须带schema，否则报错
+     */
+    public static String addUrlSchema(String url) {
+        if (Strings.isNullOrEmpty(url)) {
+            return url;
+        }
+        if (!isStartHttpUrl(url)) {
+            url = "http://" + url.trim();
+        }
+        return url;
+    }
+
 
 }

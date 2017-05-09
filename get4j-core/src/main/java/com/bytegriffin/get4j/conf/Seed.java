@@ -1,17 +1,18 @@
 package com.bytegriffin.get4j.conf;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import com.bytegriffin.get4j.core.PageMode;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
-import com.bytegriffin.get4j.net.http.HttpClientEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
+import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.util.FileUtil;
-import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * 抓取站点，对应配置文件中的seed元素
@@ -87,7 +88,7 @@ public class Seed {
     /**
      * 抓取该url站点所需的cookie，更像是人为操作
      */
-    private Map<String, String> fetchCookies = new LinkedHashMap<>();
+    private Map<String, String> fetchCookies = Maps.newLinkedHashMap();
     /**
      * 每次http请求之后都要延迟固定时间(秒)再次请求
      */
@@ -155,7 +156,7 @@ public class Seed {
      * @param userAgentFile useragent文件
      */
     public void setFetchUserAgentFile(String userAgentFile) {
-        if (!StringUtil.isNullOrBlank(userAgentFile)) {
+        if (!Strings.isNullOrEmpty(userAgentFile)) {
             this.fetchUserAgent = FileUtil.readUserAgentFile(userAgentFile);
         }
     }
@@ -166,7 +167,7 @@ public class Seed {
      * @param httpProxyFile String
      */
     public void setFetchHttpProxyFile(String httpProxyFile) {
-        if (!StringUtil.isNullOrBlank(httpProxyFile)) {
+        if (!Strings.isNullOrEmpty(httpProxyFile)) {
             this.fetchHttpProxy = FileUtil.readHttpProxyFile(httpProxyFile);
         }
     }
@@ -177,7 +178,7 @@ public class Seed {
      * @param pageMode String
      */
     public void setPageMode(String pageMode) {
-        if (!StringUtil.isNullOrBlank(pageMode)) {
+        if (!Strings.isNullOrEmpty(pageMode)) {
             this.pageMode = PageMode.valueOf(pageMode);
             return;
         }
@@ -195,7 +196,7 @@ public class Seed {
      * @return boolean
      */
     public boolean isListDetailMode() {
-        return (!StringUtil.isNullOrBlank(this.fetchDetailSelector));
+        return (!Strings.isNullOrEmpty(this.fetchDetailSelector));
     }
 
     /**
@@ -204,8 +205,8 @@ public class Seed {
      * @param fetchResourcceSelectorsStr 多个resource selector用逗号拼接成的字符串
      */
     public void setFetchResourceSelectors(String fetchResourcceSelectorsStr) {
-        List<String> fetchOtherUrlSelectors = new ArrayList<>();
-        if (!StringUtil.isNullOrBlank(fetchResourcceSelectorsStr)) {
+        List<String> fetchOtherUrlSelectors = Lists.newArrayList();
+        if (!Strings.isNullOrEmpty(fetchResourcceSelectorsStr)) {
             String[] array = fetchResourcceSelectorsStr.split(DefaultConfig.fetch_resource_split);
             for (String str : array) {
                 fetchOtherUrlSelectors.add(str);
@@ -222,7 +223,7 @@ public class Seed {
      * @param fetchUrl
      */
     public void setFetchUrl(String fetchUrl) {
-        fetchUrl = HttpClientEngine.addUrlSchema(fetchUrl);
+        fetchUrl = UrlAnalyzer.addUrlSchema(fetchUrl);
 //        if (!PageMode.list_detail.equals(this.pageMode)) {
 //            fetchUrl = fetchUrl.replace(Constants.FETCH_LIST_URL_VAR_LEFT, "").replace(Constants.FETCH_LIST_URL_VAR_RIGHT, "");
 //        }

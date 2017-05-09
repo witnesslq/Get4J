@@ -12,13 +12,13 @@ import com.bytegriffin.get4j.net.http.UrlAnalyzer;
  * 而不是一堆值，一堆值需要自己写解析类<br />
  * 默认支持Jsoup的css选择器和正则表达式
  */
-public class TextPageParser implements PageParser {
+public class ElementPageParser implements PageParser {
 
-    private static final Logger logger = LogManager.getLogger(TextPageParser.class);
+    private static final Logger logger = LogManager.getLogger(ElementPageParser.class);
 
     private String elementSeletor;
 
-    TextPageParser(String elementSeletor) {
+    ElementPageParser(String elementSeletor) {
         this.elementSeletor = elementSeletor;
     }
 

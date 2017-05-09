@@ -21,8 +21,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
-import com.bytegriffin.get4j.util.StringUtil;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.ImmediateRefreshHandler;
@@ -73,9 +71,6 @@ public class TestHttpEngine {
         Elements eles = doc.select("div.inv-title.pt5>a[href]");
         for (Element e : eles) {
             String link = e.attr("href");
-            if (StringUtil.isNullOrBlank(link)) {
-                continue;
-            }
             System.err.println(link);
         }
     }

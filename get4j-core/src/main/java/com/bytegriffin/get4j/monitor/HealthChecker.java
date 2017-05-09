@@ -6,7 +6,7 @@ import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.management.MBeanServer;
@@ -15,6 +15,9 @@ import javax.management.ObjectName;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.bytegriffin.get4j.core.ExceptionCatcher;
+import com.google.common.collect.Maps;
+
 /**
  * 系统健康检查入口
  */
@@ -22,7 +25,7 @@ public class HealthChecker {
 
 	private static final String jmx_server_name = "Get4J";
 	private static final Logger logger = LogManager.getLogger(HealthChecker.class);
-	private static Map<String, HealthStatus> healthStatusMap = new HashMap<>();
+	private static Map<String, HealthStatus> healthStatusMap = Maps.newHashMap();
 
 	public void register(String seedName) {
 		MBeanServer server = ManagementFactory.getPlatformMBeanServer();
@@ -79,4 +82,9 @@ public class HealthChecker {
 		}
 		return null;
 	}
+
+	public static List<String> getAllException(){
+		return ExceptionCatcher.getAllExceptions();
+	}
+
 }

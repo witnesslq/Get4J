@@ -2,7 +2,9 @@ package com.bytegriffin.get4j.net.sync;
 
 import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.send.EmailSender;
-import com.bytegriffin.get4j.util.ShellUtil;
+import com.bytegriffin.get4j.util.CommandUtil;
+import com.google.common.collect.Sets;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,7 +28,7 @@ public class RsyncSyncer implements Syncer {
     // 子目录名是seedname，密码需要在服务器端配置，如果是dir模式需要配置ssh-keygen无密码
     private String dirOrModule;
     private boolean isModule;
-    private HashSet<String> commands = new HashSet<>();
+    private HashSet<String> commands = Sets.newHashSet();
 
     public RsyncSyncer(String host, String username, String dirOrModule, boolean isModule) {
         this.host = host;
@@ -49,7 +51,7 @@ public class RsyncSyncer implements Syncer {
     @Override
     public void sync() {
         for (String command : commands) {
-            ShellUtil.executeShell(command);
+            CommandUtil.executeShell(command);
             try {//如果不同的seed太多，可以减慢同步速度
                 Thread.sleep(1000);
             } catch (InterruptedException e) {

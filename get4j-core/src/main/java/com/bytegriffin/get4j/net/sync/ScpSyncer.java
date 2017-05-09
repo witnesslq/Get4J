@@ -1,14 +1,15 @@
 package com.bytegriffin.get4j.net.sync;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.send.EmailSender;
-import com.bytegriffin.get4j.util.ShellUtil;
+import com.bytegriffin.get4j.util.CommandUtil;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,7 +27,7 @@ public class ScpSyncer implements Syncer {
     private String port;
     private String dir;
     // key: seedname value: avatar list
-    private Map<String, List<String>> resources = new HashMap<>();
+    private Map<String, List<String>> resources = Maps.newHashMap();
 
     public ScpSyncer(String host, String username, String dir, String port) {
         this.host = host;
@@ -47,13 +48,13 @@ public class ScpSyncer implements Syncer {
             String dir = resource.substring(0, resource.indexOf(BatchScheduler.split));
             resource = resource.substring(resource.indexOf(BatchScheduler.split) + 1);
             if (i == 0) {
-                list = new ArrayList<>();
+                list = Lists.newArrayList();
                 list.add(resource);
                 resources.put(dir, list);
             } else if (resources.containsKey(dir)) {
                 resources.get(dir).add(resource);
             } else {
-                list = new ArrayList<>();
+            	list = Lists.newArrayList();
                 list.add(resource);
                 resources.put(dir, list);
             }
@@ -71,7 +72,7 @@ public class ScpSyncer implements Syncer {
                 sb.append(file).append(" ");
             }
             String command = "scp -pB -P " + port + " " + sb.toString() + " " + username + "@" + host + ":" + dir + seedname;
-            ShellUtil.executeShell(command);
+            CommandUtil.executeShell(command);
             try { //如果不同的seed太多，可以减慢同步速度
                 Thread.sleep(1000);
             } catch (InterruptedException e) {

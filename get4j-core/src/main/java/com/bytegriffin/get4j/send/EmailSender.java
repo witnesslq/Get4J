@@ -1,7 +1,6 @@
 package com.bytegriffin.get4j.send;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
@@ -27,6 +26,7 @@ import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.MD5Util;
+import com.google.common.collect.Lists;
 import com.sun.mail.util.MailSSLSocketFactory;
 
 /**
@@ -46,7 +46,7 @@ public final class EmailSender implements Runnable{
 	private static String recipient;// 邮件接收人
 	private static Session session;
 	// 存放已经发送过的内容，为了节省内存已经过md5加密成定长字符串
-	private static List<String> md5_sended_content = new ArrayList<>();
+	private static List<String> md5_sended_content = Lists.newArrayList();
 	private String content;
 
 	private void setContent(String content){

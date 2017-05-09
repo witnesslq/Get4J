@@ -4,7 +4,9 @@ import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
-import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.jayway.jsonpath.JsonPath;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -15,7 +17,6 @@ import org.jsoup.select.Elements;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -97,8 +98,7 @@ public class FetchResourceSelector {
      * @return boolean
      */
     public static boolean isFindResources(String url) {
-        Matcher m = BINARY_FILTERS.matcher(url);
-        return m.find();
+    	return BINARY_FILTERS.matcher(url).find();
     }
 
     /**
@@ -118,8 +118,7 @@ public class FetchResourceSelector {
             url = url.substring(xiegang + 1, wenhao);
         }
         Pattern pattern = Pattern.compile(fetchFilter);
-        Matcher m = pattern.matcher(url);
-        return m.find();
+        return pattern.matcher(url).find();
     }
 
     /**
@@ -133,12 +132,10 @@ public class FetchResourceSelector {
     @Deprecated
     public static HashSet<String> regex(HashSet<String> urls, String regex) {
         Pattern filter = Pattern.compile(regex);
-        Matcher m;
-        HashSet<String> newurls = new HashSet<>();
+        HashSet<String> newurls = Sets.newHashSet();
         newurls.addAll(urls);
         for (String url : urls) {
-            m = filter.matcher(url);
-            if (m.find()) {
+            if (filter.matcher(url).find()) {
                 newurls.remove(url);
             }
         }
@@ -222,7 +219,7 @@ public class FetchResourceSelector {
      * @return HashSet
      */
     public static HashSet<String> xmlSelect(String xmlContent, String select) {
-        HashSet<String> urls = new HashSet<>();
+        HashSet<String> urls = Sets.newHashSet();
         Document doc = Jsoup.parse(xmlContent, "", Parser.xmlParser());
         String attrKey = "";
         if (select.contains("[") && select.contains("]")) {
@@ -230,7 +227,7 @@ public class FetchResourceSelector {
         }
         Elements eles = doc.select(select);
         for (Element link : eles) {
-            if (!StringUtil.isNullOrBlank(attrKey) && link.hasAttr(attrKey)) {
+            if (!Strings.isNullOrEmpty(attrKey) && link.hasAttr(attrKey)) {
                 urls.add(link.attr(attrKey).trim());
             } else {
                 urls.add(link.text().trim());
@@ -247,7 +244,7 @@ public class FetchResourceSelector {
      * @return List<String>
      */
     public static List<String> xmlSelect2List(String xmlContent, String select) {
-        List<String> list = new ArrayList<>();
+        List<String> list = Lists.newArrayList();
         Document doc = Jsoup.parse(xmlContent, "", Parser.xmlParser());
         String attrKey = "";
         if (select.contains("[") && select.contains("]")) {
@@ -255,10 +252,10 @@ public class FetchResourceSelector {
         }
         Elements eles = doc.select(select);
         for (Element link : eles) {
-            if (!StringUtil.isNullOrBlank(attrKey) && link.hasAttr(attrKey)) {
+            if (!Strings.isNullOrEmpty(attrKey) && link.hasAttr(attrKey)) {
                 list.add(link.attr(attrKey).trim());
             } else {
-                if (!StringUtil.isNullOrBlank(link.text().trim())) {
+                if (!Strings.isNullOrEmpty(link.text().trim())) {
                     list.add(link.text().trim());
                 }
             }

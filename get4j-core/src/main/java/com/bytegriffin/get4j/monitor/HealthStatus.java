@@ -6,7 +6,8 @@ import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Launcher;
 import com.bytegriffin.get4j.util.DateUtil;
-import com.bytegriffin.get4j.util.StringUtil;
+
+import com.google.common.base.Strings;
 import com.bytegriffin.get4j.core.UrlQueue;
 
 /**
@@ -43,7 +44,7 @@ public class HealthStatus implements HealthStatusMXBean {
 	@Override
 	public String getCostTime() {
 		String str = Globals.PER_START_TIME_CACHE.get(seedName);
-		if(StringUtil.isNullOrBlank(str)){
+		if(Strings.isNullOrEmpty(str)){
 			str = DateUtil.getCurrentDate();
 		}
 		return DateUtil.getCostDate(str);

@@ -1,6 +1,5 @@
 package com.bytegriffin.get4j.store;
 
-import java.io.File;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -12,6 +11,7 @@ import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.ConcurrentQueue;
 import com.bytegriffin.get4j.util.FileUtil;
+import com.google.common.collect.Lists;
 import com.bytegriffin.get4j.core.UrlQueue;
 
 /**
@@ -21,11 +21,9 @@ import com.bytegriffin.get4j.core.UrlQueue;
 public final class FailUrlStorage {
 
 	private static final Logger logger = LogManager.getLogger(FailUrlStorage.class);
-	private static final String filename = "fail_url";
-	private static File failUrlFile = null;
 
 	public static void init() {
-		failUrlFile = FileUtil.makeFile(DefaultConfig.dump_folder, filename);
+		FileUtil.makeDiskFile(DefaultConfig.fail_url_file);
 		logger.info("爬虫系统的坏链文件的初始化完成。");
 	}
 
@@ -34,7 +32,7 @@ public final class FailUrlStorage {
 	 */
 	public static void dumpFile() {
 		Set<String> seedNameKeys = Globals.CHAIN_CACHE.keySet();
-		LinkedList<String> allFailUrls = new LinkedList<>();
+		LinkedList<String> allFailUrls = Lists.newLinkedList();
 		for (String seedName : seedNameKeys) {
 			ConcurrentQueue<String> failurls = UrlQueue.getFailVisitedUrl(seedName);
 			if (failurls != null && failurls.size() > 0 && failurls.list.size() > 0) {
@@ -42,7 +40,7 @@ public final class FailUrlStorage {
 				logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + seedName + "]时一共有[" + failurls.size()+ "]个坏链产生。");
 			}
 		}
-		FileUtil.append(failUrlFile, allFailUrls);
+		FileUtil.append(DefaultConfig.fail_url_file, allFailUrls);
 		String content = null;
 		for(String failUrl : allFailUrls){
 			content += failUrl+" <br> ";

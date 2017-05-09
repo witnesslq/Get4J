@@ -7,7 +7,8 @@ import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.Process;
-import com.bytegriffin.get4j.util.StringUtil;
+
+import com.google.common.base.Strings;
 
 /**
  * 代理解析入口：负责代理所有内置以及自定义的解析类
@@ -20,8 +21,8 @@ public class AutoDelegateParser implements Process {
     public void init(Seed seed) {
         PageParser pp = null;
         String clazz = seed.getParseClassImpl();
-        if (!StringUtil.isNullOrBlank(seed.getParseElementSelector())) {// new内置ElementSelectPageParser
-            pp = new TextPageParser(seed.getParseElementSelector());
+        if (!Strings.isNullOrEmpty(seed.getParseElementSelector())) {// new内置ElementSelectPageParser
+            pp = new ElementPageParser(seed.getParseElementSelector());
         } else { // 自定义
             try {
                 pp = (PageParser) Class.forName(clazz).newInstance();

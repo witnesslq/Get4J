@@ -1,11 +1,13 @@
 package com.bytegriffin.get4j.core;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.logging.log4j.core.util.Throwables;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * 异常捕捉
@@ -16,12 +18,12 @@ public final class ExceptionCatcher {
      * 与种子抓取相关的异常信息
      * 当 key：seed_name value：exception information
      */
-    private static Map<String, List<String>> seed_exception_info = new HashMap<>();
+    private static Map<String, List<String>> seed_exception_info = Maps.newHashMap();
 
     /**
      * 其他类型的异常信息
      */
-    private static List<String> exception_infos = new ArrayList<>();
+    private static List<String> exception_infos = Lists.newArrayList();
 
     public static List<String> getAllExceptions(){
     	return exception_infos;
@@ -30,6 +32,13 @@ public final class ExceptionCatcher {
     public static List<String> getExceptions(String seedName){
     	return seed_exception_info.get(seedName);
     }
+    
+    /**
+     * 每次抓取完成后都要清空一次异常缓存
+     */
+    public static void clearExceptions(){
+    	seed_exception_info.clear();
+    }
 
 	/**
 	 * 获取完整的堆栈信息
@@ -37,10 +46,8 @@ public final class ExceptionCatcher {
 	 * @return
 	 */
 	public static String getStackTrace(Throwable t) {
-		StringWriter sw = new StringWriter();  
-        PrintWriter pw = new PrintWriter(sw, true);  
-        t.printStackTrace(pw);  
-        return sw.getBuffer().toString();  
+        List<String> ls = Throwables.toStringList(t);
+        return Joiner.on(System.lineSeparator()).join(ls);  
     }
 
 	/**
@@ -61,7 +68,7 @@ public final class ExceptionCatcher {
     public static void addException(String seedName, String exception){
     	List<String> list = seed_exception_info.get(seedName);
         if (list == null || list.size() == 0) {
-        	list = new ArrayList<>();
+        	list = Lists.newArrayList();
         	seed_exception_info.put(seedName, list);
         }
         if(!list.contains(exception)){

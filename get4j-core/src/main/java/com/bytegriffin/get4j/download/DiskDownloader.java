@@ -15,7 +15,7 @@ import com.bytegriffin.get4j.net.http.HttpClientEngine;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.net.sync.BatchScheduler;
 import com.bytegriffin.get4j.util.FileUtil;
-import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
 
 /**
  * 磁盘下载器，负责下载页面以及页面上的资源文件，它的功能是避免了开发者在PageParser中手工写下载页面或资源文件的代码。<br>
@@ -39,8 +39,7 @@ public class DiskDownloader implements Process {
         String diskpath = seed.getDownloadDisk();
         String folderName;
         if (UrlAnalyzer.isStartHttpUrl(diskpath)) {
-            defaultAvatarPath = System.getProperty("user.dir") + File.separator + "data" + File.separator + "download"
-                    + File.separator + seed.getSeedName();
+            defaultAvatarPath = DefaultConfig.getDownloadDisk(seed.getSeedName());
             staticServer = diskpath.endsWith("/") ? diskpath : diskpath + "/";// 静态资源服务器地址
             folderName = FileUtil.makeDiskDir(defaultAvatarPath);// 获取默认的服务器磁盘地址
         } else {
@@ -72,14 +71,14 @@ public class DiskDownloader implements Process {
         HttpClientEngine.downloadResources(page);
 
         // 3.判断是否包含avatar资源，有的话就下载
-        if (!StringUtil.isNullOrBlank(page.getAvatar())) {
+        if (!Strings.isNullOrEmpty(page.getAvatar())) {
             HttpClientEngine.downloadAvatar(page);// 下载avatar资源
             // 另开一个线程专门负责启用脚本同步avatar资源文件
             if (DefaultConfig.sync_open) {
                 BatchScheduler.addResource(page.getSeedName(), page.getAvatar());
             }
             String avatar = page.getAvatar();
-            if (!StringUtil.isNullOrBlank(staticServer)) {
+            if (!Strings.isNullOrEmpty(staticServer)) {
                 avatar = avatar.replace(defaultAvatarPath, staticServer + page.getSeedName() + "/");
             }
             page.setAvatar(avatar);// 将本地avatar资源文件的路径修改为静态服务器地址

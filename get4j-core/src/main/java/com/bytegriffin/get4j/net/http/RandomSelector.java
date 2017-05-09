@@ -6,7 +6,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 随机选择器<br>
- * 为User Agent与Http Proxy提供一种随机选择
+ * 为User Agent，Http Proxy和SleepRange提供一种随机选择
  */
 public abstract class RandomSelector<E> {
 

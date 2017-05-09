@@ -1,16 +1,17 @@
 package com.bytegriffin.get4j.util;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -25,6 +26,9 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.net.http.HttpProxy;
 import com.bytegriffin.get4j.send.EmailSender;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 /**
  * 文件工具类
@@ -39,7 +43,7 @@ public final class FileUtil {
      * @return List<String>
      */
     public static List<String> readUserAgentFile(String userAgentFile) {
-        return readFileLine(userAgentFile);
+        return readFileLines(userAgentFile);
     }
 
     /**
@@ -74,13 +78,13 @@ public final class FileUtil {
      * @return List<HttpProxy>
      */
     public static List<HttpProxy> readHttpProxyFile(String httpProxyFile) {
-        List<String> list = readFileLine(httpProxyFile);
+        List<String> list = readFileLines(httpProxyFile);
         if (list == null || list.size() == 0) {
             return null;
         }
         List<HttpProxy> newList = new ArrayList<>();
         for (String str : list) {
-            if (StringUtil.isNullOrBlank(str)) {
+            if (Strings.isNullOrEmpty(str)) {
                 continue;
             }
             HttpProxy hp;
@@ -116,7 +120,7 @@ public final class FileUtil {
      * @return HttpProxy
      */
     public static HttpProxy formatProxy(String proxyString) {
-        if (StringUtil.isNullOrBlank(proxyString)) {
+        if (Strings.isNullOrEmpty(proxyString)) {
             return null;
         }
         HttpProxy hp;
@@ -140,7 +144,7 @@ public final class FileUtil {
      * @param configFile String
      * @return List<String>
      */
-    private static List<String> readFileLine(String configFile) {
+    private static List<String> readFileLines(String configFile) {
         configFile = getSystemAbsolutePath(configFile);
         File file = new File(configFile);
         if (!file.exists()) {
@@ -150,22 +154,22 @@ public final class FileUtil {
         if (!fc) {
             return null;
         }
-        List<String> result = new ArrayList<>();
+        List<String> result = Lists.newArrayList();
         try {
-            BufferedReader br = new BufferedReader(new FileReader(configFile));// 构造一个BufferedReader类来读取文件
-            String s;
-            while ((s = br.readLine()) != null) {// 使用readLine方法，一次读一行
-                if (StringUtil.isNullOrBlank(s.trim())) {
-                    continue;
-                }
-                if (s.contains("#")) {// #代表单行注释，所以要去掉
-                    continue;
-                }
-                result.add(s);
-            }
-            br.close();
-        } catch (Exception e) {
-        	logger.error("读取文件时出错。", e);
+        	List<String> list = Files.readLines(file, Charset.defaultCharset());
+        	for(String line : list){
+        		//去除每行开头为#的说明
+        		if(line.startsWith("#") || Strings.isNullOrEmpty(line)){
+        			continue;
+        		}
+        		//如果＃出现在每行中间，那么只将后面的说明去除
+        		if(line.contains("#")){
+        			line = line.split("#")[0];
+        		}
+        		result.add(line);
+        	}
+        } catch (IOException e) {
+        	logger.error("读取文件行时出错。", e);
         	EmailSender.sendMail(e);
         	ExceptionCatcher.addException(e);
         }
@@ -182,101 +186,7 @@ public final class FileUtil {
         File file = new File(filename);
         return !(file.length() == 0);
     }
-
-    /**
-     * 生成文件夹以及以下的文件
-     *
-     * @param folder   String
-     * @param filename String
-     */
-    public static File makeFile(String folder, String filename) {
-        File file = new File(folder);
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-        File newfile = new File(folder + filename);
-        if (!newfile.exists()) {
-            try {
-                newfile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return newfile;
-    }
-
-    /**
-     * 按行追加内容
-     *
-     * @param file     File
-     * @param contents Collection<String>
-     */
-    public static synchronized void append(File file, Collection<String> contents) {
-        if (contents != null && !contents.isEmpty()) {
-            FileWriter fw = null;
-            try {
-                fw = new FileWriter(file, true);
-                for (String str : contents) {
-                    if (StringUtil.isNullOrBlank(str)) {
-                        break;
-                    }
-                    fw.write(str + System.getProperty("line.separator"));
-                }
-                fw.flush();
-            } catch (IOException e) {
-            	logger.error("删除文件时出错。");
-                EmailSender.sendMail(e);
-            	ExceptionCatcher.addException(e);
-            } finally {
-                try {
-                    if (fw != null) {
-                        fw.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    /**
-     * 删除文件中的某行内容
-     *
-     * @param file  String
-     * @param proxy String
-     */
-    public static void removeLine(String file, String proxy) {
-        try {
-            file = FileUtil.getSystemAbsolutePath(file);
-            File inFile = new File(file);
-            File tempFile = new File(inFile.getAbsolutePath() + ".tmp");
-
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            PrintWriter pw = new PrintWriter(new FileWriter(tempFile));
-            String line;
-
-            while ((line = br.readLine()) != null) {
-                if (!line.trim().equals("") && !line.trim().equals(proxy)) {
-                    pw.println(line);
-                    pw.flush();
-                }
-            }
-            pw.close();
-            br.close();
-            if (!inFile.delete()) {
-                logger.error("不能删除原文件。");
-                return;
-            }
-            if (!tempFile.renameTo(inFile)) {
-                logger.error("不能重命名新文件。");
-            }
-        } catch (IOException ex) {
-            logger.error("删除文件时出错。");
-            EmailSender.sendMail(ex);
-        	ExceptionCatcher.addException(ex);
-        }
-    }
-
+    
     /**
      * 在磁盘上创建下载、索引文件夹
      *
@@ -292,8 +202,75 @@ public final class FileUtil {
                 logger.warn("不能创建文件夹[" + diskDir + "]，它可能包含一些特殊字符串。", ex);
             }
         }
-        diskDir = diskDir.endsWith(File.separator) ? diskDir : diskDir + File.separator;
-        return diskDir;
+        return diskDir.endsWith(File.separator) ? diskDir : diskDir + File.separator;
+    }
+
+    /**
+     * 生成文件夹以及以下的文件
+     * 
+     * @param filename String
+     */
+    public static void makeDiskFile(String filename) {
+        File file = new File(filename);
+        try {
+			Files.createParentDirs(file);
+			Files.touch(file);
+		} catch (IOException e) {
+			logger.error("创建文件时出错。");
+            EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
+		}
+    }
+
+    /**
+     * 按行追加内容
+     *
+     * @param fileName String
+     * @param contents Collection
+     */
+    public static synchronized void append(String fileName, Collection<String> contents) {
+        if (contents == null || contents.isEmpty()) {
+        	return;
+        }
+        try {
+        	for (String str : contents) {
+                if (Strings.isNullOrEmpty(str)) {
+                    break;
+                }
+                Files.append(str + System.getProperty("line.separator"), new File(fileName), Charset.defaultCharset());
+            }
+		} catch (IOException e) {
+			logger.error("追加文件时出错。");
+            EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
+		}
+    }
+
+    /**
+     * 删除文件中的某行内容
+     *
+     * @param file  String
+     * @param content String
+     */
+    public static void removeLine(String file, String content) {
+        try {
+            file = FileUtil.getSystemAbsolutePath(file);
+            File inFile = new File(file);
+            //临时文件用于转储，append时会自动创建，不用事先创建
+            File tempFile = new File(inFile.getAbsolutePath() + ".tmp");
+            List<String> list = Files.readLines(inFile, Charset.defaultCharset());
+            for(String line : list){
+            	if(line.trim().equals(content)){
+            		continue;
+            	}
+            	Files.append(line.trim() + System.getProperty("line.separator"), tempFile, Charset.defaultCharset());
+            }
+            Files.move(tempFile, inFile);
+        } catch (IOException ex) {
+            logger.error("删除文件时出错。");
+            EmailSender.sendMail(ex);
+        	ExceptionCatcher.addException(ex);
+        }
     }
 
     /**
@@ -305,11 +282,11 @@ public final class FileUtil {
         String folderName = Globals.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
         String fileName = folderName + File.separator;
         if (page.isJsonContent()) {
-            fileName += generatePageName(page.getUrl(), DefaultConfig.json_page_suffix);
+            fileName += generatePageFileName(page.getUrl(), DefaultConfig.json_page_suffix);
         } else if (page.isHtmlContent()) {
-            fileName += generatePageName(page.getUrl(), DefaultConfig.html_page_suffix);
+            fileName += generatePageFileName(page.getUrl(), DefaultConfig.html_page_suffix);
         } else if (page.isXmlContent()) {
-            fileName += generatePageName(page.getUrl(), DefaultConfig.xml_page_suffix);
+            fileName += generatePageFileName(page.getUrl(), DefaultConfig.xml_page_suffix);
         } else {// 这种情况为资源文件，直接返回
             return;
         }
@@ -338,40 +315,31 @@ public final class FileUtil {
      * @param content  byte[]
      */
     public static void writeFileToDisk(String fileName, byte[] content) {
-        if (StringUtil.isNullOrBlank(fileName) || content == null) {
+        if (Strings.isNullOrEmpty(fileName) || content == null) {
             return;
         }
         File file = new File(fileName);
         if (file.exists() && content.length == file.length()) {
-            // logger.warn("线程[" + Thread.currentThread().getName() +
-            // "]在往硬盘上写入名为["+fileName+"]时发现硬盘上已存在此文件。");
+            logger.warn("线程[" + Thread.currentThread().getName() +"]在往硬盘上写入名为["+fileName+"]时发现硬盘上已存在此文件。");
             return;
         }
-        FileOutputStream fos = null;
         try {
-            fos = new FileOutputStream(fileName);
-            fos.write(content);
-            fos.flush();
-        } catch (Exception e) {
+            Files.write(content, file);
+        } catch (IOException e) {
             logger.error("线程[" + Thread.currentThread().getName() + "]往硬盘上写入页面时出错。", e);
             EmailSender.sendMail(e);
         	ExceptionCatcher.addException(e);
-        } finally {
-            try {
-                if (fos != null) {
-                    fos.close();
-                }
-            } catch (IOException e) {
-                logger.warn("硬盘上写入页面时出错。", e);
-            }
         }
     }
 
     /**
-     * 删除url的protocal http://www.website.com ===> www.website.com
+     * 删除url的schema <br>
+     * 例如：http://www.website.com ===> www.website.com
+     * 
+     * @param url String
      */
     private static String deleteUrlSchema(String url) {
-        if (StringUtil.isNullOrBlank(url)) {
+        if (Strings.isNullOrEmpty(url)) {
             return url;
         }
         return url.replaceAll("http://", "").replaceAll("https://", "");
@@ -388,37 +356,31 @@ public final class FileUtil {
      * @param suffix 文件后缀名
      * @return String
      */
-    private static String generatePageName(String url, String suffix) {
+    private static String generatePageFileName(String url, String suffix) {
         String newUrl = deleteUrlSchema(url);
-        String laststr = newUrl.substring(newUrl.length() - 1, newUrl.length());
-        if (laststr.equals("/")) {
-            newUrl = newUrl.substring(0, newUrl.length() - 1);
+        // 此时newUrl的格式为 www.aaa.com/path ==> path 或者 www.aaa.com ==> www.aaa.com
+        if (!DefaultConfig.download_file_url_naming) {
+            newUrl = Paths.get(newUrl).getFileName().toString();
         }
 
-        // 此时newUrl的格式为 www.aaa.com/path 或者 www.aaa.com
-        if (!DefaultConfig.download_file_url_naming) {
-            newUrl = newUrl.substring(newUrl.lastIndexOf("/") + 1, newUrl.length());
+        // 去除url中的参数，得到的newUrl可能为空：www.aaa.com
+        if (newUrl.contains("?")) {
+        	newUrl = newUrl.substring(0, newUrl.indexOf("?"));
         }
+
+        // 如果是newUrl为www.aaa.com，那么直接将
+        if (Strings.isNullOrEmpty(newUrl)) {
+            newUrl = DefaultConfig.home_page_name;
+        }    
 
         // 判断动态页面url中没有后缀名的自动加上相应的后缀名
         if (!isFindPage(newUrl)) {
             newUrl += "." + suffix;
         }
 
-        if (StringUtil.isNullOrBlank(newUrl)) {
-            newUrl = DefaultConfig.home_page_name;
-        } else {
-
-            // 默认用下划线取代url中的特殊字符
-            newUrl = newUrl.replace("*", "_").replace("<", "_").replace(">", "_").replace("/", "_").replace("\\", "_")
-                    .replace("|", "_").replace(":", "_").replace("\"", "_").replace("?", "_");
-            // 当然也可以对url中的特殊字符进行编码
-            // try {
-            // newUrl = URLEncoder.encode(newUrl,"UTF-8");
-            // newUrl = newUrl.replace("*", "");
-            // } catch (UnsupportedEncodingException e) {
-            // e.printStackTrace();
-            // }
+        // 过滤特殊字符串
+        if (!newUrl.equals(DefaultConfig.home_page_name)) {
+            newUrl = replaceSpecialChar(newUrl);
         }
         return newUrl;
     }
@@ -433,30 +395,35 @@ public final class FileUtil {
      * @return String
      */
     public static String generateResourceName(String url, String suffix) {
-        // String newUrl = deleteUrlSchema(url);
-        String laststr = url.substring(url.length() - 1, url.length());
-        if (laststr.equals("/")) {
-            url = url.substring(0, url.length() - 1);
-        }
-        // 此时newUrl的格式为 www.aaa.com/path 或者 www.aaa.com
+        String newUrl = deleteUrlSchema(url);
+        // 此时newUrl的格式为 www.aaa.com/path ==> path 或者 www.aaa.com ==> www.aaa.com
         if (!DefaultConfig.download_file_url_naming) {
-            url = url.substring(url.lastIndexOf("/") + 1, url.length());
+            newUrl = Paths.get(newUrl).getFileName().toString();
         }
-        // 去除url中的参数
-        if (url.contains("?")) {
-            url = url.substring(0, url.indexOf("?"));
+
+        // 去除url中的参数，得到的newUrl可能为空：www.aaa.com
+        if (newUrl.contains("?")) {
+        	newUrl = newUrl.substring(0, newUrl.indexOf("?"));
         }
 
         // 判断动态url中没有后缀名的自动加上相应的后缀名，有的资源文件没有后缀名，比如css不用写后缀照样也能引用
         // 注意：资源文件link[href]有时候是xml文件，例如：<link type="application/rss+xml"
         // href="rss"/>
-        // <link type="application/wlwmanifest+xml"
-        // href="wlwmanifest.xml"/>，所以要判断xml后缀
-        if (!FetchResourceSelector.isFindResources(url)) {
-            url += "." + suffix;
+        // <link type="application/wlwmanifest+xml" href="wlwmanifest.xml"/>，所以要判断xml后缀
+        if (!FetchResourceSelector.isFindResources(newUrl)) {
+        	newUrl += "." + suffix;
         }
-        // 默认用下划线取代url中的特殊字符
-        url = url.replace("*", "_").replace("<", "_").replace(">", "_").replace("/", "_").replace("\\", "_")
+
+        return replaceSpecialChar(newUrl);
+    }
+    
+    /**
+     * 默认用下划线取代url中的特殊字符，以方便生成合法的文件名
+     * @param url
+     * @return
+     */
+    private static String replaceSpecialChar(String url){
+    	return url.replace("*", "_").replace("<", "_").replace(">", "_").replace("/", "_").replace("\\", "_")
                 .replace("|", "_").replace(":", "_").replace("\"", "_").replace("?", "_");
         // 当然也可以对url中的特殊字符进行编码
         // try {
@@ -465,7 +432,6 @@ public final class FileUtil {
         // } catch (UnsupportedEncodingException e) {
         // e.printStackTrace();
         // }
-        return url;
     }
 
     /**
@@ -488,24 +454,15 @@ public final class FileUtil {
      * @param fileName String
      * @param fileSize long
      */
-    public static void createNullFile(String fileName, long fileSize) {
+    public static void makeDiskFile(String fileName, long fileSize) {
         File newFile = new File(fileName);
-        RandomAccessFile raf = null;
-        try {
-            raf = new RandomAccessFile(newFile, "rw");
+        try (RandomAccessFile raf = new RandomAccessFile(newFile, "rw")){
             raf.setLength(fileSize);
         } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (raf != null) {
-                    raf.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        	logger.error("线程[" + Thread.currentThread().getName() + "]在硬盘上创建文件时出错。", e);
+            EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
         }
-
     }
 
     /**
@@ -516,17 +473,14 @@ public final class FileUtil {
      * @param content       InputStream
      */
     public static void writeFile(String fileName, Long contentLength, InputStream content) {
-        long offset = 0;
-        BufferedInputStream bis = new BufferedInputStream(content);
-        byte[] buff = new byte[1024];
-        int bytesRead;
         File newFile = new File(fileName);
-        RandomAccessFile raf = null;
-        try {
-
-            int unit = (int) (contentLength / 100);// 将文件大小分成100分
+        try (BufferedInputStream bis = new BufferedInputStream(content);
+        	  RandomAccessFile raf = new RandomAccessFile(newFile, "rw")){
+        	int unit = (int) (contentLength / 100);// 将文件大小分成100份
             int unitProgress = 0; // 用于保存当前进度(1~100%)
-            raf = new RandomAccessFile(newFile, "rw");
+            int bytesRead;
+            long offset = 0;
+            byte[] buff = new byte[1024];  
             while ((bytesRead = bis.read(buff, 0, buff.length)) != -1) {
                 raf.seek(offset);
                 raf.write(buff, 0, bytesRead);
@@ -535,26 +489,15 @@ public final class FileUtil {
                 if (temp >= 1 && temp > unitProgress) {// 如果下载过程出现百分比变化
                     unitProgress = temp;
                     if (unitProgress % 20 == 0) {
-                        logger.info("线程[" + Thread.currentThread().getName() + "]下载文件[" + fileName + "]的进度为["
-                                + unitProgress + "%]。");
+                        logger.info("线程[" + Thread.currentThread().getName() + "]下载文件[" 
+                        		+ fileName + "]的进度为[" + unitProgress + "%]。");
                     }
-
                 }
             }
         } catch (Exception e) {
         	logger.error("线程[" + Thread.currentThread().getName() + "]下载文件到磁盘时出错。", e);
             EmailSender.sendMail(e);
         	ExceptionCatcher.addException(e);
-        } finally {
-            try {
-                if (raf != null) {
-                    raf.close();
-                }
-                bis.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         }
     }
 
@@ -564,21 +507,24 @@ public final class FileUtil {
      * @param path
      */
     public static void deleteFile(String path) {
-        File file = new File(path);
-        if (!file.isDirectory()) {
-            file.delete();
-        } else if (file.isDirectory()) {
-            File[] fileList = file.listFiles();
-            for (int i = 0; i < fileList.length; i++) {
-                File delfile = fileList[i];
-                if (!delfile.isDirectory()) {
-                    delfile.delete();
-                } else if (delfile.isDirectory()) {
-                    deleteFile(fileList[i].getPath());
-                }
-            }
-            file.delete();
-        }
+    	try {
+    		java.nio.file.Files.walkFileTree(Paths.get(path), new SimpleFileVisitor<Path>() {
+			    @Override
+			    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+			    	java.nio.file.Files.delete(file);
+			        return FileVisitResult.CONTINUE;
+			    }
+			    @Override
+			    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+			    	java.nio.file.Files.delete(dir);
+			        return super.postVisitDirectory(dir, exc);
+			    }
+			});
+        } catch (IOException e) {
+        	logger.error("线程[" + Thread.currentThread().getName() + "]递归删除文件夹["+path+"]时出错。", e);
+            EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
+		}
     }
 
 }

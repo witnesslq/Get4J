@@ -1,18 +1,13 @@
 package com.bytegriffin.get4j.net.http;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.http.HttpStatus;
@@ -27,6 +22,10 @@ import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
 import com.bytegriffin.get4j.core.UrlQueue;
 
 /**
@@ -51,8 +50,7 @@ public abstract class AbstractHttpEngine {
      * @return boolean
      */
     private boolean isFind(String content) {
-        Matcher m = KEY_WORDS.matcher(content);
-        return m.find();
+    	return KEY_WORDS.matcher(content).find();
     }
 
     /**
@@ -81,13 +79,7 @@ public abstract class AbstractHttpEngine {
      * @throws IOException ioException
      */
     String getContentAsString(InputStream is, String charset) throws IOException {
-        String str;
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is, charset));
-        StringBuilder sb = new StringBuilder();
-        while ((str = reader.readLine()) != null) {
-            sb.append(str).append("\n");
-        }
-        return sb.toString();
+    	return new String(ByteStreams.toByteArray(is), charset);
     }
 
     /**
@@ -147,7 +139,7 @@ public abstract class AbstractHttpEngine {
      */
     private static void setSleepRange(Seed seed, Logger logger) {
         String sleepRange = seed.getFetchSleepRange();
-        if (StringUtil.isNullOrBlank(sleepRange)) {
+        if (Strings.isNullOrEmpty(sleepRange)) {
             return;
         }
         String split = sleepRange.contains("-") ? "-" : "－";
@@ -166,7 +158,7 @@ public abstract class AbstractHttpEngine {
             max = min;
             min = temp;
         }
-        List<Integer> list = new ArrayList<>();
+        List<Integer> list = Lists.newArrayList();
         for (Integer i = min; i <= max; i++) {
             list.add(i);
         }
@@ -233,15 +225,17 @@ public abstract class AbstractHttpEngine {
     /**
      * 设置页面host 可以将它当作request中header的host属性使用
      *
-     * @param page page
+     * @param page Page
+     * @param logger Logger
      */
-    void setHost(Page page) {
+    void setHost(Page page, Logger logger) {
         String host = "";
         try {
             URI uri = new URI(page.getUrl());
             host = uri.getAuthority();
         } catch (URISyntaxException e) {
-            e.printStackTrace();
+        	logger.error("线程[" + Thread.currentThread().getName() + "]设置种子[" + page.getSeedName() + "]url["
+                    + page.getUrl() + "]的HOST属性时错误。",e);
         }
         page.setHost(host);
     }
@@ -314,8 +308,7 @@ public abstract class AbstractHttpEngine {
             // json文件中一般不好嗅探titile属性
             page.setTitle(UrlAnalyzer.getTitle(content));
         } else { // 不是html也不是json，那么只能是resource的链接了，xml也是
-            HashSet<String> resources = page.getResources();
-            resources.add(page.getUrl());
+            page.getResources().add(page.getUrl());
         }
     }
 
@@ -333,6 +326,8 @@ public abstract class AbstractHttpEngine {
                 || HttpStatus.SC_INTERNAL_SERVER_ERROR == statusCode
                 || HttpStatus.SC_SERVICE_UNAVAILABLE == statusCode) {
             UrlQueue.newFailVisitedUrl(page.getSeedName(), page.getUrl());
+            Preconditions.checkArgument(false, "线程[" + Thread.currentThread().getName() + "]访问种子[" 
+            		+ page.getSeedName() + "]的url["+page.getUrl()+"]请求发送"+statusCode+"错误。");
             logger.error("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["
                     + page.getUrl() + "]时发生[" + statusCode + "]错误。");
             return false;

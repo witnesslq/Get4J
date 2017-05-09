@@ -1,6 +1,5 @@
 package com.bytegriffin.get4j.store;
 
-import java.io.File;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -28,10 +27,8 @@ public class FreeProxyStorage implements Process {
 
     @Override
     public void init(Seed seed) {
-        http_proxy = seed.getStoreFreeProxy();
-        String folder = http_proxy.substring(0, http_proxy.lastIndexOf(File.separator) + 1);
-        String filename = http_proxy.substring(http_proxy.lastIndexOf(File.separator) + 1, http_proxy.length());
-        FileUtil.makeFile(folder, filename);
+    	http_proxy = seed.getStoreFreeProxy();
+        FileUtil.makeDiskFile(http_proxy);
     }
 
     @SuppressWarnings("unchecked")
@@ -73,7 +70,7 @@ public class FreeProxyStorage implements Process {
 
         // 3.将可用的代理追加到文件末尾
         int count = validates.size();
-        FileUtil.append(new File(http_proxy_file), validates);
+        FileUtil.append(http_proxy_file, validates);
         if (count == 0) {
             logger.error("更新http代理失败，请隔一段时间再更新。");
         } else {

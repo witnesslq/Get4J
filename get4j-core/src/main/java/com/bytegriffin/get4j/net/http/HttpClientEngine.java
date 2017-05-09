@@ -82,7 +82,8 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.FileUtil;
-import com.bytegriffin.get4j.util.StringUtil;
+
+import com.google.common.base.Strings;
 import com.bytegriffin.get4j.core.UrlQueue;
 
 public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
@@ -453,20 +454,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
     }
 
     /**
-     * 格式化Url: www.website.com ===> http://www.website.com
-     * Site设置的Url必须带schema，否则报错
-     */
-    public static String addUrlSchema(String url) {
-        if (StringUtil.isNullOrBlank(url)) {
-            return url;
-        }
-        if (!url.contains("http://") && !url.contains("https://")) {
-            url = "http://" + url.trim();
-        }
-        return url;
-    }
-
-    /**
      * 设置请求中的Http代理
      *
      * @param seedName seedName
@@ -494,7 +481,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             return;
         }
         String userAgent = ual.choice();
-        if (!StringUtil.isNullOrBlank(userAgent)) {
+        if (!Strings.isNullOrEmpty(userAgent)) {
             Globals.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setUserAgent(userAgent);
         }
     }
@@ -517,7 +504,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             setHttpProxy(page.getSeedName());
             setUserAgent(page.getSeedName());
             // 生成site url
-            setHost(page);
+            setHost(page, logger);
             httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
             request = new HttpGet(url);
             request.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
@@ -557,7 +544,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 byte[] bytes = EntityUtils.toByteArray(entity);
                 String content = new String(bytes);
 
-                if (StringUtil.isNullOrBlank(content)) {
+                if (Strings.isNullOrEmpty(content)) {
                     UrlQueue.newFailVisitedUrl(page.getSeedName(), url);
                     logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容为空。");
                     return page;
@@ -617,7 +604,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         String start = DateUtil.getCurrentDate();
         String fileName = FileUtil.generateResourceName(page.getUrl(), "");
         fileName = Globals.DOWNLOAD_DIR_CACHE.get(page.getSeedName()) + fileName;
-        FileUtil.createNullFile(fileName, contentlength);
+        FileUtil.makeDiskFile(fileName, contentlength);
         CloseableHttpClient httpClient = null;
         String url = page.getUrl();
         HttpGet request = null;
@@ -691,7 +678,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 if (HttpStatus.SC_MOVED_PERMANENTLY == statusCode || HttpStatus.SC_MOVED_TEMPORARILY == statusCode
                         || HttpStatus.SC_SEE_OTHER == statusCode || HttpStatus.SC_TEMPORARY_REDIRECT == statusCode) {
                     Header responseHeader = response.getFirstHeader("Location");
-                    if (responseHeader != null && !StringUtil.isNullOrBlank(responseHeader.getValue())) {
+                    if (responseHeader != null && !Strings.isNullOrEmpty(responseHeader.getValue())) {
                         request.releaseConnection();
                         url = responseHeader.getValue();
                         response = httpClient.execute(new HttpGet(url));
@@ -720,7 +707,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 }
                 String contentType = header.getValue();
                 String suffix = "";
-                if (StringUtil.isNullOrBlank(contentType)) {
+                if (Strings.isNullOrEmpty(contentType)) {
                     resourceName += FileUtil.generateResourceName(url, suffix);
                     FileUtil.writeFileToDisk(resourceName, content);
                     continue;
@@ -799,7 +786,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                     || HttpStatus.SC_SEE_OTHER == statusCode || HttpStatus.SC_TEMPORARY_REDIRECT == statusCode) {
                 Header responseHeader = response.getFirstHeader("Location");
                 if (responseHeader != null) {
-                    if (!StringUtil.isNullOrBlank(responseHeader.getValue())) {
+                    if (!Strings.isNullOrEmpty(responseHeader.getValue())) {
                         request.releaseConnection();
                         url = responseHeader.getValue();
                         request = new HttpGet(url);
@@ -828,7 +815,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             String contentType = header.getValue();
             String suffix = "";
             String resourceName = Globals.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
-            if (StringUtil.isNullOrBlank(contentType)) {
+            if (Strings.isNullOrEmpty(contentType)) {
                 resourceName += FileUtil.generateResourceName(url, suffix);
                 FileUtil.writeFileToDisk(resourceName, content);
                 return;
@@ -919,7 +906,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 byte[] bytes = EntityUtils.toByteArray(entity);
                 String content = new String(bytes);
 
-                if (StringUtil.isNullOrBlank(content)) {
+                if (Strings.isNullOrEmpty(content)) {
                     logger.warn("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容为空。");
                     return null;
                 }

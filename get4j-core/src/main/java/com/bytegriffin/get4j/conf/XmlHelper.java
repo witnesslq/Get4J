@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
 
-import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
 
 /**
  * xml文件工具类
@@ -28,7 +28,7 @@ public final class XmlHelper {
      * @param xsd_file xsd文件
      */
     public static void validate(String xml_file, String xsd_file) {
-        if (StringUtil.isNullOrBlank(xsd_file)) {
+        if (Strings.isNullOrEmpty(xsd_file)) {
             logger.warn("配置文件 [" + xsd_file + "] 不存在。");
             return;
         }

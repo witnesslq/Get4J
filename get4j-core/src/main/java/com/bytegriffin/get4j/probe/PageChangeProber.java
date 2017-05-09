@@ -15,6 +15,7 @@ import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.MD5Util;
 import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
 
 /**
  * 页面变化探测器 ：用于再次爬取页面前事先探查页面的具体情况。<br>
@@ -46,7 +47,7 @@ public class PageChangeProber {
         fetchProbeSelector = seed.getFetchProbeSelector();
         
         if (DefaultConfig.default_value.equalsIgnoreCase(seed.getFetchProbeSleep()) ||
-                StringUtil.isNullOrBlank(seed.getFetchProbeSleep()) ||
+                Strings.isNullOrEmpty(seed.getFetchProbeSleep()) ||
                 !StringUtil.isNumeric(seed.getFetchProbeSleep()) ||
                 Integer.valueOf(seed.getFetchProbeSleep()) <= 0) {
             fetchProbeSleep = DefaultConfig.probe_sleep * 1000;
@@ -55,10 +56,10 @@ public class PageChangeProber {
         }
 
         // 2.创建probe文件夹
-        FileUtil.makeFile(DefaultConfig.probe_folder, ProbeFileStorage.filename);
+        FileUtil.makeDiskFile(DefaultConfig.probe_page_file);
 
         // 3.缓存ProbePage文件对象
-        if (FileUtil.isExistContont(ProbeFileStorage.probe_file)) {
+        if (FileUtil.isExistContont(DefaultConfig.probe_page_file)) {
             probePage = ProbeFileStorage.read(UrlAnalyzer.formatListDetailUrl(seed.getFetchUrl()));
         }
 
@@ -101,7 +102,7 @@ public class PageChangeProber {
             if (!DefaultConfig.default_value.equalsIgnoreCase(fetchProbeSelector)) {
                 content = UrlAnalyzer.selectPageContent(page, fetchProbeSelector);
             }
-            probePage = ProbeFileStorage.append(ProbeFileStorage.probe_file, page.getUrl(), content, ProbeFileStorage.un_finish);
+            probePage = ProbeFileStorage.append(DefaultConfig.probe_page_file, page.getUrl(), content, ProbeFileStorage.un_finish, true);
             return;
         }
 
@@ -110,7 +111,7 @@ public class PageChangeProber {
             // 2.获取最新页面内容
             String newContent = http.probePageContent(page);
             // 当页面内容为空时，发送Email通知
-            if (StringUtil.isNullOrBlank(newContent)) {
+            if (Strings.isNullOrEmpty(newContent)) {
                 stop();
                 String msg = "探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]内容为空。";
                 logger.error(msg);
@@ -126,7 +127,7 @@ public class PageChangeProber {
                 content = UrlAnalyzer.selectPageContent(page, fetchProbeSelector);
             }
 
-            if (StringUtil.isNullOrBlank(content)) {
+            if (Strings.isNullOrEmpty(content)) {
                 stop();
                 String msg = "探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面选择器[" + content + "]出错或者是页面改版。";
                 logger.error(msg);

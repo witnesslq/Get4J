@@ -1,9 +1,6 @@
 package com.bytegriffin.get4j;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +30,9 @@ import com.bytegriffin.get4j.core.SpiderEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.MD5Util;
-import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * 爬虫入口类兼API<br>
@@ -60,7 +59,7 @@ public class Spider {
 
     private Spider(PageMode pageMode) {
     	DefaultConfig.closeHttpClientLog();
-    	dynamicFieldMap = new HashMap<>();
+    	dynamicFieldMap = Maps.newHashMap();
     	seed = new Seed();
         resourceSync = new ResourceSync();
         configuration = new Configuration();
@@ -286,9 +285,7 @@ public class Spider {
      */
     public Spider proxy(String ip, Integer port) {
         HttpProxy hp = new HttpProxy(ip, port);
-        List<HttpProxy> list = new ArrayList<>();
-        list.add(hp);
-        seed.setFetchHttpProxy(list);
+        seed.setFetchHttpProxy(Lists.newArrayList(hp));
         return this;
     }
 
@@ -322,9 +319,7 @@ public class Spider {
      * @return Spider
      */
     public Spider userAgent(String userAgent) {
-        List<String> list = new LinkedList<>();
-        list.add(userAgent);
-        seed.setFetchUserAgent(list);
+        seed.setFetchUserAgent(Lists.newArrayList(userAgent));
         return this;
     }
 
@@ -549,13 +544,13 @@ public class Spider {
      * @return Spider
      */
     public Spider ftp(String host, int port, String username, String password) {
-        Map<String, String> ftp = new HashMap<>();
+        Map<String, String> ftp = Maps.newHashMap();
         ftp.put(AbstractConfig.host_node, host);
         ftp.put(AbstractConfig.port_node, String.valueOf(port));
         ftp.put(AbstractConfig.username_node, username);
         ftp.put(AbstractConfig.password_node, password);
         resourceSync.setFtp(ftp);
-        Map<String, String> sync = new HashMap<>();
+        Map<String, String> sync = Maps.newHashMap();
         sync.put(AbstractConfig.open_node, "true");
         sync.put(AbstractConfig.batch_count_node, DefaultConfig.sync_batch_count + "");
         sync.put(AbstractConfig.batch_time_node, DefaultConfig.sync_batch_time + "");
@@ -576,7 +571,7 @@ public class Spider {
      * @return Spider
      */
     public Spider rsync(String host, String username, boolean isModule, String moduleOrDir) {
-        Map<String, String> rsync = new HashMap<>();
+        Map<String, String> rsync = Maps.newHashMap();
         rsync.put(AbstractConfig.host_node, host);
         rsync.put(AbstractConfig.username_node, username);
         if (isModule) {
@@ -585,7 +580,7 @@ public class Spider {
             rsync.put(AbstractConfig.dir_node, moduleOrDir);
         }
         resourceSync.setRsync(rsync);
-        Map<String, String> sync = new HashMap<>();
+        Map<String, String> sync = Maps.newHashMap();
         sync.put(AbstractConfig.open_node, "true");
         sync.put(AbstractConfig.batch_count_node, DefaultConfig.sync_batch_count + "");
         sync.put(AbstractConfig.batch_time_node, DefaultConfig.sync_batch_time + "");
@@ -605,22 +600,21 @@ public class Spider {
      * @return Spider
      */
     public Spider scp(String host, String username, String dir, Integer port) {
-        Map<String, String> scp = new HashMap<>();
+        Map<String, String> scp = Maps.newHashMap();
         scp.put(AbstractConfig.host_node, host);
         scp.put(AbstractConfig.username_node, username);
         scp.put(AbstractConfig.dir_node, dir);
         port = port == null ? 22 : port;
         scp.put(AbstractConfig.port_node, String.valueOf(port));
         resourceSync.setScp(scp);
-        Map<String, String> sync = new HashMap<>();
+        Map<String, String> sync = Maps.newHashMap();
         sync.put(AbstractConfig.open_node, "true");
         sync.put(AbstractConfig.batch_count_node, DefaultConfig.sync_batch_count + "");
         sync.put(AbstractConfig.batch_time_node, DefaultConfig.sync_batch_time + "");
-        sync.put(AbstractConfig.protocal_node, AbstractConfig.rsync_node);
+        sync.put(AbstractConfig.protocal_node, AbstractConfig.scp_node);
         resourceSync.setSync(sync);
         return this;
     }
-
 
     /**
      * annotation入口，如果不想一项一项设置Api，也可以写一个annotation
@@ -825,12 +819,12 @@ public class Spider {
      * 检查Api设置是否设置正确，否则启动失败
      */
     public void start() {
-        if (StringUtil.isNullOrBlank(seed.getFetchUrl())) {
+        if (Strings.isNullOrEmpty(seed.getFetchUrl())) {
             logger.error("种子[" + seed.getSeedName() + "]没有配置要抓取的url。");
             System.exit(1);
         }
         // 自动生成seed name
-        if (StringUtil.isNullOrBlank(seed.getSeedName())) {
+        if (Strings.isNullOrEmpty(seed.getSeedName())) {
             seed.setSeedName(MD5Util.generateSeedName(seed.getFetchUrl()));
         }
         if(dynamicField.getFields() != null && !dynamicField.getFields().isEmpty()){
@@ -847,7 +841,6 @@ public class Spider {
      */
     public static void initFreeProxy() {
     	DefaultConfig.closeHttpClientLog();
-        List<Seed> seeds = new ArrayList<Seed>();
         Seed xicidaili = new Seed("xicidaili");
         xicidaili.setPageMode(PageMode.list_detail);
         xicidaili.setFetchUrl("http://www.xicidaili.com/nn/{1}");
@@ -856,8 +849,7 @@ public class Spider {
         xicidaili.setParseClassImpl("com.bytegriffin.get4j.parse.FreeProxyPageParser");
         xicidaili.setStoreFreeProxy(DefaultConfig.http_proxy);
         xicidaili.setFetchUserAgentFile(DefaultConfig.user_agent);
-        seeds.add(xicidaili);
-        SpiderEngine.create().setSeeds(seeds).build();
+        SpiderEngine.create().setSeeds(Lists.newArrayList(xicidaili)).build();
     }
 
     /**

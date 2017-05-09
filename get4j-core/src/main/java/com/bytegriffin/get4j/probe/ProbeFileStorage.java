@@ -1,22 +1,24 @@
 package com.bytegriffin.get4j.probe;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.DefaultConfig;
+import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.probe.ProbePageSerial.ProbePage;
+import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.MD5Util;
+import com.google.common.collect.Lists;
 
 /**
  * Probe文件存储器 <br>
@@ -24,7 +26,6 @@ import com.bytegriffin.get4j.util.MD5Util;
 public class ProbeFileStorage {
 
     private static final Logger logger = LogManager.getLogger(ProbeFileStorage.class);
-
     /**
      * probe序列化文件中对象的固定长度字节，这样才更加方便地遍历出文件中存储的多个相同大小的ProbePage对象
      * 可通过probePage.getSerializedSize()来获取大小值
@@ -40,8 +41,6 @@ public class ProbeFileStorage {
      * 1表示已完成，重启程序后不用再抓，直接轮训监控
      */
     static final String finished = "1";
-    static String filename = "probe_pages.bin";
-    static String probe_file = DefaultConfig.probe_folder + filename;
 
     /**
      * 读取Probe文件中与url相等的值
@@ -50,32 +49,23 @@ public class ProbeFileStorage {
      * @return List
      */
     public static ProbePage read(String url) {
-        FileInputStream fis = null;
-        ByteArrayOutputStream swapStream = null;
         ProbePageSerial.ProbePage page = null;
-        try {
+        try (InputStream is = Files.newInputStream(Paths.get(DefaultConfig.probe_page_file), StandardOpenOption.READ)) {
             byte[] buff = new byte[probe_buffer_length];
-            int rc = 0;
-            swapStream = new ByteArrayOutputStream();
-            fis = new FileInputStream(probe_file);
-            while ((rc = fis.read(buff, 0, probe_buffer_length)) > 0) {
-                swapStream.write(buff, 0, rc);
-                ProbePageSerial.ProbePage probepage = ProbePageSerial.ProbePage.parseFrom(swapStream.toByteArray());
-                if (probepage.getUrl().equalsIgnoreCase(MD5Util.convert(url))) {
+            String md5url = MD5Util.convert(url);
+            while (is.read(buff, 0, probe_buffer_length) > 0) {
+            	//byteBuf.flip();
+                ProbePageSerial.ProbePage probepage = ProbePageSerial.ProbePage.parseFrom(buff);
+                if (probepage.getUrl().equalsIgnoreCase(md5url)) {
                     page = probepage;
                     break;
                 }
             }
             return page;
-        } catch (Exception e) {
+        } catch (IOException e) {
             logger.error("读probe文件时出错。", e);
-        } finally {
-            try {
-                fis.close();
-                swapStream.close();
-            } catch (IOException e) {
-                logger.error("读probe文件时出错。", e);
-            }
+            EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
         }
         return page;
     }
@@ -85,34 +75,22 @@ public class ProbeFileStorage {
      *
      * @return
      */
-    public static List<ProbePage> read() {
-        FileInputStream fis = null;
-        ByteArrayOutputStream swapStream = null;
-        List<ProbePage> list = new ArrayList<>();
-        try {
+    private static List<ProbePage> reads() {
+        List<ProbePage> list = Lists.newArrayList();
+        try (InputStream is = Files.newInputStream(Paths.get(DefaultConfig.probe_page_file), StandardOpenOption.READ)){
             byte[] buff = new byte[probe_buffer_length];
-            int rc = 0;
-            swapStream = new ByteArrayOutputStream();
-            fis = new FileInputStream(probe_file);
-            while ((rc = fis.read(buff, 0, probe_buffer_length)) > 0) {
-                swapStream.write(buff, 0, rc);
-                ProbePageSerial.ProbePage page = ProbePageSerial.ProbePage.parseFrom(swapStream.toByteArray());
+            while (is.read(buff, 0, probe_buffer_length) > 0) {
+                ProbePageSerial.ProbePage page = ProbePageSerial.ProbePage.parseFrom(buff);
                 list.add(page);
             }
             return list;
         } catch (Exception e) {
             logger.error("读probe文件时出错。", e);
-        } finally {
-            try {
-                fis.close();
-                swapStream.close();
-            } catch (IOException e) {
-                logger.error("读probe文件时出错。", e);
-            }
-        }
+            EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
+        } 
         return null;
     }
-
 
     /**
      * 更新Probe文件：不能直接删除并更新数据，需要生成一个临时文件进行转存
@@ -122,75 +100,65 @@ public class ProbeFileStorage {
      * @param isfinish
      * @return 是否更新成功
      */
-    public synchronized static ProbePage update(String url, String content, String isfinish) {
-        FileOutputStream tempFos = null;
+    synchronized static ProbePage update(String url, String content, String isfinish) {
         ProbePageSerial.ProbePage newProbePage = null;
-        List<ProbePage> list = read();
-        String tempfile = probe_file + "." + System.currentTimeMillis() + ".tmp";
+        // 2.1 更新就是先创建一个临时文件 
+        String tempfile = DefaultConfig.probe_page_file + "." + System.currentTimeMillis() + ".tmp";
+        File tempFile = new File(tempfile);
         try {
-            if (!list.isEmpty()) {
-                // 2.1 更新就是先创建一个临时文件  
-                File tempFile = new File(tempfile);
-                tempFos = new FileOutputStream(tempFile);
-                // 2.2 将probe文件除了url相同的数据转存到临时文件中
-                for (ProbePage pp : list) {
-                    if (url.equals(pp.getUrl())) {
-                        continue;
-                    }
-                    ProbePageSerial.ProbePage tempProbe = ProbePageSerial.ProbePage.newBuilder().setUrl(MD5Util.convert(pp.getUrl())).
-                            setContent(MD5Util.convert(pp.getContent())).setFinish(isfinish).build();
-                    tempProbe.writeTo(tempFos);
+        	tempFile.createNewFile();
+        	List<ProbePage> list = reads();
+            // 2.2 将probe文件除了url相同的数据转存到临时文件中
+            for (ProbePage pp : list) {
+                if (MD5Util.convert(url).equals(pp.getUrl())) {
+                    continue;
                 }
-
-                // 2.3 将要更新的数据追加到临时文件中
-                return append(tempFile.getCanonicalPath(), url, content, isfinish);
+                append(tempFile.getCanonicalPath(), pp.getUrl(), pp.getContent(), pp.getFinish(), false);
             }
+            // 2.3 将要更新的数据追加到临时文件中
+            newProbePage = append(tempFile.getCanonicalPath(), url, content, isfinish, true);
+            // 2.4 将临时文件重命名为probe文件，原probe文件存在的话就直接覆盖
+            // 必须要在流关闭之后才能重命名，否则在windows系统下报错
+            if (!list.isEmpty()) {
+            	Files.move(Paths.get(tempfile), Paths.get(DefaultConfig.probe_page_file), StandardCopyOption.REPLACE_EXISTING);
+            }
+            return newProbePage;
         } catch (IOException e) {
             logger.error("更新probe文件时出错。", e);
-        } finally {
-            try {
-                tempFos.flush();
-                tempFos.close();
-                // 2.4 将临时文件重命名为probe文件，原probe文件存在的话就直接覆盖
-                // 必须要在流关闭之后才能重命名，否则在windows系统下报错
-                if (!list.isEmpty()) {
-                	Files.move(Paths.get(tempfile), Paths.get(probe_file), StandardCopyOption.REPLACE_EXISTING);
-                }
-            } catch (IOException e) {
-                logger.error("更新probe文件时出错。", e);
-            }
-        }
+            EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
+        } 
         return newProbePage;
     }
 
     /**
-     * 追加内容到Probe文件：将url和页面内容转成固定长度的MD5格式，以便每次探测时
+     * 追加内容到Probe文件：将url和页面内容转成固定长度的MD5格式，
+     * 以便每次探测时进行判断内容是否变化
      *
      * @param file
      * @param url
      * @param content
      * @param isfinish
+     * @param isEncode 是否进行加密
      */
-    public synchronized static ProbePage append(String file, String url, String content, String isfinish) {
-        FileOutputStream ff = null;
+    synchronized static ProbePage append(String file, String url, String content, String isfinish, boolean isEncode) {
         ProbePageSerial.ProbePage probePage = null;
-        try {
-            ff = new FileOutputStream(file, true);// 追加内容
-            probePage = ProbePageSerial.ProbePage.newBuilder().
-                    setUrl(MD5Util.convert(url)).setContent(MD5Util.convert(content)).setFinish(isfinish).build();
-            probePage.writeTo(ff);
-            ff.flush();
+        try (OutputStream os = Files.newOutputStream(Paths.get(file), StandardOpenOption.APPEND)){
+        	if(isEncode){
+        		url = MD5Util.convert(url);
+        		content = MD5Util.convert(content);
+        	}
+            probePage = ProbePageSerial.ProbePage.newBuilder().setUrl(url).setContent(content).setFinish(isfinish).build();
+            probePage.writeTo(os);
+            os.flush();
             return probePage;
-        } catch (Exception e) {
-            logger.error("写probe文件时出错。", e);
-        } finally {
-            try {
-                ff.close();
-            } catch (IOException e) {
-                logger.error("写probe文件时出错。", e);
-            }
-        }
+        } catch (IOException e) {
+            logger.error("追加probe文件时出错。", e);
+            EmailSender.sendMail(e);
+        	ExceptionCatcher.addException(e);
+        } 
         return probePage;
     }
-    		
+
+
 }

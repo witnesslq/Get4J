@@ -1,6 +1,5 @@
 package com.bytegriffin.get4j.core;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,9 @@ import com.bytegriffin.get4j.store.FreeProxyStorage;
 import com.bytegriffin.get4j.store.LuceneIndexStorage;
 import com.bytegriffin.get4j.store.MongodbStorage;
 import com.bytegriffin.get4j.util.DateUtil;
-import com.bytegriffin.get4j.util.StringUtil;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 /**
  * 爬虫配置引擎 <br/>
@@ -84,7 +85,7 @@ public class SpiderEngine {
      * @return SpiderEngine
      */
     public SpiderEngine setSeed(Seed seed) {
-        List<Seed> seeds = new ArrayList<>();
+        List<Seed> seeds = Lists.newArrayList();
         seeds.add(seed);
         this.seeds = seeds;
         return this;
@@ -129,7 +130,7 @@ public class SpiderEngine {
      * @return
      */
     public SpiderEngine setDynamicField(DynamicField dynamicField) {
-        this.dynamicFields = new ArrayList<>();
+        this.dynamicFields = Lists.newArrayList();
         this.dynamicFields.add(dynamicField);
         return this;
     }
@@ -165,7 +166,7 @@ public class SpiderEngine {
         // 2.测试代理是否可用
         List<HttpProxy> hplist = seed.getFetchHttpProxy();
         if (hplist != null && hplist.size() > 0) {
-            LinkedList<HttpProxy> newList = new LinkedList<>();
+            LinkedList<HttpProxy> newList = Lists.newLinkedList();
             for (HttpProxy httpProxy : hplist) {
                 String furl = UrlAnalyzer.formatListDetailUrl(seed.getFetchUrl());
                 boolean isReached = http.testHttpProxy(furl, httpProxy);
@@ -205,7 +206,7 @@ public class SpiderEngine {
         for (Seed seed : seeds) {
             String seedName = seed.getSeedName();
             Chain chain = new Chain();
-            if (StringUtil.isNullOrBlank(seed.getFetchUrl())) {
+            if (Strings.isNullOrEmpty(seed.getFetchUrl())) {
                 logger.error("启动失败：种子[" + seedName + "]-[fetch.url]参数为必填项。");
                 System.exit(1);
             }
@@ -214,8 +215,7 @@ public class SpiderEngine {
 
             // 2.设置流程
             StringBuilder subProcess = new StringBuilder();
-
-            if (!StringUtil.isNullOrBlank(seed.getFetchProbeSelector())) {
+            if (!Strings.isNullOrEmpty(seed.getFetchProbeSelector())) {
                 PageChangeProber p = new PageChangeProber(seed);
                 Globals.FETCH_PROBE_CACHE.put(seed.getSeedName(), p);
                 subProcess.append("PageChangeProber-");
@@ -251,29 +251,29 @@ public class SpiderEngine {
             	subProcess.append("-DynamicFieldsFetcher");
             }
 
-            if (!StringUtil.isNullOrBlank(seed.getDownloadDisk())) {
+            if (!Strings.isNullOrEmpty(seed.getDownloadDisk())) {
                 Process p = new DiskDownloader();
                 chain.addProcess(p);
                 p.init(seed);
                 subProcess.append("-DiskDownloader");
-            } else if (!StringUtil.isNullOrBlank(seed.getDownloadHdfs())) {
+            } else if (!Strings.isNullOrEmpty(seed.getDownloadHdfs())) {
                 chain.addProcess(new HdfsDownloader());
                 subProcess.append("-HdfsDownloader");
             }
 
-            // if (!StringUtil.isNullOrBlank(seed.getExtractClassImpl())) {
+            // if (!Strings.isNullOrEmpty(seed.getExtractClassImpl())) {
             // chain.addProcess(new ExtractDispatcher());
             // subProcess.append("-Extract");
             // }
 
-            if (!StringUtil.isNullOrBlank(seed.getParseClassImpl())) {
+            if (!Strings.isNullOrEmpty(seed.getParseClassImpl())) {
                 AutoDelegateParser dp = new AutoDelegateParser();
                 chain.addProcess(dp);
                 dp.init(seed);
                 int index = seed.getParseClassImpl().lastIndexOf(".") + 1;
                 subProcess.append("-");
                 subProcess.append(seed.getParseClassImpl().substring(index));
-            } else if (!StringUtil.isNullOrBlank(seed.getParseElementSelector())) {
+            } else if (!Strings.isNullOrEmpty(seed.getParseElementSelector())) {
                 AutoDelegateParser dp = new AutoDelegateParser();
                 chain.addProcess(dp);
                 dp.init(seed);
@@ -281,31 +281,31 @@ public class SpiderEngine {
             }
 
             // 不配置成else if是想系统支持多个数据源
-            if (!StringUtil.isNullOrBlank(seed.getStoreJdbc())) {
+            if (!Strings.isNullOrEmpty(seed.getStoreJdbc())) {
                 DBStorage dbstorage = new DBStorage();
                 dbstorage.init(seed);
                 chain.addProcess(dbstorage);
                 subProcess.append("-DBStorage");
             }
-            if (!StringUtil.isNullOrBlank(seed.getStoreMongodb())) {
+            if (!Strings.isNullOrEmpty(seed.getStoreMongodb())) {
                 MongodbStorage mongodb = new MongodbStorage();
                 mongodb.init(seed);
                 chain.addProcess(mongodb);
                 subProcess.append("-MongodbStorage");
             }
-            if (!StringUtil.isNullOrBlank(seed.getStoreLuceneIndex())) {
+            if (!Strings.isNullOrEmpty(seed.getStoreLuceneIndex())) {
                 LuceneIndexStorage index = new LuceneIndexStorage();
                 index.init(seed);
                 chain.addProcess(index);
                 subProcess.append("-LuceneIndexStorage");
             }
-            if (!StringUtil.isNullOrBlank(seed.getStoreFreeProxy())) {
+            if (!Strings.isNullOrEmpty(seed.getStoreFreeProxy())) {
                 FreeProxyStorage freeProxyStorage = new FreeProxyStorage();
                 freeProxyStorage.init(seed);
                 chain.addProcess(freeProxyStorage);
                 subProcess.append("-FreeProxyStorage");
             }
-            // else if (!StringUtil.isNullOrBlank(seed.getStoreRedis())) {
+            // else if (!Strings.isNullOrEmpty(seed.getStoreRedis())) {
             // chain.addProcess(new RedisStorage());
             // subProcess.append("-RedisStorage");
 
@@ -346,9 +346,9 @@ public class SpiderEngine {
             String host = ftp.get(AbstractConfig.host_node);
             String username = ftp.get(AbstractConfig.username_node);
             String password = ftp.get(AbstractConfig.password_node);
-            String port = StringUtil.isNullOrBlank(ftp.get(AbstractConfig.port_node)) ? "21" : ftp.get(AbstractConfig.port_node);
+            String port = Strings.isNullOrEmpty(ftp.get(AbstractConfig.port_node)) ? "21" : ftp.get(AbstractConfig.port_node);
             // 只检查了host属性是否为空，因为有的ftp服务没有用户名/密码等
-            if (StringUtil.isNullOrBlank(host)) {
+            if (Strings.isNullOrEmpty(host)) {
                 logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的host属性为空，请重新检查。");
                 System.exit(1);
             }
@@ -356,16 +356,16 @@ public class SpiderEngine {
         } else if (AbstractConfig.rsync_node.equals(protocal)) {
             Map<String, String> rsync = resourceSync.getRsync();
             if (rsync == null || rsync.isEmpty()) {
-                logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的ftp属性出错，请重新检查。");
+                logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的rsync属性出错，请重新检查。");
                 System.exit(1);
             }
             String host = rsync.get(AbstractConfig.host_node);
             String username = rsync.get(AbstractConfig.username_node);
             String module = rsync.get(AbstractConfig.module_node);
             String dir = rsync.get(AbstractConfig.dir_node);
-            if (!StringUtil.isNullOrBlank(module)) {
+            if (!Strings.isNullOrEmpty(module)) {
             	DefaultConfig.resource_synchronizer = new RsyncSyncer(host, username, module, true);
-            } else if (!StringUtil.isNullOrBlank(dir)) {
+            } else if (!Strings.isNullOrEmpty(dir)) {
             	DefaultConfig.resource_synchronizer = new RsyncSyncer(host, username, dir, false);
             } else {
                 logger.error("yaml配置文件[" + AbstractConfig.resource_sync_yaml_file + "]中的rsync的module或dir属性必须二选一，请重新检查。");
@@ -380,7 +380,7 @@ public class SpiderEngine {
             String host = scp.get(AbstractConfig.host_node);
             String username = scp.get(AbstractConfig.username_node);
             String dir = scp.get(AbstractConfig.dir_node);
-            String port = StringUtil.isNullOrBlank(scp.get(AbstractConfig.port_node)) ? "22" : scp.get(AbstractConfig.port_node);
+            String port = Strings.isNullOrEmpty(scp.get(AbstractConfig.port_node)) ? "22" : scp.get(AbstractConfig.port_node);
             DefaultConfig.resource_synchronizer = new ScpSyncer(host, username, dir, port);
         }
         DefaultConfig.sync_open = Boolean.valueOf(open);
@@ -397,7 +397,7 @@ public class SpiderEngine {
     	}
     	DefaultConfig.download_file_url_naming = !DefaultConfig.default_value.equals(configuration.getDownloadFileNameRule());
     	
-    	if(!StringUtil.isNullOrBlank(configuration.getEmailRecipient())){
+    	if(!Strings.isNullOrEmpty(configuration.getEmailRecipient())){
     		EmailSender es = new EmailSender(configuration.getEmailRecipient());
     		Globals.emailSender = es;
     	}
@@ -414,16 +414,16 @@ public class SpiderEngine {
             Timer timer = new Timer();
             logger.info("爬虫开始抓取[" + seed.getSeedName() + "]。。。");
             // 注意：如果配置了probe属性，那么程序不再支持interval功能，而是由probe来接管
-            if (!StringUtil.isNullOrBlank(seed.getFetchProbeSelector())) {
-            	if (!StringUtil.isNullOrBlank(starttime)) {
+            if (!Strings.isNullOrEmpty(seed.getFetchProbeSelector())) {
+            	if (!Strings.isNullOrEmpty(starttime)) {
             		timer.schedule(job, DateUtil.strToDate(starttime));
                 } else {
                 	timer.schedule(job, 0L);
                 }
             } else {
-                if (StringUtil.isNullOrBlank(starttime)) {
+                if (Strings.isNullOrEmpty(starttime)) {
                     timer.schedule(job, 0L);
-                } else if (StringUtil.isNullOrBlank(interval) || interval.equals("0")) {
+                } else if (Strings.isNullOrEmpty(interval) || interval.equals("0")) {
                     timer.schedule(job, DateUtil.strToDate(starttime));
                 } else {
                     timer.schedule(job, DateUtil.strToDate(starttime), Long.valueOf(interval) * 1000);

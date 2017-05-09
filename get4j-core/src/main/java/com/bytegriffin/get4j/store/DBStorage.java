@@ -21,7 +21,7 @@ import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.MD5Util;
-import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -94,7 +94,7 @@ public class DBStorage implements Process {
                 e.printStackTrace();
             }
         }
-        if (StringUtil.isNullOrBlank(page.getAvatar())) {
+        if (Strings.isNullOrEmpty(page.getAvatar())) {
             sql += "" + null + ",";
         } else {
             sql += "'" + page.getAvatar().replace("\\", "\\\\") + "',";// windows下的磁盘路径斜杠会被mysql数据库会自动去除
@@ -149,12 +149,12 @@ public class DBStorage implements Process {
     private String buildUpdateSql(Page page, String dbId) {
         String sql = "";
         // 注意：有时候修改了seedName，此时也会随之更新
-        if (StringUtil.isNullOrBlank(page.getSeedName())) {
+        if (Strings.isNullOrEmpty(page.getSeedName())) {
             sql += "SEED_NAME=" + null + ",";
         } else {
             sql += "SEED_NAME='" + page.getSeedName() + "',";
         }
-        if (StringUtil.isNullOrBlank(page.getAvatar())) {
+        if (Strings.isNullOrEmpty(page.getAvatar())) {
             sql += "AVATAR=" + null + ",";
         } else {
             sql += "AVATAR='" + page.getAvatar().replace("\\", "\\\\") + "',";
@@ -221,15 +221,12 @@ public class DBStorage implements Process {
      * @return Page
      */
     public synchronized Page readOne(DataSource dataSource, Page page) {
-        Connection con = null;
+
         Page rowData = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
         String sql = "select * from page where fetch_url='" + page.getUrl() + "'";
-        try {
-            con = dataSource.getConnection();
-            pstmt = con.prepareStatement(sql);
-            rs = pstmt.executeQuery();
+        try (Connection con = dataSource.getConnection();
+        	PreparedStatement pstmt = con.prepareStatement(sql);
+        	ResultSet rs  = pstmt.executeQuery()) {
             ResultSetMetaData md = rs.getMetaData();
             int columnCount = md.getColumnCount();
             while (rs.next()) {
@@ -268,21 +265,7 @@ public class DBStorage implements Process {
             logger.error("找不到数据 : " + sql, e);
             EmailSender.sendMail(e);
             ExceptionCatcher.addException(page.getSeedName(), e);
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (pstmt != null) {
-                    pstmt.close();
-                }
-                if (con != null) {
-                    con.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
+        } 
         return rowData;
     }
 
@@ -294,39 +277,16 @@ public class DBStorage implements Process {
      * @param sql        String
      */
     private synchronized void write(String seedName, DataSource dataSource, String sql) {
-        Connection con = null;
-        Statement stmt = null;
-        try {
-            con = dataSource.getConnection();
+        try (Connection con = dataSource.getConnection();
+        	 Statement stmt = con.createStatement()	){
             con.setAutoCommit(false);
-            stmt = con.createStatement();
             stmt.addBatch(sql);
             stmt.executeBatch();
             con.commit();
         } catch (SQLException e) {
-            try {
-                if (con != null) {
-                    con.rollback();
-                }
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
             EmailSender.sendMail(e);
             ExceptionCatcher.addException(seedName, e);
             logger.error("不能执行更新sql: " + sql, e);
-        } finally {
-            try {
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (con != null) {
-                    con.close();
-                }
-            } catch (SQLException e) {
-                logger.error("Job " + Thread.currentThread().getName() + " cannot to close DB resultset.",
-                        e.getCause());
-            }
-
         }
     }
 

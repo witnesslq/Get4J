@@ -1,6 +1,5 @@
 package com.bytegriffin.get4j.core;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
@@ -28,8 +27,10 @@ import com.bytegriffin.get4j.store.FailUrlStorage;
 import com.bytegriffin.get4j.util.ConcurrentQueue;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.FileUtil;
-import com.bytegriffin.get4j.util.ShellUtil;
+import com.bytegriffin.get4j.util.CommandUtil;
 import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.bytegriffin.get4j.core.UrlQueue;
 import com.jayway.jsonpath.JsonPath;
 
@@ -146,6 +147,8 @@ public class Launcher extends TimerTask implements Command {
 		}
 		// 清空这次抓取访问过的url集合，以方便下次轮训抓取时过滤重复链接
 		clearVisitedUrlQueue(seed);
+		// 清空异常信息
+		ExceptionCatcher.clearExceptions();
 	}
 
 	/**
@@ -193,7 +196,7 @@ public class Launcher extends TimerTask implements Command {
 			// 1.计算总页数
 			String fetchUrl = seed.getFetchUrl();
 			String totalPages = seed.getFetchTotalPages();
-			if (!StringUtil.isNullOrBlank(totalPages) && !StringUtil.isNumeric(totalPages)) {
+			if (!Strings.isNullOrEmpty(totalPages) && !StringUtil.isNumeric(totalPages)) {
 				Page page = Globals.HTTP_ENGINE_CACHE.get(seed.getSeedName())
 						.getPageContent(new Page(seed.getSeedName(), UrlAnalyzer.formatListDetailUrl(fetchUrl)));
 				if (totalPages.contains(DefaultConfig.json_path_prefix)) {// json格式
@@ -202,7 +205,7 @@ public class Launcher extends TimerTask implements Command {
 				} else {// html格式
 					Document doc = Jsoup.parse(page.getHtmlContent());
 					totalPages = doc.select(totalPages.trim()).text().trim();
-					if (StringUtil.isNullOrBlank(totalPages)) {
+					if (Strings.isNullOrEmpty(totalPages)) {
 						totalPages = "1";
 					}
 				}
@@ -218,7 +221,7 @@ public class Launcher extends TimerTask implements Command {
 				int pagenum = Integer.valueOf(m.group(1));
 				String prefix = fetchUrl.substring(0, fetchUrl.indexOf(DefaultConfig.fetch_list_url_left));
 				String suffix = fetchUrl.substring(fetchUrl.indexOf(DefaultConfig.fetch_list_url_right) + 1);
-				List<String> list = new ArrayList<>();
+				List<String> list = Lists.newArrayList();
 				int totalPage = Integer.valueOf(totalPages);
 				for (int i = 0; i < totalPage; i++) {
 					int pn = pagenum + i;
@@ -265,7 +268,7 @@ public class Launcher extends TimerTask implements Command {
 		} else if (DefaultConfig.resource_synchronizer instanceof ScpSyncer) {
 			// Scp如果想实现增量复制需要先在目标服务器上创建文件夹
 			ScpSyncer scp = (ScpSyncer) DefaultConfig.resource_synchronizer;
-			ShellUtil.executeShell("ssh " + scp.getHost() + " 'mkdir " + scp.getDir() + seed.getSeedName() + "'");
+			CommandUtil.executeShell("ssh " + scp.getHost() + " 'mkdir " + scp.getDir() + seed.getSeedName() + "'");
 		}
 		BatchScheduler.start();
 		batch = Executors.newSingleThreadExecutor();

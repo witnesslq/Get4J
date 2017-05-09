@@ -6,7 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.util.ConcurrentQueue;
-import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
 import com.bytegriffin.get4j.core.UrlQueue;
 
 /**
@@ -26,7 +26,7 @@ public class Worker implements Runnable {
 
     @Override
     public void run() {
-        if (StringUtil.isNullOrBlank(seedName)) {
+        if (Strings.isNullOrEmpty(seedName)) {
             return;
         }
         Chain chain = Globals.CHAIN_CACHE.get(seedName);

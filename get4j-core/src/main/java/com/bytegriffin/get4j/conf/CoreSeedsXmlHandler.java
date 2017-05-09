@@ -1,15 +1,16 @@
 package com.bytegriffin.get4j.conf;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
-import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * core-sites.xml配置文件处理类
@@ -33,8 +34,8 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
             System.exit(1);
         }
         List<Element> siteElements = seedNode.elements(seed_node);
-        List<Seed> seeds = new ArrayList<>();
-        HashSet<String> hashset = new HashSet<>();//过滤相同seedName
+        List<Seed> seeds = Lists.newArrayList();
+        Set<String> hashset = Sets.newHashSet();//过滤相同seedName
         for (Element element : siteElements) {
             String seedName = element.element(name_node).getStringValue();
             Seed seed = new Seed(seedName);
@@ -44,7 +45,7 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
                 String name = property.element(name_node).getStringValue();
                 String value = property.element(value_node).getStringValue();
                 if (name.equalsIgnoreCase(woker_thread_count)) {
-                    if (!StringUtil.isNullOrBlank(value)) {
+                    if (!Strings.isNullOrEmpty(value)) {
                         seed.setThreadCount(Integer.valueOf(value));
                     }
                 } else if (name.equalsIgnoreCase(fetch_url)) {
@@ -70,7 +71,7 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
                 } else if (name.equalsIgnoreCase(fetch_http_user_agent)) {
                     seed.setFetchUserAgentFile(value);
                 } else if (name.equalsIgnoreCase(fetch_sleep)) {
-                    if (!StringUtil.isNullOrBlank(value)) {
+                    if (!Strings.isNullOrEmpty(value)) {
                         seed.setFetchSleep(Integer.valueOf(value));
                     }
                 } else if (name.equalsIgnoreCase(fetch_sleep_range)) {
@@ -80,7 +81,7 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
                 } else if (name.equalsIgnoreCase(fetch_resource_selector)) {
                     seed.setFetchResourceSelectors(value);
                 } else if (name.equalsIgnoreCase(fetch_javascript_support)) {
-                    if (!StringUtil.isNullOrBlank(value)) {
+                    if (!Strings.isNullOrEmpty(value)) {
                         seed.setFetchJavascriptSupport(Boolean.valueOf(value));
                     }
                 } else if (name.equalsIgnoreCase(download_disk)) {

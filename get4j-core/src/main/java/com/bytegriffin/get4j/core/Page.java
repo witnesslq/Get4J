@@ -2,7 +2,6 @@ package com.bytegriffin.get4j.core;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +11,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
-import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.jayway.jsonpath.JsonPath;
 
 /**
@@ -63,7 +64,7 @@ public class Page {
     /**
      * 当前页面中的资源文件：js、jpg、css等文件
      */
-    private HashSet<String> resources = new HashSet<>();
+    private HashSet<String> resources = Sets.newHashSet();
     /**
      * 当前资源文件存储路径
      */
@@ -79,11 +80,11 @@ public class Page {
     /**
      * 当启动list_detail抓取模式时，每个列表所对应的详情页
      */
-    private HashSet<String> detailLinks = new HashSet<>();
+    private HashSet<String> detailLinks = Sets.newHashSet();
     /**
      * 自定义动态字段
      */
-    private Map<String, Object> fields = new HashMap<>();
+    private Map<String, Object> fields = Maps.newHashMap();
 
     public Page() {
     }
@@ -99,7 +100,7 @@ public class Page {
      * @return boolean
      */
     public boolean isJsonContent() {
-        return !StringUtil.isNullOrBlank(this.jsonContent);
+        return !Strings.isNullOrEmpty(this.jsonContent);
     }
 
     /**
@@ -108,7 +109,7 @@ public class Page {
      * @return boolean
      */
     public boolean isHtmlContent() {
-        return !StringUtil.isNullOrBlank(this.htmlContent);
+        return !Strings.isNullOrEmpty(this.htmlContent);
     }
 
     /**
@@ -117,7 +118,7 @@ public class Page {
      * @return boolean
      */
     public boolean isXmlContent() {
-        return !StringUtil.isNullOrBlank(this.xmlContent);
+        return !Strings.isNullOrEmpty(this.xmlContent);
     }
 
     /**

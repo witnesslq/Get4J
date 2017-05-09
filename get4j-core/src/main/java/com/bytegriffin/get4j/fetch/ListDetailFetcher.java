@@ -15,7 +15,7 @@ import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.util.DateUtil;
-import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
 import com.bytegriffin.get4j.core.UrlQueue;
 
 /**
@@ -38,7 +38,7 @@ public class ListDetailFetcher implements Process {
 
         // 2.初始化detail页面选择器
         String detailSelect = seed.getFetchDetailSelector();
-        if (!StringUtil.isNullOrBlank(detailSelect)) {
+        if (!Strings.isNullOrEmpty(detailSelect)) {
             Globals.FETCH_DETAIL_SELECT_CACHE.put(seed.getSeedName(), detailSelect.replace(" ", ""));
         }
 
@@ -63,7 +63,7 @@ public class ListDetailFetcher implements Process {
             String detailSelect = Globals.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
             // 如果fetch.resource.selector配置了all或者none，或者没有配置fetch.detail.selecotr只配置了fetch.resource.selector，那说明没有detaillink与avatar对应，也就是说只能抓取所有resource
             if (resourceselector == null || resourceselector.isConfigAll() || resourceselector.isConfigNone()
-                    || StringUtil.isNullOrBlank(detailSelect)) {
+                    || Strings.isNullOrEmpty(detailSelect)) {
                 UrlAnalyzer.custom(page).sniffAndSetResources();
             } else { // 如果fetch.resource.selector配置了具体参数（一定是包含detaillink与avatar资源的外部的css选择器或正则，而不只是指定avatar），则表示抓取符合参数的具体资源
                 detailLinkAvatar = UrlAnalyzer.custom(page).mappingDetailLinkAndAvatar();

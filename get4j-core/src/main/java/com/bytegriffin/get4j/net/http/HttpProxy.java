@@ -6,7 +6,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 
-import com.bytegriffin.get4j.util.StringUtil;
+import com.google.common.base.Strings;
 
 /**
  * Http代理
@@ -21,7 +21,7 @@ public class HttpProxy {
     private CredentialsProvider credsProvider;
 
     public HttpProxy(String ip) {
-        if (!StringUtil.isNullOrBlank(ip)) {
+        if (!Strings.isNullOrEmpty(ip)) {
             this.ip = ip.trim();
         }
         this.port = "80";
@@ -29,17 +29,17 @@ public class HttpProxy {
     }
 
     public HttpProxy(String ip, String port) {
-        if (!StringUtil.isNullOrBlank(ip)) {
+        if (!Strings.isNullOrEmpty(ip)) {
             this.ip = ip.trim();
         }
-        if (!StringUtil.isNullOrBlank(port)) {
+        if (!Strings.isNullOrEmpty(port)) {
             this.port = port.trim();
         }
         this.httpHost = new HttpHost(this.ip, Integer.valueOf(this.port));
     }
 
     public HttpProxy(String ip, Integer port) {
-        if (!StringUtil.isNullOrBlank(ip)) {
+        if (!Strings.isNullOrEmpty(ip)) {
             this.ip = ip.trim();
         }
         if (port != null) {
@@ -49,24 +49,24 @@ public class HttpProxy {
     }
 
     public HttpProxy(String ip, String port, String schema) {
-        if (!StringUtil.isNullOrBlank(ip)) {
+        if (!Strings.isNullOrEmpty(ip)) {
             this.ip = ip.trim();
         }
-        if (!StringUtil.isNullOrBlank(port)) {
+        if (!Strings.isNullOrEmpty(port)) {
             this.port = port.trim();
         }
         this.httpHost = new HttpHost(this.ip, Integer.valueOf(this.port), schema);
     }
 
     public HttpProxy(String ip, String port, String username, String password) {
-        if (!StringUtil.isNullOrBlank(ip)) {
+        if (!Strings.isNullOrEmpty(ip)) {
             this.ip = ip.trim();
         }
-        if (!StringUtil.isNullOrBlank(port)) {
+        if (!Strings.isNullOrEmpty(port)) {
             this.port = port.trim();
         }
         this.username = username.trim();
-        if (StringUtil.isNullOrBlank(password)) {
+        if (Strings.isNullOrEmpty(password)) {
             this.password = "";
         } else {
             this.password = password.trim();
@@ -79,10 +79,10 @@ public class HttpProxy {
 
     public String toString() {
         String str = this.ip + ":" + this.port;
-        if (!StringUtil.isNullOrBlank(this.username)) {
+        if (!Strings.isNullOrEmpty(this.username)) {
             str += "@" + this.username;
         }
-        if (!StringUtil.isNullOrBlank(this.password)) {
+        if (!Strings.isNullOrEmpty(this.password)) {
             str += ":" + this.password;
         }
         return str;

@@ -4,6 +4,7 @@ import java.security.MessageDigest;
 import java.util.UUID;
 
 import com.bytegriffin.get4j.conf.DefaultConfig;
+import com.google.common.base.Strings;
 
 /**
  * MD5生成器
@@ -98,7 +99,7 @@ public class MD5Util {
      * @return
      */
     public synchronized static String convert(String salt) {
-        if (StringUtil.isNullOrBlank(salt)) {
+        if (Strings.isNullOrEmpty(salt)) {
             return null;
         }
         java.security.MessageDigest md;

@@ -15,7 +15,6 @@ import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.send.EmailSender;
-import com.bytegriffin.get4j.util.StringUtil;
 import com.bytegriffin.get4j.core.UrlQueue;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
@@ -26,6 +25,7 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.google.common.base.Strings;
 
 /**
  * 专门处理Javascript效果的html网页 <br>
@@ -134,7 +134,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
             return;
         }
         String userAgent = ual.choice();
-        if (!StringUtil.isNullOrBlank(userAgent)) {
+        if (!Strings.isNullOrEmpty(userAgent)) {
             request.setAdditionalHeader("User-Agent", userAgent);
         }
     }
@@ -152,7 +152,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
         sleep(page.getSeedName(), logger);
         try {
             // 生成site url
-            setHost(page);
+            setHost(page, logger);
             WebRequest request = new WebRequest(new URL(url));
             setHttpProxy(page.getSeedName(), webClient, request);
             setUserAgent(page.getSeedName(), request);
@@ -183,7 +183,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
 
             String content = response.getContentAsString();
             String contentType = response.getContentType();
-            if (StringUtil.isNullOrBlank(content)) {
+            if (Strings.isNullOrEmpty(content)) {
                 logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容为空。");
                 return page;
             }
@@ -250,7 +250,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
 
             String content = response.getContentAsString();
             String contentType = response.getContentType();
-            if (StringUtil.isNullOrBlank(content)) {
+            if (Strings.isNullOrEmpty(content)) {
                 logger.warn("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面内容为空。");
             }
 
