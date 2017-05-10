@@ -268,7 +268,7 @@ public class Launcher extends TimerTask implements Command {
 		} else if (DefaultConfig.resource_synchronizer instanceof ScpSyncer) {
 			// Scp如果想实现增量复制需要先在目标服务器上创建文件夹
 			ScpSyncer scp = (ScpSyncer) DefaultConfig.resource_synchronizer;
-			CommandUtil.executeShell("ssh " + scp.getHost() + " 'mkdir " + scp.getDir() + seed.getSeedName() + "'");
+			CommandUtil.executeShell("ssh " +scp.getUsername() +"@"+ scp.getHost() + " 'mkdir " + scp.getDir() + seed.getSeedName() + "'");
 		}
 		BatchScheduler.start();
 		batch = Executors.newSingleThreadExecutor();

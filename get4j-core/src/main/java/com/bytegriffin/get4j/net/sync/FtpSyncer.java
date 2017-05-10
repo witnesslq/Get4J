@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
@@ -26,7 +26,7 @@ public class FtpSyncer implements Syncer {
     private String port;
     private String username;
     private String password;
-    private List<String> batch;
+    private Set<String> batch;
 
     public FtpSyncer(String host, String port, String username, String password) {
         this.host = host;
@@ -35,7 +35,7 @@ public class FtpSyncer implements Syncer {
         this.password = password;
     }
 
-    public void setBatch(List<String> batch) {
+    public void setBatch(Set<String> batch) {
         this.batch = batch;
     }
 

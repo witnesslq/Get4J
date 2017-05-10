@@ -3,15 +3,16 @@ package com.bytegriffin.get4j.net.sync;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.CommandUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Scp同步器：用于同步下载的资源文件到资源服务器上，比如：avatar文件同步到图片服务器
@@ -41,7 +42,7 @@ public class ScpSyncer implements Syncer {
      *
      * @param avatars 资源文件列表 一般特指avatar资源
      */
-    public void setBatch(List<String> avatars) {
+    public void setBatch(Set<String> avatars) {
         int i = 0;
         List<String> list;
         for (String resource : avatars) {

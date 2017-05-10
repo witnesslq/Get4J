@@ -590,7 +590,7 @@ public class Spider {
     }
 
     /**
-     * 设置scp为资源同步方式 <br>pageFieldsMappings = new ArrayList<>();
+     * 设置scp为资源同步方式 <br>
      * 需要ssh-keygen配置无密码登陆
      *
      * @param host     服务器地址

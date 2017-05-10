@@ -1,16 +1,16 @@
 package com.bytegriffin.get4j.net.sync;
 
-import com.bytegriffin.get4j.core.ExceptionCatcher;
-import com.bytegriffin.get4j.send.EmailSender;
-import com.bytegriffin.get4j.util.CommandUtil;
-import com.google.common.collect.Sets;
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.util.HashSet;
-import java.util.List;
+import com.bytegriffin.get4j.core.ExceptionCatcher;
+import com.bytegriffin.get4j.send.EmailSender;
+import com.bytegriffin.get4j.util.CommandUtil;
+import com.google.common.collect.Sets;
 
 /**
  * Rsync同步器：用于同步下载的资源文件到资源服务器上，比如：avatar文件同步到图片服务器
@@ -37,7 +37,7 @@ public class RsyncSyncer implements Syncer {
         this.isModule = isModule;
     }
 
-    public void setBatch(List<String> avatars) {
+    public void setBatch(Set<String> avatars) {
         // 判断是否为Module，
         String suffix = isModule ? ":" + dirOrModule : dirOrModule;
         for (String resource : avatars) {

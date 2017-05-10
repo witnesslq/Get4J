@@ -395,7 +395,8 @@ public class SpiderEngine {
     	if(configuration == null){
     		return;
     	}
-    	DefaultConfig.download_file_url_naming = !DefaultConfig.default_value.equals(configuration.getDownloadFileNameRule());
+    	DefaultConfig.download_file_url_naming = !(Strings.isNullOrEmpty(configuration.getDownloadFileNameRule()) 
+    			|| DefaultConfig.default_value.equals(configuration.getDownloadFileNameRule()) );
     	
     	if(!Strings.isNullOrEmpty(configuration.getEmailRecipient())){
     		EmailSender es = new EmailSender(configuration.getEmailRecipient());
