@@ -8,14 +8,10 @@
 		<artifactId>get4j-parent</artifactId>
 		<version>1.0.0</version>
 	</parent>
-
 	<artifactId>get4j-cluster</artifactId>
 	<name>get4j-cluster</name>
-	<url>http://maven.apache.org</url>
+	<url>https://github.com/bytegriffin/Get4J</url>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
 
 	<dependencies>
 
@@ -24,7 +20,7 @@
 			<artifactId>get4j-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
@@ -32,4 +28,66 @@
 
 	</dependencies>
 
+	<build>
+		<plugins>
+			<!-- 发布项目 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>com.bytegriffin.get4j.Spider</mainClass>
+						</manifest>
+					</archive>
+					<descriptors>
+						<descriptor>assembly/assembly.xml</descriptor>
+					</descriptors>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- 打依赖包 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeScope>runtime</includeScope>
+							<outputDirectory>target/lib/</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+
+		<!-- 打源码包时需要添加的配置文件 -->
+		<resources>
+			<resource>
+				<directory>${project.basedir}/conf/</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/user_agent</include>
+					<include>**/http_proxy</include>
+					<include>**/log4j2.xml</include>
+				</includes>
+			</resource>
+		</resources>
+	</build>
 </project>
