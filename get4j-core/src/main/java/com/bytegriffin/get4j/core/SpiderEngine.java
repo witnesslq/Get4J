@@ -53,6 +53,9 @@ public class SpiderEngine {
     private Configuration configuration;
     private ResourceSync resourceSync;
     private List<DynamicField> dynamicFields;
+    private List<Process> fronts;
+    private List<Process> backs;
+    private List<Process> downloads;
 
     private static final Logger logger = LogManager.getLogger(SpiderEngine.class);
 
@@ -66,6 +69,36 @@ public class SpiderEngine {
         }
         return me;
     }
+    
+    /**
+     * 增加前端的loader
+     * @param processes
+     * @return
+     */
+    public SpiderEngine addFrontLoader(List<Process> fronts) {
+		this.fronts = fronts;
+		return this;
+	}
+    
+    /**
+     * 增加前端的loader
+     * @param processes
+     * @return
+     */
+    public SpiderEngine addBackLoader(List<Process> backs) {
+		this.backs = backs;
+		return this;
+	}
+    
+    /**
+     * 增加下载的loader
+     * @param processes
+     * @return
+     */
+    public SpiderEngine addDownloader(List<Process> downloads) {
+		this.downloads = downloads;
+		return this;
+	}
 
     /**
      * 构建爬虫参数
@@ -215,6 +248,14 @@ public class SpiderEngine {
 
             // 2.设置流程
             StringBuilder subProcess = new StringBuilder();
+            
+            if(fronts != null && fronts.size() > 0){
+            	 for(Process p : fronts){
+                 	p.init(seed);
+                 	subProcess.append(p.getClass().getSimpleName()+"-");
+                 }
+            }
+            
             if (!Strings.isNullOrEmpty(seed.getFetchProbeSelector())) {
                 PageChangeProber p = new PageChangeProber(seed);
                 Globals.FETCH_PROBE_CACHE.put(seed.getSeedName(), p);
@@ -259,6 +300,13 @@ public class SpiderEngine {
             } else if (!Strings.isNullOrEmpty(seed.getDownloadHdfs())) {
                 chain.addProcess(new HdfsDownloader());
                 subProcess.append("-HdfsDownloader");
+            }
+            
+            if(downloads != null && downloads.size() > 0){
+            	for(Process p : downloads){
+                	p.init(seed);
+                	subProcess.append(p.getClass().getSimpleName()+"-");
+                }
             }
 
             // if (!Strings.isNullOrEmpty(seed.getExtractClassImpl())) {
@@ -305,6 +353,14 @@ public class SpiderEngine {
                 chain.addProcess(freeProxyStorage);
                 subProcess.append("-FreeProxyStorage");
             }
+            
+            if(backs != null && backs.size() > 0){
+            	for(Process p : backs){
+                	p.init(seed);
+                	subProcess.append(p.getClass().getSimpleName()+"-");
+                }
+            }
+
             // else if (!Strings.isNullOrEmpty(seed.getStoreRedis())) {
             // chain.addProcess(new RedisStorage());
             // subProcess.append("-RedisStorage");
